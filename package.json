@@ -1,0 +1,30 @@
+{
+  "name": "tidy.games",
+  "author": "Aaron Rieke",
+  "version": "1.0.0",
+  "scripts": {
+    "dev-wizard": "parcel ./apps/wizard/index.html",
+    "dev-workshop": "parcel ./apps/workshop/index.html",
+    "build-wizard": "parcel build ./apps/wizard/index.html",
+    "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json"
+  },
+  "license": "ISC",
+  "workspaces": [
+    "@lib/*"
+  ],
+  "dependencies": {
+    "express": "^4.17.1",
+    "goober": "2.0.43",
+    "preact": "10.5.14",
+    "twemoji": "^13.1.0",
+    "ws": "^8.2.3",
+    "zustand": "3.5.10"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/ws": "^8.2.0",
+    "parcel": "^2.0.1",
+    "tsc-alias": "^1.4.1",
+    "typescript": "^4.5.2"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "lib": ["es2020", "dom"],
+    "moduleResolution": "node",
+    "outDir": "dist-node",
+    "baseUrl": ".",
+    "paths": {
+      "@lib": ["./@lib"]
+    }
+  },
+  "include": ["./**/index-server.ts"]
+}
