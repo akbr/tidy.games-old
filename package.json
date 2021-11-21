@@ -12,6 +12,9 @@
   "workspaces": [
     "@lib/*"
   ],
+  "alias": {
+    "@lib": "./@lib"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "goober": "2.0.43",
