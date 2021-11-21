@@ -21,8 +21,8 @@ function requireHTTPS(req, res, next) {
   next();
 }
 
-export function startServer<T extends EngineTypesShape>(engine: Engine<T>) {
-  mountRoomServer(
+export function startServer<T extends EngineTypesShape>(engine?: Engine<T>) {
+  const refactorThis = mountRoomServer(
     //@ts-ignore
     express()
       .use(express.static(distPath))
@@ -34,5 +34,7 @@ export function startServer<T extends EngineTypesShape>(engine: Engine<T>) {
       .listen(PORT, function () {
         return console.log("Listening on " + PORT);
       })
-  )(createServer(engine));
+  );
+
+  if (engine) refactorThis(createServer(engine));
 }
