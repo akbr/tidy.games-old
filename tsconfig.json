@@ -7,12 +7,7 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "lib": ["es2020", "dom"],
-    "moduleResolution": "node",
-    "outDir": "dist-node",
-    "baseUrl": ".",
-    "paths": {
-      "@lib": ["./@lib"]
-    }
+    "moduleResolution": "node"
   },
-  "include": ["./**/index-server.ts"]
+  "include": ["./apps/**/src/**/*.ts", "./@lib/**/*.ts"]
 }

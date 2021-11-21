@@ -1,9 +1,7 @@
 import { init } from "./init";
 
 //window.location.hash = "#";
-
 let { store, server, actions } = init();
-
 /**
 
 //@ts-ignore
