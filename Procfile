@@ -1,1 +1,1 @@
-web: npm run echo
+web: node echo.js
