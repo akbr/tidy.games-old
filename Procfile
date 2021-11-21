@@ -1,0 +1,1 @@
+web: node ./dist-node/apps/$APP_NAME/src/index-server.js
