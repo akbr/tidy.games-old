@@ -1,5 +1,5 @@
 import { setup } from "goober";
-import { h, JSX } from "preact";
+import { h } from "preact";
 
 import { render } from "@lib/premix";
 import { createServer } from "@lib/socket-server";
