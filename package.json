@@ -3,12 +3,10 @@
   "author": "Aaron Rieke",
   "version": "1.0.0",
   "scripts": {
-    "start": "npm run heroku-wizard",
     "dev-wizard": "parcel ./apps/wizard/index.html",
     "dev-workshop": "parcel ./apps/workshop/index.html",
     "build-wizard": "parcel build ./apps/wizard/index.html",
-    "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "heroku-wizard": "npm run build-wizard && npm run build-servers && node ./dist-node/apps/wizard/src/index-server.js"
+    "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json"
   },
   "license": "ISC",
   "workspaces": [
