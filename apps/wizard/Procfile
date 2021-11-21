@@ -1,1 +1,1 @@
-web: npm heroku-wizard
+web: npm run heroku-wizard
