@@ -9,16 +9,13 @@
   "scripts": {
     "dev-wizard": "parcel ./apps/wizard/index.html",
     "dev-workshop": "parcel ./apps/workshop/index.html",
-    "build-wizard": "parcel build ./apps/wizard/index.html",
+    "build-wizard": "parcel build apps/wizard/index.html --no-scope-hoist",
     "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json"
   },
   "license": "ISC",
   "workspaces": [
     "@lib/*"
   ],
-  "alias": {
-    "@lib": "./@lib"
-  },
   "dependencies": {
     "express": "^4.17.1",
     "goober": "2.0.43",
