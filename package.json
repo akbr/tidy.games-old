@@ -6,10 +6,11 @@
     "npm": "8.1.0",
     "node": "16.13.0"
   },
+  "browserslist": "last 2 Chrome versions",
   "scripts": {
     "dev-wizard": "parcel ./apps/wizard/index.html",
     "dev-workshop": "parcel ./apps/workshop/index.html",
-    "build-wizard": "parcel build apps/wizard/index.html --no-scope-hoist",
+    "build-wizard": "parcel build apps/wizard/index.html",
     "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json"
   },
   "license": "ISC",
@@ -18,7 +19,7 @@
   ],
   "dependencies": {
     "express": "^4.17.1",
-    "goober": "2.0.43",
+    "goober": "2.0.41",
     "preact": "10.5.14",
     "twemoji": "^13.1.0",
     "ws": "^8.2.3",
