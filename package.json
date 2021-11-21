@@ -3,7 +3,8 @@
   "author": "Aaron Rieke",
   "version": "1.0.0",
   "engines": {
-    "npm": "8.1.0"
+    "npm": "8.1.0",
+    "node": "16.13.0"
   },
   "scripts": {
     "dev-wizard": "parcel ./apps/wizard/index.html",
