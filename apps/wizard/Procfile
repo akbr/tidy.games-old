@@ -1,1 +1,0 @@
-web: npm run build-wizard && npm run build-servers && node ./dist-node/apps/wizard/src/index-server.js

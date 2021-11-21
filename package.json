@@ -8,11 +8,12 @@
   },
   "browserslist": "last 2 Chrome versions",
   "scripts": {
-    "dev-wizard": "parcel ./apps/wizard/index.html",
-    "dev-workshop": "parcel ./apps/workshop/index.html",
-    "build-wizard": "parcel build apps/wizard/index.html",
+    "dev": "parcel ./apps/$npm_config_app_name/index.html",
+    "build-client": "parcel build apps/$npm_config_app_name/index.html",
     "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "heroku-postbuild": "echo APP WILL BUILD FROM PROCFILE BE PATIENT"
+    "deploy": "git push https://git.heroku.com/$npm_config_app_name-tidy-games.git HEAD:master",
+    "build": "npm run build-client --app_name=$APP_NAME && npm run build-servers",
+    "start": "node ./dist-node/apps/$APP_NAME/src/index-server.js"
   },
   "workspaces": [
     "@lib/*"
