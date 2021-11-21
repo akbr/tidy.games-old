@@ -3,7 +3,7 @@
   "author": "Aaron Rieke",
   "version": "1.0.0",
   "scripts": {
-    "echo": "echo PACKAGE.JSON ECHO!",
+    "start": "node echo.js",
     "dev-wizard": "parcel ./apps/wizard/index.html",
     "dev-workshop": "parcel ./apps/workshop/index.html",
     "build-wizard": "parcel build ./apps/wizard/index.html",
