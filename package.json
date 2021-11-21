@@ -5,7 +5,7 @@
   "scripts": {
     "dev-wizard": "parcel ./apps/wizard/index.html",
     "dev-workshop": "parcel ./apps/workshop/index.html",
-    "build-wizard": "parcel build ./apps/wizard/index.html",
+    "build-wizard": "parcel build ./apps/wizard/src/index.html",
     "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json"
   },
   "license": "ISC",
