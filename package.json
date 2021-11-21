@@ -12,7 +12,7 @@
     "dev-workshop": "parcel ./apps/workshop/index.html",
     "build-wizard": "parcel build apps/wizard/index.html",
     "build-servers": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "heroku-postbuild": "echo REMEMBER APP IS BUILT IN PROCFILE"
+    "heroku-postbuild": "echo APP WILL BUILD FROM PROCFILE BE PATIENT"
   },
   "workspaces": [
     "@lib/*"
