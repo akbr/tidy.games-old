@@ -1,7 +1,6 @@
 import type { WizardPropsPlus } from "./AppOuter";
 
 import { rotateArray, rotateIndex } from "@lib/array";
-
 import { Title } from "./Title";
 import { Lobby } from "./Lobby";
 import {
