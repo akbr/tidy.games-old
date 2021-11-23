@@ -7,12 +7,24 @@ type DragUpdaterProps = {
   play: (cardId: string) => void;
 };
 
+type NewProps = {
+  selector: string;
+  shouldDrag: ($el: HTMLElement) => boolean;
+  shouldResetPosition: (
+    $el: HTMLElement,
+    initialX: number,
+    initialY: number
+  ) => boolean;
+  onClick: ($el: HTMLElement) => void;
+};
+
 export const dragUpdater = (
   el: HTMLElement,
-  { isInHand, isValidPlay, play }: DragUpdaterProps,
+  { isInHand = () => true, isValidPlay, play }: DragUpdaterProps,
   prev?: DragUpdaterProps
 ) => {
   if (prev) return;
+
   let active: HTMLElement | false = false;
   let animating = false;
 
@@ -54,7 +66,7 @@ export const dragUpdater = (
       let locData = e.type === "touchmove" ? e.touches[0] : e;
       style(active, {
         x: locData.pageX - initialDragX + originalTranslateX,
-        y: locData.pageY - initialDragY + originalTranslateY
+        y: locData.pageY - initialDragY + originalTranslateY,
       });
     }
   }
@@ -76,7 +88,7 @@ export const dragUpdater = (
       animating = true;
       style(active, vector, {
         duration: 200,
-        easing: "ease"
+        easing: "ease",
       }).finished.then(() => {
         animating = false;
       });

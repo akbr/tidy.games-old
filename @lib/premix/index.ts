@@ -21,7 +21,7 @@ export function render(
   if (statuses.length) waitFor(...statuses);
 }
 
-type Updater<T> = (
+export type Updater<T> = (
   $el: HTMLElement,
   props: T,
   prevProps?: T
@@ -32,7 +32,7 @@ export const WithUpdate = <T>({
   fn,
   children,
 }: {
-  props: T;
+  props?: T;
   fn: Updater<T>;
   children?: ComponentChildren;
 }) => {

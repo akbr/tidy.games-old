@@ -15,7 +15,6 @@ export const handUpdate = (
   $root: HTMLElement,
   {
     hand,
-    reset = false,
     appDimensions = { w: window.innerWidth, h: window.innerHeight },
     cardDimensions = { w: 80, h: 112 },
   }: HandUpdaterProps,
