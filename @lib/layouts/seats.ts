@@ -1,4 +1,4 @@
-import { Vec } from "@tldraw/vec";
+import { Vec } from "@lib/vector";
 
 const topCenter = [0.5, 0];
 const leftCenter = [0, 0.5];

@@ -19,7 +19,6 @@ export const getHandHeight = (
 export const getHandPositions = (
   children: unknown[],
   containerWidth: number,
-  containerHeight: number,
   childWidth: number,
   xPeek: number,
   yPeek: number
@@ -72,7 +71,6 @@ export const positionHand = (
     children,
     containerRect.width,
     childRect.width,
-    containerHeight,
     xPeek,
     yPeek
   );

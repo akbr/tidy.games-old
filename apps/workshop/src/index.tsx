@@ -17,7 +17,7 @@ import { Twemoji } from "@lib/components/Twemoji";
 import { Updater, WithUpdate } from "@lib/premix";
 import { PositionSeats } from "@lib/components/PositionSeats";
 import { positionHand } from "@lib/layouts/hand";
-import { dragUpdater } from "@lib/card-views/dragUpdate";
+import { handleDrags } from "@lib/layouts/drag";
 // -------------------------------
 
 const Block = styled("div")`
@@ -54,7 +54,10 @@ const HandContainer = styled("div")`
 
 const WIP = () => {
   return (
-    <WithUpdate fn={dragUpdater} props={{}}>
+    <WithUpdate
+      fn={handleDrags}
+      props={{ selector: "[data-poop]", onClick: console.log }}
+    >
       <Container>
         <Table style={{ pointerEvents: "none" }}>
           <PositionSeats>
@@ -68,7 +71,7 @@ const WIP = () => {
         </Table>
         <WithUpdate fn={positionHand} props={{ anim: "initial" }}>
           <HandContainer>
-            <Card data-card-id={1} />
+            <Card data-poop={1} />
             <Card />
             <Card />
             <Card />
@@ -79,8 +82,6 @@ const WIP = () => {
     </WithUpdate>
   );
 };
-
-console.log(WIP());
 
 render(<WIP />, document.getElementById("app")!);
 

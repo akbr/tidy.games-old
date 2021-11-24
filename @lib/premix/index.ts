@@ -32,7 +32,7 @@ export const WithUpdate = <T>({
   fn,
   children,
 }: {
-  props?: T;
+  props: T;
   fn: Updater<T>;
   children?: ComponentChildren;
 }) => {
