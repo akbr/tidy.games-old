@@ -45,9 +45,11 @@ export const getHandPositions = (
 };
 
 type PositionHandProps = {
-  anim: "initial" | "mod" | void;
+  anim: "initial" | null;
   xPeek?: number;
   yPeek?: number;
+  hand: string[];
+  didRefresh?: Symbol;
 };
 
 export const positionHand = (
@@ -74,6 +76,7 @@ export const positionHand = (
     xPeek,
     yPeek
   );
+
   style($root, {
     height: containerHeight,
   });

@@ -1,9 +1,11 @@
 import { styled, keyframes } from "goober";
 
 export const DeadCenterWrapper = styled("div")`
-  height: 100%;
+  position: absolute;
   display: grid;
   place-content: center;
+  height: 100%;
+  width: 100%;
 `;
 
 export const Container = styled("div")`

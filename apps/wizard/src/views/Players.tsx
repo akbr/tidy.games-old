@@ -1,35 +1,101 @@
-import { Player } from "./types";
-import { styled, css } from "goober";
-
-import { seatRatios } from "@lib/card-views/layout";
-import { PlayerDisplay } from "./PlayerDisplay";
 import { WizardShape } from "../engine/types";
+import { styled, keyframes } from "goober";
 
-const getTranslate = (r: number) => (r === 0 ? 0 : r === 1 ? -100 : -50);
-const xOffsetAmt = 10;
-const getXOffset = (r: number) =>
-  r === 0 ? xOffsetAmt : r === 1 ? -xOffsetAmt : 0;
-const yOffsetAmt = 20;
-const getYOffset = (r: number) =>
-  r === 0 ? yOffsetAmt : r === 1 ? -yOffsetAmt - 4 : 0;
+import { getSeatCSSDirection } from "@lib/layouts/seats";
+import { PositionSeats } from "@lib/components/PositionSeats";
+import { Badge } from "@lib/components/Badge";
+import { Twemoji } from "@lib/components/Twemoji";
 
-const vecToDir = ({ x, y }: { x: number; y: number }) => {
-  if (x === 0 && y > 0) return "right";
-  if (x === 1 && y > 0) return "left";
-  if (y === 1 && x > 0) return "top";
-  return "bottom";
+import { Player } from "./types";
+import { getScore } from "../derivations";
+
+const BidInfo = styled("div")`
+  text-align: center;
+  font-size: 14px;
+`;
+export const scoreAppear = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(2) rotate(32deg);
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-15px);
+    opacity: 0;
+  }
+`;
+
+const Score = styled("div")`
+  text-shadow: 0 0 7px var(--glow-color), 0 0 10px var(--glow-color),
+    0 0 21px var(--glow-color);
+  animation: ${scoreAppear} 3.5s both;
+`;
+
+const ScorePop = ({ score }: { score: number }) => {
+  let isPositive = score > 0;
+  let strScore = isPositive ? `+${score}` : `${score}`;
+  let color = isPositive ? "blue" : "red";
+  return <Score style={{ "--glow-color": color }}>{strScore}</Score>;
 };
 
-const getPlayerPositionClass = ({ x, y }: { x: number; y: number }) =>
-  css({
-    position: "absolute",
-    left: `${x * 100}%`,
-    top: `${y * 100}%`,
-    transform: `translate(
-    calc(${getTranslate(x)}% + ${getXOffset(x)}px),
-    calc(${getTranslate(y)}% + ${getYOffset(y)}px)
-    )`,
-  });
+type PlayerProps = {
+  avatar: string;
+  name: string;
+  type: WizardShape["states"]["type"];
+  bid: number | null;
+  actual: number;
+  leader: boolean;
+  active: boolean;
+  dir: "top" | "bottom" | "left" | "right";
+};
+
+export const PlayerDisplay = ({
+  avatar,
+  name,
+  type,
+  bid,
+  actual,
+  leader,
+  active,
+  dir,
+}: PlayerProps) => {
+  const info =
+    type === "play" || type === "trickEnd" || type === "turnEnd" ? (
+      <BidInfo>{`${actual} / ${bid}`}</BidInfo>
+    ) : type === "showScores" ? (
+      <ScorePop score={getScore(bid!, actual)} />
+    ) : null;
+
+  const say =
+    (type === "bid" || type === "bidEnd") && bid !== null
+      ? { dir, content: `Bid: ${bid}` }
+      : null;
+
+  return (
+    <div style={{ padding: "16px 8px 20px 8px" }}>
+      <Badge
+        avatar={avatar}
+        name={name}
+        info={info}
+        tl={leader ? <Twemoji char={"1️⃣"} size={18} /> : null}
+        tr={active ? <Twemoji char={"⏳"} size={18} /> : null}
+        say={say}
+      />
+    </div>
+  );
+};
 
 type PlayersProps = {
   type: WizardShape["states"]["type"];
@@ -46,12 +112,9 @@ export const Players = ({
   actuals,
   trickLeader,
 }: PlayersProps) => {
-  const positions = seatRatios[players.length - 1];
-
-  const playerNodes = players.map(({ avatar, name, active }, idx) => {
-    const dir = positions[idx][0];
-    return (
-      <div className={getPlayerPositionClass(dir)} key={idx}>
+  return (
+    <PositionSeats>
+      {players.map(({ avatar, name, active }, idx) => (
         <PlayerDisplay
           {...{
             name,
@@ -61,12 +124,10 @@ export const Players = ({
             bid: bids[idx],
             actual: actuals[idx],
             leader: idx === trickLeader,
-            dir: vecToDir(dir),
+            dir: getSeatCSSDirection(players.length, idx),
           }}
         />
-      </div>
-    );
-  });
-
-  return <>{playerNodes}</>;
+      ))}
+    </PositionSeats>
+  );
 };

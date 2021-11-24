@@ -21,8 +21,8 @@ export const seatRatios = [
 const ratio2DirectionVec = ([ratioX, ratioY]: number[]) => {
   if (ratioX === 0) return [1, 0];
   if (ratioX === 1) return [-1, 0];
-  if (ratioY === 0) return [0, -1];
-  /** ratioY === 1 **/ return [0, 1];
+  if (ratioY === 0) return [0, 1];
+  /** ratioY === 1 **/ return [0, -1];
 };
 
 const ratio2CSSDirection = ([x, y]: number[]) => {

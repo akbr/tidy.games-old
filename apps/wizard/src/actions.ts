@@ -1,5 +1,4 @@
 import { AppInterface } from "@lib/socket-server-interface/types";
-import { getHandHeight } from "@lib/card-views/handUpdate.calc";
 
 import { WizardShape } from "./engine/types";
 import { engine } from "./engine";
@@ -53,18 +52,6 @@ export const createActions = ({
       } else {
         return true;
       }
-    },
-    getScreenDimensions,
-    getTableDimensions: (inputWidth: number, inputHeight: number) => {
-      let { room, state } = getState();
-      let hand = room && state ? state.hands[room.seatIndex] : [];
-      let screen = getScreenDimensions(inputWidth, inputHeight);
-      let space = getHandHeight(screen, hand.length || 1);
-
-      return {
-        w: screen.w,
-        h: screen.h - space,
-      };
     },
     exit: () => {
       store.setState({ state: null, room: null });

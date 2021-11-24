@@ -53,6 +53,7 @@ export type PlayProps = {
   startPlayer: number;
   playerIndex: number;
   winningIndex?: number;
+  didRefresh?: Symbol;
 };
 
 const getChildArray = ($el: HTMLElement) =>
@@ -92,8 +93,7 @@ export const positionTrick = (
   const lastIndex = trick.length - 1;
   const $lastCard = trick[lastIndex];
   const lastPosition = getTransforms($lastCard);
-
-  style(trick, (i) => playedCoords[i]);
+  style(trick, (i) => ({ ...playedCoords[i], r: 0 }));
 
   // Bail if resize
   // --------------
@@ -111,9 +111,8 @@ export const positionTrick = (
         playedByUser
           ? lastPosition
           : {
-              x: heldCoords[lastIndex].x + randomBetween(-10, 10),
-              y: heldCoords[lastIndex].y + randomBetween(-10, 10),
-              r: randomBetween(-25, 25),
+              x: heldCoords[lastIndex].x,
+              y: heldCoords[lastIndex].y,
             }
       );
     },

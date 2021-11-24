@@ -8,6 +8,7 @@ import {
 } from "preact";
 import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
 import { WaitRequest } from "../timing";
+import shallow from "zustand/shallow";
 
 let waitRequests: WaitRequest[] = [];
 export function render(
@@ -55,10 +56,14 @@ export const WithUpdate = <T>({
     //@ts-ignore
     let $el = elRef.current.base ? elRef.current.base : elRef.current;
     //@ts-ignore
-    let result = fn($el, props, propsRef.current);
-    if (result) waitRequests.push(result);
+    if (!shallow(props, propsRef.current)) {
+      //@ts-ignore
+      let result = fn($el, props, propsRef.current);
+      if (result) waitRequests.push(result);
+      //@ts-ignore
+      propsRef.current = props;
+    }
     //@ts-ignore
-    propsRef.current = props;
   }, [elRef, fn, props]);
 
   return h(Fragment, null, children);
@@ -80,6 +85,17 @@ function debounce(func: Function, wait: number, immediate: boolean) {
     timeout = setTimeout(later, wait);
     if (callNow) func.apply(context, args);
   };
+}
+
+export function useRefreshOnResize(debounceMs = 300) {
+  const [_, set] = useState(Symbol());
+  useEffect(() => {
+    const update = debounce(() => set(Symbol()), debounceMs, false);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return _;
 }
 
 export function useWindowSize() {
