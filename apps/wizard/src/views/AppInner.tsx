@@ -1,5 +1,4 @@
 import { styled } from "goober";
-import { DragSurface } from "@lib/card-views/preactInterfaces";
 import { rotateArray, rotateIndex } from "@lib/array";
 
 import type { WizardPropsPlus } from "./AppOuter";
@@ -10,7 +9,7 @@ import { TableCenter } from "./TableCenter";
 import { Players } from "./Players";
 import { UiButtons } from "./UiButtons";
 import { PlayInfo } from "./PlayInfo";
-import { _HandBridge, _TrickBridge } from "./bridges";
+import { _HandBridge, _TrickBridge, _DragSurfaceBridge } from "./bridges";
 
 const GameContainer = styled("div")`
   display: flex;
@@ -97,7 +96,7 @@ export function AppInner(props: WizardPropsPlus) {
   return (
     <>
       <UiButtons {...props} />
-      <DragSurface {...{ isInHand, isValidPlay, play }}>
+      <_DragSurfaceBridge {...{ isInHand, isValidPlay, play }}>
         <GameContainer>
           <_HandBridge anim={null} hand={hand}>
             <HandArea />
@@ -129,7 +128,7 @@ export function AppInner(props: WizardPropsPlus) {
             </Fill>
           </TableArea>
         </GameContainer>
-      </DragSurface>
+      </_DragSurfaceBridge>
     </>
   );
 }
