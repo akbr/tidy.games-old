@@ -7,7 +7,7 @@ import {
   Fragment,
 } from "preact";
 import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
-import { WaitRequest } from "../timing";
+import { WaitRequest, debounce } from "@lib/timing";
 import shallow from "zustand/shallow";
 
 let waitRequests: WaitRequest[] = [];
@@ -68,24 +68,6 @@ export const WithUpdate = <T>({
 
   return h(Fragment, null, children);
 };
-
-function debounce(func: Function, wait: number, immediate: boolean) {
-  var timeout: number | undefined;
-  return function () {
-    //@ts-ignore
-    var context = this,
-      args = arguments;
-    var later = function () {
-      timeout = undefined;
-      if (!immediate) func.apply(context, args);
-    };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    //@ts-ignore
-    timeout = setTimeout(later, wait);
-    if (callNow) func.apply(context, args);
-  };
-}
 
 export function useRefreshOnResize(debounceMs = 300) {
   const [_, set] = useState(Symbol());
