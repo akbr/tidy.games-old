@@ -5,12 +5,13 @@ import { MiniCard } from "@lib/card-views/MiniCard";
 import { getTuple } from "../engine/logic";
 
 const InfoContainer = styled("div")`
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  position: absolute;
   padding: 10px;
-  right: 0;
   text-align: right;
   background-color: rgba(0, 0, 0, 0.15);
   border-radius: 0 0 0 6px;

@@ -51,7 +51,7 @@ export function useDidRefresh(debounceMs = 300) {
 }
 
 const WIP = () => {
-  return <Card />;
+  return <div class="bg-color-200 absolute right-0">Helo</div>;
 };
 
 render(<WIP />, document.getElementById("app")!);

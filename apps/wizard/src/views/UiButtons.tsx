@@ -62,7 +62,7 @@ export const UiButtons = ({ actions, dialogActions }: WizardPropsPlus) => {
   const openScores = () => dialogActions.set(Scorez);
 
   return (
-    <div class={`${a} ${flex} ${topMargins}`} style={{ zIndex: "500" }}>
+    <div class={`${a} ${flex} ${topMargins}`} style={{ top: 0 }}>
       <TopButton emoji={"⚙️"} label={"Settings"} open={openOptions} />
       <TopButton emoji={"🗒️"} label={"Scorepad"} open={openScores} />
     </div>

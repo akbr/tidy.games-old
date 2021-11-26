@@ -69,6 +69,15 @@ export const WithUpdate = <T>({
   return h(Fragment, null, children);
 };
 
+export function useOnResize<T>(fn: () => T) {
+  const [value, set] = useState<T>(fn());
+  useEffect(() => {
+    const update = debounce(() => set(fn()), 300, false);
+    return () => window.removeEventListener("resize", update);
+  }, [fn]);
+  return value;
+}
+
 export function useRefreshOnResize(debounceMs = 300) {
   const [_, set] = useState(Symbol());
   useEffect(() => {

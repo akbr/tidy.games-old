@@ -10,6 +10,8 @@ import { Players } from "./Players";
 import { UiButtons } from "./UiButtons";
 import { PlayInfo } from "./PlayInfo";
 import { _HandBridge, _TrickBridge, _DragSurfaceBridge } from "./bridges";
+import { useOnResize, useRefreshOnResize } from "@lib/premix";
+import { getDimensions } from "../dimensions";
 
 const GameContainer = styled("div")`
   display: flex;
@@ -19,7 +21,6 @@ const GameContainer = styled("div")`
 
 const TableArea = styled("div")`
   position: relative;
-  flex: 1 1 auto;
 `;
 
 const HandArea = styled("div")`
@@ -36,8 +37,14 @@ const Fill = styled("div")`
 `;
 
 export function AppInner(props: WizardPropsPlus) {
+  useRefreshOnResize();
+
   const { frame, actions } = props;
   const { state, room, err } = frame;
+
+  const hands = state ? state.hands : [];
+
+  const { tableDimensions } = getDimensions(hands.length);
 
   if (room === null) {
     return <Title join={actions.join} />;
@@ -84,7 +91,6 @@ export function AppInner(props: WizardPropsPlus) {
     trickLeader,
     trumpCard,
     trumpSuit,
-    hands,
   } = state;
 
   const winningIndex =
@@ -95,7 +101,26 @@ export function AppInner(props: WizardPropsPlus) {
 
   return (
     <>
+      <TableArea style={{ height: tableDimensions[1] }}>
+        <Players
+          {...{
+            type,
+            players: rotateArray(players, -seatIndex),
+            bids: rotateArray(bids, -seatIndex),
+            actuals: rotateArray(actuals, -seatIndex),
+            trickLeader: rotateIndex(numPlayers, trickLeader, -seatIndex),
+          }}
+        />
+        <TableCenter {...props} />
+      </TableArea>
+
       <UiButtons {...props} />
+      <PlayInfo {...{ bids, turn, trumpCard, trumpSuit }} />
+    </>
+  );
+}
+
+/**
       <_DragSurfaceBridge {...{ isInHand, isValidPlay, play }}>
         <GameContainer>
           <_HandBridge anim={null} hand={hand}>
@@ -123,12 +148,9 @@ export function AppInner(props: WizardPropsPlus) {
                   trickLeader: rotateIndex(numPlayers, trickLeader, -seatIndex),
                 }}
               />
-              <PlayInfo {...{ bids, turn, trumpCard, trumpSuit }} />
               <TableCenter {...props} />
             </Fill>
           </TableArea>
         </GameContainer>
       </_DragSurfaceBridge>
-    </>
-  );
-}
+ */

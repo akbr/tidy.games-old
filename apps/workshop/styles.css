@@ -1,8 +1,11 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 :root {
   --app-max-width: 700px;
   --app-min-width: 300px;
   --app-min-height: 500px;
-  --backdrop-background: #2a1b0e;
   --table-background: radial-gradient(
     circle,
     rgb(0, 133, 11) 20%,

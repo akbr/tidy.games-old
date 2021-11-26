@@ -56,7 +56,6 @@ body {
   height: 100%;
   max-width: var(--app-max-width);
   min-width: var(--app-min-width);
-  min-height: var(--app-min-height);
   background: var(--table-background);
   overflow: hidden;
   box-shadow: 23px 3px 15px rgba(0, 0, 0, 0.1),

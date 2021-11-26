@@ -54,7 +54,7 @@ export const _TrickBridge: FunctionalComponent<_TrickBridgeProps> = ({
       }}
     >
       <WithUpdate fn={insertCards} props={trick}>
-        {children}
+        <div />
       </WithUpdate>
     </WithUpdate>
   );
