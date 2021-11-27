@@ -4,7 +4,6 @@ import { ComponentChildren, FunctionalComponent } from "preact";
 import { useCallback, useState } from "preact/hooks";
 
 import { ErrorReciever } from "@lib/components/ErrorReceiver";
-import { DeadCenterWrapper } from "@lib/components/common";
 import { DialogOf } from "@lib/components/Dialog";
 
 import { AppInner } from "./AppInner";
@@ -48,12 +47,7 @@ export function AppOuter(props: WizardProps) {
 
   const { err, connected } = frame;
 
-  if (!connected)
-    return (
-      <DeadCenterWrapper>
-        <div style={{ fontSize: "50px" }}>🔌</div>
-      </DeadCenterWrapper>
-    );
+  if (!connected) return <div style={{ fontSize: "50px" }}>🔌</div>;
 
   const enhancedProps = { ...props, dialogActions };
 

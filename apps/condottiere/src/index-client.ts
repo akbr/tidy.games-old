@@ -1,1 +1,2 @@
-console.log("Hello from Condottiere!");
+import workshop from "./workshop";
+workshop;
