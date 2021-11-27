@@ -1,20 +1,9 @@
 import { Player } from "./types";
 
-import { styled, keyframes } from "goober";
-import {
-  Fieldset,
-  Container,
-  Button,
-  Throb,
-  Appear,
-} from "@lib/components/common";
+import { styled } from "goober";
+import { Fieldset, Button, Appear } from "@lib/components/common";
 import { PreGameWrapper } from "./Title";
 import { Badge } from "@lib/components/Badge";
-
-const RoomInfoContainer = styled("div")`
-  display: inline-flex;
-  gap: 1em;
-`;
 
 const PlayerBox = styled(Fieldset)`
   display: flex;
@@ -34,16 +23,6 @@ const Link = styled("input")`
   &:hover {
     background-color: yellow;
     color: black;
-  }
-`;
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
   }
 `;
 
@@ -70,12 +49,12 @@ export const Lobby = ({
 
   return (
     <PreGameWrapper>
-      <Container style={{ gap: "1.5em", marginTop: "1.5em" }}>
-        <Throb style={{ color: "yellow" }}>Waiting for players...</Throb>
-        <RoomInfoContainer>
+      <div class="flex flex-col items-center gap-4 mt-6">
+        <div class="animate-bounce text-yellow-200">Waiting for players...</div>
+        <div class="inline-flex gap-4">
           <PlayerBox>
             <legend>✏️ Code:</legend>
-            <div style={{ textAlign: "center" }}>
+            <div class="text-center">
               <Link
                 readonly
                 size={roomId.length - 2}
@@ -89,8 +68,7 @@ export const Lobby = ({
           </PlayerBox>
           <PlayerBox>
             <legend>⚡ Direct link:</legend>
-            <div style={{ textAlign: "center" }}>
-              <span></span>
+            <div class="text-center">
               <Link
                 readonly
                 size={url.length - 2}
@@ -102,7 +80,7 @@ export const Lobby = ({
               />
             </div>
           </PlayerBox>
-        </RoomInfoContainer>
+        </div>
         <PlayerBox>
           <legend>Players in room:</legend>
           {players.map((player, idx) => {
@@ -116,11 +94,7 @@ export const Lobby = ({
               <Appear>
                 <div style={style}>
                   <Badge {...player}></Badge>
-                  {isPlayer && (
-                    <div style={{ textAlign: "center", fontSize: "14px" }}>
-                      YOU
-                    </div>
-                  )}
+                  {isPlayer && <div class="text-center text-base">YOU</div>}
                 </div>
               </Appear>
             );
@@ -135,7 +109,7 @@ export const Lobby = ({
           <div>The game creator will start the game. Hang tight!</div>
         )}
         <Button onClick={exit}>Exit</Button>
-      </Container>
+      </div>
     </PreGameWrapper>
   );
 };

@@ -1,19 +1,5 @@
 import { styled, keyframes } from "goober";
 
-export const DeadCenterWrapper = styled("div")`
-  position: absolute;
-  display: grid;
-  place-content: center;
-  height: 100%;
-  width: 100%;
-`;
-
-export const Container = styled("div")`
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-`;
-
 export const Fieldset = styled("fieldset")`
   display: flex;
   align-items: center;

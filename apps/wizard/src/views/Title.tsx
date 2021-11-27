@@ -1,27 +1,13 @@
 import { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import { styled } from "goober";
-import { Fieldset, Button, Container } from "@lib/components/common";
-
-const TitleWrapper = styled("div")`
-  margin-top: 1em;
-  width: min-content;
-`;
+import { Fieldset, Button } from "@lib/components/common";
 
 const Banner = styled("div")`
   display: inline-block;
   text-align: center;
   filter: drop-shadow(0px 0px 0.15em blue);
-  font-family: "Berkshire Swash", cursive;
   font-size: 6em;
-`;
-
-const SubBanner = styled("div")`
-  display: inline-block;
-  width: 100%;
-  margin-top: -1em;
-  padding-right: 0.25em;
-  text-align: right;
 `;
 
 const GameInput = styled("input")`
@@ -34,18 +20,13 @@ const GameInput = styled("input")`
   height: 1.75em;
 `;
 
-const Footer = styled("div")`
-  position: absolute;
-  font-size: 12px;
-  bottom: 0.6em;
-  right: 0.6em;
-`;
-
 const TitleBlock = () => (
-  <TitleWrapper>
+  <div class="w-min mt-4">
     <Banner>Wizard</Banner>
-    <SubBanner>Bid your way to victory!</SubBanner>
-  </TitleWrapper>
+    <div class="inline-block w-full -mt-4 pr-2 text-right">
+      Bid your way to victory!
+    </div>
+  </div>
 );
 
 type JoinProps = { join: (id?: string) => void };
@@ -53,7 +34,7 @@ type JoinProps = { join: (id?: string) => void };
 const Interface = ({ join }: JoinProps) => {
   const [code, setCode] = useState("");
   return (
-    <Container style={{ gap: "1em" }}>
+    <div class="flex flex-col items-center">
       <Button onClick={() => join()}>New Game</Button>
       <h2> OR </h2>
       <Fieldset>
@@ -75,7 +56,7 @@ const Interface = ({ join }: JoinProps) => {
           Join Game
         </Button>
       </Fieldset>
-    </Container>
+    </div>
   );
 };
 
@@ -86,14 +67,14 @@ export const PreGameWrapper = ({
 }) => {
   return (
     <>
-      <Container>
+      <div class="flex flex-col items-center">
         <TitleBlock />
-      </Container>
+      </div>
       {children}
-      <Footer style={{ textAlign: "right" }}>
+      <div class="absolute bottom-0 right-0 text-sm text-right p-2">
         <div>Wizard by Ken Fisher.</div>
         <div>App by Aaron Rieke.</div>
-      </Footer>
+      </div>
     </>
   );
 };
