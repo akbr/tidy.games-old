@@ -1,21 +1,7 @@
-import { styled } from "goober";
 import { getBidsDiff, getBidsStatus } from "../derivations";
 import { Appear } from "@lib/components/common";
 import { MiniCard } from "@lib/card-views/MiniCard";
 import { getTuple } from "../engine/logic";
-
-const InfoContainer = styled("div")`
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 10px;
-  text-align: right;
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 0 0 0 6px;
-`;
 
 const getDisplayCard = (trumpCard: string | null, trumpSuit: string | null) => {
   if (trumpCard === null) return null;
@@ -44,24 +30,35 @@ export const PlayInfo = ({
 }: PlayInfoProps) => {
   const bidsComplete = getBidsStatus(bids);
   const bidsDiff = getBidsDiff(bids, turn);
-
   const displayCard = getDisplayCard(trumpCard, trumpSuit);
 
   return (
-    <InfoContainer>
-      <div>Round: {turn}</div>
-      {displayCard && <Appear>{displayCard}</Appear>}
-      {bidsComplete && (
+    <div class="flex flex-col gap-0 text-right p-2 bg-black bg-opacity-30 rounded-bl-md">
+      <div>
+        Round: <span class="font-semibold">{turn}</span>
+      </div>
+      {displayCard && (
         <Appear>
-          {bidsDiff === 0 ? (
-            <div>Bids: Even</div>
-          ) : bidsDiff > 0 ? (
-            <div>Bids: +{bidsDiff}</div>
-          ) : (
-            <div>Bids: -{Math.abs(bidsDiff)}</div>
-          )}
+          <div>Trump:</div>
+          <div class="pb-2">{displayCard}</div>
         </Appear>
       )}
-    </InfoContainer>
+      {bidsComplete && (
+        <Appear>
+          {
+            <div>
+              Bids:{" "}
+              <span class="font-semibold">
+                {bidsDiff === 0
+                  ? "Even"
+                  : bidsDiff > 0
+                  ? `+${bidsDiff}`
+                  : `-${Math.abs(bidsDiff)}`}
+              </span>
+            </div>
+          }
+        </Appear>
+      )}
+    </div>
   );
 };

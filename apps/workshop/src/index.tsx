@@ -29,29 +29,8 @@ const Card = styled("div")`
   border: 2px solid black;
 `;
 
-export function useDidRefresh(debounceMs = 300) {
-  const prevToken = useRef<Symbol>(null);
-  const [currToken, set] = useState<Symbol>(Symbol());
-  const didRefresh = currToken !== prevToken.current;
-  prevToken.current = currToken;
-
-  useEffect(() => {
-    const update = debounce(
-      () => {
-        set(Symbol());
-      },
-      debounceMs,
-      false
-    );
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  return didRefresh;
-}
-
 const WIP = () => {
-  return <div class="bg-color-200 absolute right-0">Helo</div>;
+  return <div class="bg-green-700 absolute right-0">Helo</div>;
 };
 
 render(<WIP />, document.getElementById("app")!);

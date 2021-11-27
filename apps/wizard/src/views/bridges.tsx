@@ -1,11 +1,11 @@
 import { FunctionalComponent } from "preact";
+import { WithUpdate } from "@lib/premix";
 import { memoizedCreate } from "@lib/card-views/createCard";
 import { positionHand } from "@lib/layouts/hand";
-import { useRefreshOnResize, WithUpdate } from "@lib/premix";
 import { positionTrick } from "@lib/layouts/trick";
 import { dragUpdater } from "@lib/card-views/dragUpdate";
 
-export const insertCards = ($el: HTMLElement, cardIds: string[]) => {
+const insertCards = ($el: HTMLElement, cardIds: string[]) => {
   $el.innerHTML = "";
   if (cardIds.length > 0) {
     cardIds.forEach((id) => $el.appendChild(memoizedCreate(id)));
@@ -14,51 +14,31 @@ export const insertCards = ($el: HTMLElement, cardIds: string[]) => {
 
 type _HandBridgeProps = Parameters<typeof positionHand>[1] & { hand: string[] };
 
-export const _HandBridge: FunctionalComponent<_HandBridgeProps> = ({
-  children,
-  hand,
-  anim,
-}) => {
-  const didRefresh = useRefreshOnResize();
-  return (
-    <WithUpdate fn={positionHand} props={{ anim, didRefresh, hand }}>
-      <WithUpdate fn={insertCards} props={hand}>
-        {children}
-      </WithUpdate>
-    </WithUpdate>
-  );
+const handUpdate = ($el: HTMLElement, props: _HandBridgeProps) => {
+  insertCards($el, props.hand);
+  positionHand($el, props);
 };
+
+export const _HandBridge: FunctionalComponent<_HandBridgeProps> = (props) => (
+  <WithUpdate fn={handUpdate} props={{ ...props }}>
+    <div id="hand" class="absolute top-0" />
+  </WithUpdate>
+);
+
 type _TrickBridgeProps = Parameters<typeof positionTrick>[1] & {
   trick: string[];
 };
 
-export const _TrickBridge: FunctionalComponent<_TrickBridgeProps> = ({
-  numPlayers,
-  startPlayer,
-  playerIndex,
-  winningIndex,
-  trick,
-  children,
-}) => {
-  const didRefresh = useRefreshOnResize();
-  return (
-    <WithUpdate
-      fn={positionTrick}
-      props={{
-        numPlayers,
-        startPlayer,
-        playerIndex,
-        winningIndex,
-        trick,
-        didRefresh,
-      }}
-    >
-      <WithUpdate fn={insertCards} props={trick}>
-        <div />
-      </WithUpdate>
-    </WithUpdate>
-  );
+const trickUpdate = ($el: HTMLElement, props: _TrickBridgeProps) => {
+  insertCards($el, props.trick);
+  positionTrick($el, props);
 };
+
+export const _TrickBridge: FunctionalComponent<_TrickBridgeProps> = (props) => (
+  <WithUpdate fn={trickUpdate} props={{ ...props }}>
+    <div id="trick" class="absolute top-0" />
+  </WithUpdate>
+);
 
 type DragSurfaceProps = {
   isInHand: (cardId?: string) => boolean;
@@ -74,7 +54,9 @@ export const _DragSurfaceBridge: FunctionalComponent<DragSurfaceProps> = ({
 }) => {
   return (
     <WithUpdate fn={dragUpdater} props={{ isInHand, play, isValidPlay }}>
-      <div style={{ height: "100%" }}>{children}</div>
+      <div id="gameArea" style={{ height: "100%" }}>
+        {children}
+      </div>
     </WithUpdate>
   );
 };

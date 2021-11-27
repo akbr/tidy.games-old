@@ -1,7 +1,7 @@
 import { getHandHeight } from "@lib/layouts/hand";
 
-const xPeek = 35;
-const yPeek = 50;
+export const xPeek = 35;
+export const yPeek = 60;
 
 export const getDimensions = (handLength: number) => {
   const { width, height } = document

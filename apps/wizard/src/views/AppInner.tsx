@@ -1,4 +1,4 @@
-import { styled } from "goober";
+import { useRefreshOnResize } from "@lib/premix";
 import { rotateArray, rotateIndex } from "@lib/array";
 
 import type { WizardPropsPlus } from "./AppOuter";
@@ -10,31 +10,8 @@ import { Players } from "./Players";
 import { UiButtons } from "./UiButtons";
 import { PlayInfo } from "./PlayInfo";
 import { _HandBridge, _TrickBridge, _DragSurfaceBridge } from "./bridges";
-import { useOnResize, useRefreshOnResize } from "@lib/premix";
-import { getDimensions } from "../dimensions";
 
-const GameContainer = styled("div")`
-  display: flex;
-  flex-direction: column-reverse;
-  height: 100%;
-`;
-
-const TableArea = styled("div")`
-  position: relative;
-`;
-
-const HandArea = styled("div")`
-  position: relative;
-  flex: 0 1 auto;
-  margin-top: 10px;
-  min-height: 50px;
-`;
-
-const Fill = styled("div")`
-  position: absolute;
-  height: 100%;
-  width: 100%;
-`;
+import { getDimensions, xPeek, yPeek } from "../dimensions";
 
 export function AppInner(props: WizardPropsPlus) {
   useRefreshOnResize();
@@ -44,7 +21,8 @@ export function AppInner(props: WizardPropsPlus) {
 
   const hands = state ? state.hands : [];
 
-  const { tableDimensions } = getDimensions(hands.length);
+  const { tableDimensions, appDimensions } = getDimensions(hands.length);
+  const [_, tableHeight] = tableDimensions;
 
   if (room === null) {
     return <Title join={actions.join} />;
@@ -100,8 +78,8 @@ export function AppInner(props: WizardPropsPlus) {
   const hand = hands[seatIndex];
 
   return (
-    <>
-      <TableArea style={{ height: tableDimensions[1] }}>
+    <_DragSurfaceBridge {...{ isInHand, isValidPlay, play }}>
+      <div id="tableArea" class={"relative"} style={{ height: tableHeight }}>
         <Players
           {...{
             type,
@@ -111,46 +89,33 @@ export function AppInner(props: WizardPropsPlus) {
             trickLeader: rotateIndex(numPlayers, trickLeader, -seatIndex),
           }}
         />
-        <TableCenter {...props} />
-      </TableArea>
-
-      <UiButtons {...props} />
-      <PlayInfo {...{ bids, turn, trumpCard, trumpSuit }} />
-    </>
+        <div
+          id="tableCenter"
+          className="absolute top-1/2 left-1/2 transform-centering"
+        >
+          <TableCenter {...props} />
+        </div>
+      </div>
+      <div id="uiButtons" class="absolute top-0">
+        <UiButtons {...props} />
+      </div>
+      <div id="playInfo" class="absolute top-0 right-0">
+        <PlayInfo {...{ bids, turn, trumpCard, trumpSuit }} />
+      </div>
+      <_HandBridge
+        containerDimensions={appDimensions}
+        xPeek={xPeek}
+        yPeek={yPeek}
+        anim={null}
+        hand={hand}
+      />
+      <_TrickBridge
+        containerDimensions={tableDimensions}
+        trick={trick}
+        numPlayers={numPlayers}
+        startPlayer={trickLeader}
+        playerIndex={seatIndex}
+      />
+    </_DragSurfaceBridge>
   );
 }
-
-/**
-      <_DragSurfaceBridge {...{ isInHand, isValidPlay, play }}>
-        <GameContainer>
-          <_HandBridge anim={null} hand={hand}>
-            <HandArea />
-          </_HandBridge>
-          <TableArea>
-            <_TrickBridge
-              {...{
-                trick,
-                numPlayers,
-                playerIndex: seatIndex,
-                startPlayer: trickLeader,
-                winningIndex,
-              }}
-            >
-              <Fill />
-            </_TrickBridge>
-            <Fill>
-              <Players
-                {...{
-                  type,
-                  players: rotateArray(players, -seatIndex),
-                  bids: rotateArray(bids, -seatIndex),
-                  actuals: rotateArray(actuals, -seatIndex),
-                  trickLeader: rotateIndex(numPlayers, trickLeader, -seatIndex),
-                }}
-              />
-              <TableCenter {...props} />
-            </Fill>
-          </TableArea>
-        </GameContainer>
-      </_DragSurfaceBridge>
- */

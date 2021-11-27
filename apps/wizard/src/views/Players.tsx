@@ -84,7 +84,7 @@ export const PlayerDisplay = ({
       : null;
 
   return (
-    <div style={{ padding: "16px 8px 20px 8px" }}>
+    <div style={{ padding: "20px 10px 24px 10px" }}>
       <Badge
         avatar={avatar}
         name={name}

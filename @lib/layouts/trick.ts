@@ -1,24 +1,23 @@
 import { Vec, toXY } from "@lib/vector";
-import { getSeatPosition, getSeatDirectionVector } from "./seats";
-
 import { style } from "@lib/stylus";
 import { getTransforms } from "@lib/stylus/transforms";
 import { seq } from "@lib/timing";
 import { randomBetween } from "@lib/random";
 import { rotateIndex } from "@lib/array";
-import shallow from "zustand/shallow";
+
+import { getSeatPosition, getSeatDirectionVector } from "./seats";
 
 export const getHeldCoords = (
   numPlayers: number,
   seatIndex: number,
   parentDim: number[],
-  childDim: number[]
+  childDimensions: number[]
 ) => {
   const buffer = [1.3, 1.3];
   const seat = getSeatPosition(numPlayers, seatIndex, parentDim);
   const direction = getSeatDirectionVector(numPlayers, seatIndex);
-  const heldOffset = Vec.mulV(Vec.mul(direction, -1), childDim, buffer);
-  const cardCenter = Vec.mul(childDim, -0.5);
+  const heldOffset = Vec.mulV(Vec.mul(direction, -1), childDimensions, buffer);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
 
   return toXY(Vec.add(seat, heldOffset, cardCenter));
 };
@@ -27,7 +26,7 @@ export const getPlayedCoords = (
   numPlayers: number,
   seatIndex: number,
   parentDim: number[],
-  childDim: number[]
+  childDimensions: number[]
 ) => {
   const minYRatio = 0.33;
   const seat = getSeatPosition(numPlayers, seatIndex, parentDim);
@@ -38,22 +37,20 @@ export const getPlayedCoords = (
     parentDim[1] * minYRatio,
   ]);
   const padding = Vec.mulV(Vec.mul(direction, -1), [
-    childDim[0] + 12,
-    childDim[1] / 2,
+    childDimensions[0] + 12,
+    childDimensions[1] / 2,
   ]);
-  const cardCenter = Vec.mul(childDim, -0.5);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
 
   return toXY(Vec.add(seat, playOffset, padding, cardCenter));
 };
 
-// ----- !!!!!-------
-
 export type PlayProps = {
+  containerDimensions: number[];
   numPlayers: number;
   startPlayer: number;
   playerIndex: number;
   winningIndex?: number;
-  didRefresh?: Symbol;
 };
 
 const getChildArray = ($el: HTMLElement) =>
@@ -65,14 +62,18 @@ const getDimensionVec = ($el: HTMLElement) => {
 
 export const positionTrick = (
   $parent: HTMLElement,
-  { numPlayers, startPlayer, playerIndex, winningIndex }: PlayProps,
-  prev?: PlayProps
+  {
+    containerDimensions,
+    numPlayers,
+    startPlayer,
+    playerIndex,
+    winningIndex,
+  }: PlayProps
 ) => {
   const trick = getChildArray($parent);
   if (trick.length === 0) return;
 
-  const parentDim = getDimensionVec($parent);
-  const childDim = getDimensionVec(trick[0]);
+  const childDimensions = getDimensionVec(trick[0]);
 
   // Calculate positions
   // -------------------
@@ -81,11 +82,11 @@ export const positionTrick = (
   );
 
   const playedCoords = modSeatIndexes.map((idx) =>
-    getPlayedCoords(numPlayers, idx, parentDim, childDim)
+    getPlayedCoords(numPlayers, idx, containerDimensions, childDimensions)
   );
 
   const heldCoords = modSeatIndexes.map((idx) =>
-    getHeldCoords(numPlayers, idx, parentDim, childDim)
+    getHeldCoords(numPlayers, idx, containerDimensions, childDimensions)
   );
 
   // Basic reset

@@ -18,11 +18,12 @@ export const getHandHeight = (
 
 export const getHandPositions = (
   children: unknown[],
-  containerWidth: number,
+  containerDimensions: number[],
   childWidth: number,
   xPeek: number,
   yPeek: number
 ) => {
+  const [containerWidth, containerHeight] = containerDimensions;
   const maxInRow = getMaxInRow(containerWidth, xPeek);
   const numRows = getNumRows(children.length, containerWidth, xPeek);
 
@@ -35,7 +36,7 @@ export const getHandPositions = (
 
     const pos = {
       x: (idx % maxInRow) * xPeek,
-      y: rowNum * yPeek,
+      y: containerHeight - (rowNum + 1) * yPeek,
     };
     const numInRow = isFirstRow ? maxInRow - shortBy : maxInRow;
     const adj = containerWidth - (xPeek * (numInRow - 1) + childWidth);
@@ -45,41 +46,29 @@ export const getHandPositions = (
 };
 
 type PositionHandProps = {
+  containerDimensions: number[];
   anim: "initial" | null;
   xPeek?: number;
   yPeek?: number;
-  hand: string[];
-  didRefresh?: Symbol;
 };
 
 export const positionHand = (
   $root: HTMLElement,
-  { anim, xPeek = 35, yPeek = 50 }: PositionHandProps
+  { anim, containerDimensions, xPeek = 35, yPeek = 60 }: PositionHandProps
 ) => {
   const children = Array.from($root.childNodes) as HTMLElement[];
   if (children.length === 0) return;
 
-  const containerRect = $root.getBoundingClientRect();
   const childRect = children[0].getBoundingClientRect();
-
-  const containerHeight = getHandHeight(
-    children.length,
-    containerRect.width,
-    xPeek,
-    yPeek
-  );
+  const [containerWidth, containerHeight] = containerDimensions;
 
   let positions = getHandPositions(
     children,
-    containerRect.width,
+    containerDimensions,
     childRect.width,
     xPeek,
     yPeek
   );
-
-  style($root, {
-    height: containerHeight,
-  });
 
   style(children, {
     position: "absolute",

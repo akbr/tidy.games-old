@@ -1,16 +1,8 @@
 import type { WizardProps } from "./types";
 import type { WizardPropsPlus } from "./AppOuter";
-
-import { css } from "goober";
-import { a, topMargins } from "@lib/components/commonCss";
 import { EmojiButton, Button } from "@lib/components/common";
 
 import { ScoreTable } from "./ScoreTable";
-
-let flex = css`
-  display: flex;
-  gap: 0.2em;
-`;
 
 const TopButton = ({
   open,
@@ -62,7 +54,7 @@ export const UiButtons = ({ actions, dialogActions }: WizardPropsPlus) => {
   const openScores = () => dialogActions.set(Scorez);
 
   return (
-    <div class={`${a} ${flex} ${topMargins}`} style={{ top: 0 }}>
+    <div class="flex gap-1 p-1">
       <TopButton emoji={"⚙️"} label={"Settings"} open={openOptions} />
       <TopButton emoji={"🗒️"} label={"Scorepad"} open={openScores} />
     </div>
