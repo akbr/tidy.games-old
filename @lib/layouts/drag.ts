@@ -7,13 +7,13 @@ import { getTransforms } from "@lib/stylus/transforms";
  * - onClick should only be fired if there was no dragging
  */
 
-type HandleDragProps = {
+export type HandleDragProps = {
   selector: string;
-  shouldDrag?: ($el: HTMLElement) => boolean;
-  shouldResetPosition?: (
+  shouldDrag?: ($target: HTMLElement) => boolean;
+  onDrop?: (
     $el: HTMLElement,
-    initialX: number,
-    initialY: number
+    initialCoords: number[],
+    pageCoords: number[]
   ) => boolean;
   onClick?: ($el: HTMLElement) => void;
 };
@@ -26,7 +26,7 @@ export const handleDrags = (
   {
     selector,
     shouldDrag = returnTrue,
-    shouldResetPosition = returnTrue,
+    onDrop = returnTrue,
     onClick = noop,
   }: HandleDragProps,
   prev?: HandleDragProps
@@ -84,13 +84,15 @@ export const handleDrags = (
     if (!active) return;
 
     //@ts-ignore
-    //let locData = e.type === "touchend" ? e.changedTouches[0] : e;
-    //let yAmtMoved = initialDragY - locData.pageY;
-    //let playAttempt = yAmtMoved > 100;
+    let locData = e.type === "touchend" ? e.changedTouches[0] : e;
 
-    const shouldReset = shouldResetPosition(active, initialDragX, initialDragY);
+    const shouldRevert = !onDrop(
+      active,
+      [initialDragX, initialDragY],
+      [locData.pageX, locData.pageY]
+    );
 
-    if (shouldReset) {
+    if (shouldRevert) {
       animating = true;
       style(
         active,

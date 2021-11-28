@@ -9,7 +9,7 @@ import { TableCenter } from "./TableCenter";
 import { Players } from "./Players";
 import { UiButtons } from "./UiButtons";
 import { PlayInfo } from "./PlayInfo";
-import { _HandBridge, _TrickBridge, _DragSurfaceBridge } from "./bridges";
+import { _HandBridge, _TrickBridge } from "./bridges";
 
 import { getDimensions, xPeek, yPeek } from "../dimensions";
 
@@ -17,7 +17,7 @@ export function AppInner(props: WizardPropsPlus) {
   useRefreshOnResize();
 
   const { frame, actions } = props;
-  const { state, room, err } = frame;
+  const { state, room } = frame;
 
   const hands = state ? state.hands : [];
 
@@ -57,7 +57,6 @@ export function AppInner(props: WizardPropsPlus) {
   if (state.type === "turnEnd") waitFor(2000);
   if (state.type === "showScores") waitFor(3500);
 
-  const { isInHand, play, isValidPlay } = actions;
   const { seatIndex } = room;
   const {
     type,
@@ -78,7 +77,7 @@ export function AppInner(props: WizardPropsPlus) {
   const hand = hands[seatIndex];
 
   return (
-    <_DragSurfaceBridge {...{ isInHand, isValidPlay, play }}>
+    <>
       <div id="tableArea" class={"relative"} style={{ height: tableHeight }}>
         <Players
           {...{
@@ -115,7 +114,8 @@ export function AppInner(props: WizardPropsPlus) {
         numPlayers={numPlayers}
         startPlayer={trickLeader}
         playerIndex={seatIndex}
+        winningIndex={winningIndex}
       />
-    </_DragSurfaceBridge>
+    </>
   );
 }

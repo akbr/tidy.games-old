@@ -33,22 +33,22 @@ export const PlayInfo = ({
   const displayCard = getDisplayCard(trumpCard, trumpSuit);
 
   return (
-    <div class="flex flex-col gap-0 text-right p-2 bg-black bg-opacity-30 rounded-bl-md">
+    <div class="flex flex-col gap-0 text-right p-2 bg-black bg-opacity-20 rounded-bl-md">
       <div>
-        Round: <span class="font-semibold">{turn}</span>
+        Round: <span>{turn}</span>
       </div>
       {displayCard && (
         <Appear>
           <div>Trump:</div>
-          <div class="pb-2">{displayCard}</div>
+          <div>{displayCard}</div>
         </Appear>
       )}
       {bidsComplete && (
         <Appear>
           {
-            <div>
+            <div class="pt-2">
               Bids:{" "}
-              <span class="font-semibold">
+              <span>
                 {bidsDiff === 0
                   ? "Even"
                   : bidsDiff > 0

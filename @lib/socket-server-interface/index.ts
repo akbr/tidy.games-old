@@ -1,13 +1,14 @@
 import type { EngineTypesShape, ServerApi } from "../socket-server/types";
-import type { AppInterface } from "./types";
+import type { AppAPI } from "./types";
 
 import { createSocketManager } from "../socket/socketManager";
 import { createStore } from "./createStore";
+import { createMeter } from "@lib/timing";
 
-export function createInterface<ET extends EngineTypesShape>(
+export const createAppAPI = <ET extends EngineTypesShape>(
   server: ServerApi<ET> | string
-): AppInterface<ET> {
-  const manager = createSocketManager(server);
-  const { store, meter } = createStore<ET>(manager);
-  return { manager, store, meter };
-}
+): AppAPI<ET> => ({
+  manager: createSocketManager(server),
+  meter: createMeter(),
+  store: createStore(),
+});

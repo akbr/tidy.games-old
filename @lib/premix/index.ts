@@ -59,24 +59,16 @@ export const WithUpdate = <T>({
     if (!shallow(props, propsRef.current)) {
       //@ts-ignore
       let result = fn($el, props, propsRef.current);
-      if (result) waitRequests.push(result);
+      if (result) {
+        waitRequests.push(result);
+      }
       //@ts-ignore
       propsRef.current = props;
     }
-    //@ts-ignore
   }, [elRef, fn, props]);
 
   return h(Fragment, null, children);
 };
-
-export function useOnResize<T>(fn: () => T) {
-  const [value, set] = useState<T>(fn());
-  useEffect(() => {
-    const update = debounce(() => set(fn()), 300, false);
-    return () => window.removeEventListener("resize", update);
-  }, [fn]);
-  return value;
-}
 
 export function useRefreshOnResize(debounceMs = 300) {
   const [_, set] = useState(Symbol());
@@ -87,21 +79,4 @@ export function useRefreshOnResize(debounceMs = 300) {
   }, []);
 
   return _;
-}
-
-export function useWindowSize() {
-  let [value, setValue] = useState([window.innerWidth, window.innerHeight]);
-
-  useEffect(() => {
-    const update = debounce(
-      () => setValue([window.innerWidth, window.innerHeight]),
-      300,
-      false
-    );
-
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
-  return value;
 }

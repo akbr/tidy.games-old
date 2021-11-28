@@ -123,7 +123,9 @@ export const positionTrick = (
       }),
   ];
 
-  if (winningIndex === undefined) return seq(timeline);
+  if (winningIndex === undefined) {
+    return seq(timeline);
+  }
 
   // Win animation
   // -------------
