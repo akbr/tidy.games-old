@@ -6,13 +6,7 @@ import { Appear } from "@lib/components/common";
 import { BidInput } from "./BidInput";
 import { TrumpInput } from "./TrumpInput";
 
-const LimitWidth = styled("div")`
-  text-align: center;
-  max-width: 135px;
-`;
-
-export function TableCenter({ frame, actions }: WizardProps) {
-  const { state, room } = frame;
+export function TableCenter({ state, room, actions }: WizardProps) {
   if (!state || !room) return null;
 
   const active = room.seatIndex === state.activePlayer;

@@ -30,7 +30,7 @@ body {
   color: white;
 }
 
-#app {
+#root {
   position: relative;
   margin: auto;
   height: 100%;

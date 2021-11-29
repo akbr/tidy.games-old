@@ -1,21 +1,4 @@
-import { styled } from "goober";
 import { useState, useCallback, useEffect } from "preact/hooks";
-
-const Container = styled("div")`
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`;
-
-const Error = styled("div")`
-  display: inline-block;
-  background-color: red;
-  padding: 6px;
-  border-radius: 4px;
-`;
 
 type Err = { type: string; data: string };
 
@@ -33,7 +16,7 @@ const TimedError = ({
     return () => clearTimeout(timeout);
   }, [err]);
 
-  return <Error>{err.data}</Error>;
+  return <div class="inline-block bg-red-600 p-2 rounded-lg">{err.data}</div>;
 };
 
 export const ErrorReciever = ({ err }: { err: Err | null }) => {
@@ -50,10 +33,10 @@ export const ErrorReciever = ({ err }: { err: Err | null }) => {
   );
 
   return (
-    <Container>
+    <div class="flex flex-col gap-4">
       {errors.map((err) => (
         <TimedError key={err} err={err} remove={remove} />
       ))}
-    </Container>
+    </div>
   );
 };

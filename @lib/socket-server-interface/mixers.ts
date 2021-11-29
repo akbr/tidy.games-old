@@ -1,5 +1,49 @@
 import type { EngineTypesShape } from "../socket-server/types";
-import type { AppAPI } from "./types";
+import type { ServerSlice } from "./storeSlices";
+import type { AppPrimitives } from "./types";
+
+export function mixServerRes<
+  ET extends EngineTypesShape,
+  StateSlice extends ServerSlice<ET>
+>({ store, manager, meter }: AppPrimitives<ET, StateSlice>) {
+  store.subscribe((frame) => {
+    if (frame.connected === false || frame.state === null) {
+      meter.empty();
+    }
+  });
+
+  meter.subscribe((state) => {
+    store.setState({ state, err: null });
+  });
+
+  manager.onData = (res) => {
+    if (res[0] === "engine") {
+      let state = res[1];
+      meter.push(state);
+    }
+
+    if (res[0] === "engineMsg") {
+      let err = res[1];
+      store.setState({ err });
+    }
+
+    if (res[0] === "server") {
+      let room = res[1].data;
+      store.setState({ room, err: null });
+    }
+
+    if (res[0] === "serverMsg") {
+      let err = res[1];
+      store.setState({ err });
+    }
+  };
+
+  manager.onStatus = (connected) => {
+    store.setState({ connected });
+  };
+}
+
+// ---
 
 type HashStatus = {
   id?: string;
@@ -32,10 +76,10 @@ export function getHash(): HashStatus {
   return { id, playerIndex };
 }
 
-export function mixHash<ET extends EngineTypesShape>({
-  manager,
-  store,
-}: AppAPI<ET>) {
+export function mixHash<
+  ET extends EngineTypesShape,
+  Slice extends ServerSlice<ET>
+>({ store, manager }: AppPrimitives<ET, Slice>) {
   function onHashChange() {
     let { id, playerIndex } = getHash();
     let { room } = store.getState();

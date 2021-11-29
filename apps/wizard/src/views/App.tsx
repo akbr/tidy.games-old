@@ -1,30 +1,28 @@
+import type { AppProps } from "./types";
+
 import { useRefreshOnResize } from "@lib/premix";
 import { rotateArray, rotateIndex } from "@lib/array";
-
-import type { WizardPropsPlus } from "./AppOuter";
+import { getDimensions, xPeek, yPeek } from "../dimensions";
 
 import { Title } from "./Title";
 import { Lobby } from "./Lobby";
+
 import { TableCenter } from "./TableCenter";
 import { Players } from "./Players";
 import { UiButtons } from "./UiButtons";
 import { PlayInfo } from "./PlayInfo";
 import { _HandBridge, _TrickBridge } from "./bridges";
 
-import { getDimensions, xPeek, yPeek } from "../dimensions";
-
-export function AppInner(props: WizardPropsPlus) {
+export function App(props: AppProps) {
   useRefreshOnResize();
 
-  const { frame, actions } = props;
-  const { state, room } = frame;
+  const { connected, room, actions, state } = props;
 
-  const hands = state ? state.hands : [];
+  if (!connected) {
+    return <div style={{ fontSize: "50px" }}>🔌</div>;
+  }
 
-  const { tableDimensions, appDimensions } = getDimensions(hands.length);
-  const [_, tableHeight] = tableDimensions;
-
-  if (room === null) {
+  if (!room) {
     return <Title join={actions.join} />;
   }
 
@@ -35,12 +33,12 @@ export function AppInner(props: WizardPropsPlus) {
     active: idx === activePlayer,
   }));
 
-  if (state === null) {
+  if (!state) {
     return (
       <Lobby
+        roomId={room.id}
         players={players}
         isAdmin={room.seatIndex === 0}
-        roomId={room.id}
         playerIndex={room.seatIndex}
         start={actions.start}
         exit={actions.exit}
@@ -70,14 +68,26 @@ export function AppInner(props: WizardPropsPlus) {
     trumpSuit,
   } = state;
 
+  const hand = state.hands[seatIndex];
+
+  const { tableDimensions, appDimensions } = getDimensions(hand.length);
+  const tableHeight = tableDimensions[1];
+
   const winningIndex =
     state.type === "trickEnd"
       ? rotateIndex(state.numPlayers, state.trickWinner, -state.trickLeader)
       : undefined;
-  const hand = hands[seatIndex];
 
   return (
     <>
+      <_TrickBridge
+        containerDimensions={tableDimensions}
+        trick={trick}
+        numPlayers={numPlayers}
+        startPlayer={trickLeader}
+        playerIndex={seatIndex}
+        winningIndex={winningIndex}
+      />
       <div id="tableArea" class={"relative"} style={{ height: tableHeight }}>
         <Players
           {...{
@@ -107,14 +117,6 @@ export function AppInner(props: WizardPropsPlus) {
         yPeek={yPeek}
         anim={null}
         hand={hand}
-      />
-      <_TrickBridge
-        containerDimensions={tableDimensions}
-        trick={trick}
-        numPlayers={numPlayers}
-        startPlayer={trickLeader}
-        playerIndex={seatIndex}
-        winningIndex={winningIndex}
       />
     </>
   );

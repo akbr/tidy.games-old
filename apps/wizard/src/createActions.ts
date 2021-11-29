@@ -1,5 +1,6 @@
-import { AppAPI } from "@lib/socket-server-interface/types";
+import { AppPrimitives } from "@lib/socket-server-interface/types";
 import { WizardShape } from "./engine/types";
+import { StoreShape } from "./types";
 
 export type Actions = ReturnType<typeof createActions>;
 
@@ -7,7 +8,7 @@ export const createActions = ({
   store,
   manager,
   meter,
-}: AppAPI<WizardShape>) => {
+}: AppPrimitives<WizardShape, StoreShape>) => {
   const { send } = manager;
   const { waitFor } = meter;
 
@@ -25,6 +26,9 @@ export const createActions = ({
     exit: () => {
       store.setState({ state: null, room: null });
       manager.openSocket();
+    },
+    setDialog: (dialog: StoreShape["dialog"]) => {
+      store.setState({ dialog });
     },
     waitFor,
   };

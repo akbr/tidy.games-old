@@ -5,7 +5,7 @@ export const yPeek = 60;
 
 export const getDimensions = (handLength: number) => {
   const { width, height } = document
-    .getElementById("app")!
+    .getElementById("root")!
     .getBoundingClientRect();
 
   const handHeight = getHandHeight(handLength, width, xPeek, yPeek);

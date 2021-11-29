@@ -1,41 +1,71 @@
+if (process.env.NODE_ENV === "development") require("preact/debug");
+
 import { setup } from "goober";
 import { h } from "preact";
 import { render } from "@lib/premix";
 import { createServer } from "@lib/socket-server";
-import { createAppAPI } from "@lib/socket-server-interface";
-import { mixHash } from "@lib/socket-server-interface/mixHash";
-import { mixServerRes } from "@lib/socket-server-interface/mixServerRes";
+import { createAppPrimitives } from "@lib/socket-server-interface";
+import {
+  createDialogSlice,
+  createServerSlice,
+} from "@lib/socket-server-interface/storeSlices";
+import { mixServerRes, mixHash } from "@lib/socket-server-interface/mixers";
 import { initDragListeners } from "./initDragListeners";
 import { createActions } from "./createActions";
 
-import { WizardShape } from "./engine/types";
 import { engine } from "./engine";
 
-import { AppOuter } from "./views/AppOuter";
+import { App } from "./views/App";
+import { StoreShape } from "./types";
+import { Errors } from "./views/Errors";
+import shallow from "zustand/shallow";
 
 export function init() {
+  // Init goober
   setup(h);
 
+  // Create a server
   const isDev = location.port === "1234";
   const server = isDev
     ? createServer(engine)
     : location.origin.replace(/^http/, "ws");
 
-  const appApi = createAppAPI<WizardShape>(server);
-  let { store, meter, manager } = appApi;
+  // Create a basic set of objects
+  const storeTemplate = {
+    ...createServerSlice(),
+    ...createDialogSlice(),
+  } as StoreShape;
 
-  const $appRoot = document.getElementById("app")!;
+  const appApi = createAppPrimitives(server, storeTemplate);
+  const { store, manager, meter } = appApi;
 
-  initDragListeners(appApi, $appRoot);
-
+  // Create the derivative stuff needed for views
   const actions = createActions(appApi);
 
-  store.subscribe((frame, prevFrame) => {
-    render(h(AppOuter, { frame, prevFrame, actions }), $appRoot, meter.waitFor);
+  // Set up the views
+  const $app = document.getElementById("app")!;
+  store.subscribe(({ state, room, connected }, prev) => {
+    if (
+      shallow(
+        { state, room, connected },
+        { state: prev.state, room: prev.room, connected: prev.connected }
+      )
+    )
+      return;
+    render(h(App, { state, room, connected, actions }), $app, meter.waitFor);
   });
 
+  const $errors = document.getElementById("errors")!;
+  store.subscribe(({ err }) => {
+    render(h(Errors, { err }), $errors, meter.waitFor);
+  });
+
+  // Open a connection to the server
+  // (this API is questionable)
   manager.openSocket();
 
+  // Add the functionality
+  initDragListeners(appApi, $app);
   mixServerRes(appApi);
   mixHash(appApi);
 

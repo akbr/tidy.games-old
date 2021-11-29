@@ -22,7 +22,14 @@
   </head>
 
   <body>
-    <div id="app"></div>
+    <div id="root">
+      <div id="app" class="absolute w-full h-full"></div>
+      <div
+        id="dialogs"
+        class="absolute w-full h-full pointer-events-none"
+      ></div>
+      <div id="errors"></div>
+    </div>
     <svg
       aria-hidden="true"
       style="position: absolute; width: 0; height: 0; overflow: hidden"

@@ -5,15 +5,15 @@ import type {
   InputsWith,
 } from "../socket-server/types";
 import type { Meter } from "../timing";
-import type { Store } from "./createStore";
+import { StoreApi } from "zustand";
 
 export type ManagerWith<ET extends EngineTypesShape> = SocketManager<
   InputsWith<ET>,
   OutputsWith<ET>
 >;
 
-export type AppAPI<ET extends EngineTypesShape> = {
+export type AppPrimitives<ET extends EngineTypesShape, Slice extends object> = {
   manager: ManagerWith<ET>;
-  store: Store<ET>;
   meter: Meter<ET["states"]>;
+  store: StoreApi<Slice>;
 };

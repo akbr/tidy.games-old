@@ -40,22 +40,3 @@ function useDialog(props: WizardProps) {
     dialogActions: { set, close },
   };
 }
-
-export function AppOuter(props: WizardProps) {
-  const { frame } = props;
-  const { Dialog, dialogActions } = useDialog(props);
-
-  const { err, connected } = frame;
-
-  if (!connected) return <div style={{ fontSize: "50px" }}>🔌</div>;
-
-  const enhancedProps = { ...props, dialogActions };
-
-  return (
-    <>
-      {Dialog}
-      <AppInner {...enhancedProps} />
-      <ErrorReciever err={err} />
-    </>
-  );
-}
