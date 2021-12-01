@@ -1,5 +1,5 @@
 {
-  "name": "@lib/socket-server",
+  "name": "@lib/client-setup",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

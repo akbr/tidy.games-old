@@ -1,4 +1,4 @@
-import { WizardEngine } from "./types";
+import type { WizardEngine } from "./types";
 import { getInitialState, reducer } from "./reducer";
 import { createBot } from "./createBot";
 

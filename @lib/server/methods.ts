@@ -1,28 +1,22 @@
-import type {
-  EngineTypesShape,
-  ServerContext,
-  ServerSocket,
-  BotSocket,
-  Room,
-} from "./types";
+import type { EngineTypes } from "../engine/types";
+import type { ServerContext, Room, ServerSocket, BotSocket } from ".";
 
 import { getRandomRoomID } from "./utils";
 
-export const createRoom = <ET extends EngineTypesShape>(
+export const createRoom = <ET extends EngineTypes>(
   { engine, rooms }: ServerContext<ET>,
   id: string
 ) => {
-  const room: Room<ET> = {
+  rooms.set(id, {
     id,
     seats: [],
     spectators: [],
     state: engine.autoStart ? engine.getInitialState(0) : false,
-  };
-  rooms.set(id, room);
-  return room;
+  });
+  return rooms.get(id) as Room<ET>;
 };
 
-export const getRoomForSocket = <ET extends EngineTypesShape>(
+export const getRoomForSocket = <ET extends EngineTypes>(
   { rooms, sockets }: ServerContext<ET>,
   socket: ServerSocket<ET>
 ) => {
@@ -36,7 +30,7 @@ export const getRoomForSocket = <ET extends EngineTypesShape>(
 
 const avatars = ["🦊", "🐷", "🐔", "🐻", "🐭", "🦁"];
 const botAvatar = "🤖";
-export const broadcastRoomStatus = <ET extends EngineTypesShape>(
+export const broadcastRoomStatus = <ET extends EngineTypes>(
   { botSockets }: ServerContext<ET>,
   { id, seats, spectators, state }: Room<ET>
 ) => {
@@ -69,7 +63,7 @@ export const broadcastRoomStatus = <ET extends EngineTypesShape>(
   });
 };
 
-export const joinRoom = <ET extends EngineTypesShape>(
+export const joinRoom = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   socket: ServerSocket<ET>,
   id?: string,
@@ -142,7 +136,7 @@ export const joinRoom = <ET extends EngineTypesShape>(
   return addSocket();
 };
 
-export const createBot = <ET extends EngineTypesShape>(
+export const createBot = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   id: string,
   options?: ET["botOptions"]
@@ -193,7 +187,7 @@ export const createBot = <ET extends EngineTypesShape>(
   ]);
 };
 
-export const leaveRoom = <ET extends EngineTypesShape>(
+export const leaveRoom = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   socket: ServerSocket<ET>
 ) => {
@@ -232,7 +226,7 @@ export const leaveRoom = <ET extends EngineTypesShape>(
   }
 };
 
-export const broadcastStateUpdate = <ET extends EngineTypesShape>(
+export const broadcastStateUpdate = <ET extends EngineTypes>(
   { engine }: ServerContext<ET>,
   room: Room<ET>
 ) => {
@@ -247,7 +241,7 @@ export const broadcastStateUpdate = <ET extends EngineTypesShape>(
   });
 };
 
-export const updateThroughReducer = <ET extends EngineTypesShape>(
+export const updateThroughReducer = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   room: Room<ET>,
   socket: ServerSocket<ET>,
@@ -282,7 +276,7 @@ export const updateThroughReducer = <ET extends EngineTypesShape>(
   broadcastStateUpdate(ctx, room);
 };
 
-export const recurseThroughReducer = <ET extends EngineTypesShape>(
+export const recurseThroughReducer = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   room: Room<ET>
 ): void => {

@@ -1,9 +1,6 @@
-import type {
-  Engine,
-  EngineTypesShape,
-  ServerApi,
-  ServerContext,
-} from "./types";
+import type { EngineTypes, Engine } from "../engine/types";
+import { Socket } from "@lib/socket/types";
+import type { ServerApi, ServerOutputs, ServerInputs } from "./types";
 
 import {
   getRoomForSocket,
@@ -13,9 +10,34 @@ import {
   broadcastStateUpdate,
   updateThroughReducer,
   recurseThroughReducer,
-} from "./serverFns";
+} from "./methods";
 
-export function createServer<ET extends EngineTypesShape>(engine: Engine<ET>) {
+export type ServerSocket<ET extends EngineTypes> = Socket<
+  ServerOutputs<ET>,
+  ServerInputs<ET>
+>;
+
+export type BotSocket<ET extends EngineTypes> = Socket<
+  ServerInputs<ET>,
+  ServerOutputs<ET>
+>;
+
+export type Room<ET extends EngineTypes> = {
+  id: string;
+  seats: (ServerSocket<ET> | false)[];
+  spectators: ServerSocket<ET>[];
+  state: ET["states"] | false;
+};
+
+export type ServerContext<ET extends EngineTypes> = {
+  engine: Engine<ET>;
+  rooms: Map<string, Room<ET>>;
+  sockets: Map<ServerSocket<ET>, string>;
+  botSockets: Set<ServerSocket<ET>>;
+  api: ServerApi<ET>;
+};
+
+export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
   const api = {} as ServerApi<ET>;
 
   const ctx: ServerContext<ET> = {

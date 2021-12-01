@@ -1,35 +1,27 @@
-import { AppPrimitives } from "@lib/socket-server-interface/types";
+import { AppPrimitives } from "@lib/client-setup/";
 import { WizardShape } from "./engine/types";
-import { StoreShape } from "./types";
+
+import {
+  createServerActions,
+  createDialogActions,
+} from "@lib/client-setup/storeSlices";
 
 export type Actions = ReturnType<typeof createActions>;
 
-export const createActions = ({
-  store,
-  manager,
-  meter,
-}: AppPrimitives<WizardShape, StoreShape>) => {
-  const { send } = manager;
-  const { waitFor } = meter;
+export const createActions = (api: AppPrimitives<WizardShape>) => {
+  const { send } = api.manager;
+
+  const stock = {
+    waitFor: api.meter.waitFor,
+    ...createServerActions(api),
+    ...createDialogActions(api),
+  };
 
   return {
-    join: (id?: string) => {
-      //@ts-ignore
-      send(["server", { type: "join", data: { id } }]);
-    },
-    start: () => send(["server", { type: "start" }]),
-    addBot: () => send(["server", { type: "addBot" }]),
+    ...stock,
     bid: (num: number) => send(["engine", { type: "bid", data: num }]),
     selectTrump: (suit: string) =>
       send(["engine", { type: "selectTrump", data: suit }]),
     play: (cardId: string) => send(["engine", { type: "play", data: cardId }]),
-    exit: () => {
-      store.setState({ state: null, room: null });
-      manager.openSocket();
-    },
-    setDialog: (dialog: StoreShape["dialog"]) => {
-      store.setState({ dialog });
-    },
-    waitFor,
   };
 };

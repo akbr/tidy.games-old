@@ -1,4 +1,4 @@
-import type { AppProps } from "./types";
+import type { AppProps } from "../types";
 
 import { useRefreshOnResize } from "@lib/premix";
 import { rotateArray, rotateIndex } from "@lib/array";
@@ -70,7 +70,7 @@ export function App(props: AppProps) {
 
   const hand = state.hands[seatIndex];
 
-  const { tableDimensions, appDimensions } = getDimensions(hand.length);
+  const { tableDimensions, appDimensions } = getDimensions(hand.length || 1);
   const tableHeight = tableDimensions[1];
 
   const winningIndex =

@@ -1,16 +1,11 @@
 import { WizardShape } from "./engine/types";
 import { Actions } from "./createActions";
-import {
-  ServerSlice,
-  DialogSlice as DialogSliceTemplate,
-} from "@lib/socket-server-interface/storeSlices";
+import { ServerState, StoreState } from "@lib/client-setup/";
 
-export type StoreShape = AppSlice & DialogSlice;
-export type AppSlice = ServerSlice<WizardShape>;
-export type DialogSlice = DialogSliceTemplate<AppProps>;
-
-export type AppProps = Omit<ServerSlice<WizardShape>, "err"> & {
+export type AppProps = Omit<ServerState<WizardShape>, "err"> & {
   actions: Actions;
 };
-export type ErrorsProps = Pick<ServerSlice<WizardShape>, "err">;
-export type DialogProps = DialogSlice;
+export type ErrProps = Pick<ServerState<WizardShape>, "err">;
+export type DialogProps = Pick<StoreState<WizardShape>, "state" | "dialog"> & {
+  actions: Actions;
+};

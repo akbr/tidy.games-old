@@ -1,4 +1,4 @@
-import { AppAPI } from "@lib/socket-server-interface/types";
+import { AppPrimitives } from "@lib/client-setup/";
 import { WizardShape } from "./engine/types";
 
 export const getBidsStatus = (bids: (number | null)[]) => !bids.includes(null);
@@ -10,8 +10,8 @@ export const getScore = (bid: number, actual: number) => {
   return diff === 0 ? bid * 10 + 20 : diff * -10;
 };
 
-export const getHand = (store: AppAPI<WizardShape>["store"]) => {
-  let { state, room } = store.getState();
+export const getHand = (store: AppPrimitives<WizardShape>["store"]) => {
+  let { state, room } = store.get((x) => x);
   return !room || !state ? [] : state.hands[room.seatIndex];
 };
 

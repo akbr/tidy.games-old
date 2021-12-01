@@ -1,10 +1,10 @@
-import type { Socket, Server } from "../socket/types";
+import type { Socket, SocketServer } from "./types";
 
 function async(fn: () => unknown) {
   Promise.resolve().then(fn);
 }
 
-export function createLocalSocket<I, O>(server: Server<I, O>) {
+export function createLocalSocket<I, O>(server: SocketServer<I, O>) {
   let clientSocket: Socket<I, O>;
   let serverSocket: Socket<O, I>;
   let connected = false;

@@ -1,4 +1,4 @@
-import { Engine } from "@lib/socket-server/types";
+import { Engine } from "@lib/engine/types";
 
 export type WizardShape = {
   states:

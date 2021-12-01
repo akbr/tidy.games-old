@@ -6,7 +6,7 @@ export interface Socket<I, O> {
   onmessage?: (output: O) => void;
 }
 
-export interface Server<I, O> {
+export interface SocketServer<I, O> {
   onOpen: (socket: Socket<O, I>) => void;
   onClose: (socket: Socket<O, I>) => void;
   onInput: (socket: Socket<O, I>, action: I) => void;

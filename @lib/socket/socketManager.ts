@@ -1,4 +1,4 @@
-import type { Socket, Server } from "./types";
+import type { Socket, SocketServer } from "./types";
 import { createWebSocket } from "./webSocket";
 import { createLocalSocket } from "./localSocket";
 
@@ -11,7 +11,7 @@ export interface SocketManager<I, O> {
   onStatus: (status: boolean) => void;
 }
 
-export function createSocketManager<I, O>(arg: Server<I, O> | string) {
+export function createSocketManager<I, O>(arg: SocketServer<I, O> | string) {
   let currentSocket: Socket<I, O> | false = false;
   let currentSocketStatus: boolean;
   let sendBuffer: I[];

@@ -1,11 +1,11 @@
-import { AppPrimitives } from "@lib/socket-server-interface/types";
+import { AppPrimitives } from "@lib/client-setup";
 import { getHand } from "./derivations";
 import { handleDrags } from "@lib/layouts/drag";
-import { ServerSlice } from "@lib/socket-server-interface/storeSlices";
-import { EngineTypesShape } from "@lib/socket-server/types";
+import { ServerSlice } from "@lib/client-setup/storeSlices";
+import { EngineTypes } from "@lib/engine/types";
 
 export const initDragListeners = <
-  ET extends EngineTypesShape,
+  ET extends EngineTypes,
   Slice extends ServerSlice<ET>
 >(
   { store, manager }: AppPrimitives<ET, Slice>,
@@ -17,6 +17,7 @@ export const initDragListeners = <
     shouldDrag: ($target) => {
       let cardEl = $target.closest(selector) as HTMLElement;
       if (!cardEl || !(typeof cardEl.dataset.cardId === "string")) return false;
+      //@ts-ignore
       let hands = getHand(store);
       if (!hands.includes(cardEl.dataset.cardId)) return false;
       return true;
