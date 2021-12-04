@@ -1,30 +1,8 @@
-import type { WizardProps } from "./types";
-import type { WizardPropsPlus } from "./AppOuter";
-import { EmojiButton, Button } from "@lib/components/common";
-
+import type { AppProps, DialogProps } from "./types";
+import { Twemoji } from "@lib/components/Twemoji";
 import { ScoreTable } from "./ScoreTable";
 
-const TopButton = ({
-  open,
-  emoji,
-  label,
-}: {
-  open: () => void;
-  emoji: string;
-  label: string;
-}) => {
-  return (
-    <EmojiButton onClick={open}>
-      <span role="img" aria-label={label}>
-        {emoji}
-      </span>
-    </EmojiButton>
-  );
-};
-
-function Scorez({ frame }: WizardProps) {
-  const { state, room } = frame;
-
+function Scorez({ state, room }: DialogProps) {
   if (room && state) {
     return (
       <div style={{ display: "grid", placeContent: "center" }}>
@@ -36,27 +14,23 @@ function Scorez({ frame }: WizardProps) {
       </div>
     );
   }
-  return null;
+  return <div>No scores yet!</div>;
 }
 
-export const UiButtons = ({ actions, dialogActions }: WizardPropsPlus) => {
-  const openOptions = () =>
-    dialogActions.set(
-      <Button
-        onClick={() => {
-          actions.exit();
-          dialogActions.close();
-        }}
-      >
-        Exit
-      </Button>
-    );
-  const openScores = () => dialogActions.set(Scorez);
+export const UiButtons = ({ actions }: AppProps) => {
+  const { setDialog } = actions;
 
   return (
-    <div class="flex gap-1 p-1">
-      <TopButton emoji={"⚙️"} label={"Settings"} open={openOptions} />
-      <TopButton emoji={"🗒️"} label={"Scorepad"} open={openScores} />
+    <div class="flex gap-2 p-2">
+      <div
+        class="cursor-pointer"
+        onClick={() => setDialog(<div>Options!</div>)}
+      >
+        <Twemoji char={"⚙️"} size={36} />
+      </div>
+      <div class="cursor-pointer" onClick={() => setDialog(Scorez)}>
+        <Twemoji char={"🗒️"} size={36} />
+      </div>
     </div>
   );
 };

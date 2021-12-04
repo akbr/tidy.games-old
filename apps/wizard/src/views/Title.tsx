@@ -34,7 +34,7 @@ type JoinProps = { join: (id?: string) => void };
 const Interface = ({ join }: JoinProps) => {
   const [code, setCode] = useState("");
   return (
-    <div class="flex flex-col items-center">
+    <div class="flex flex-col items-center gap-4">
       <Button onClick={() => join()}>New Game</Button>
       <h2> OR </h2>
       <Fieldset>

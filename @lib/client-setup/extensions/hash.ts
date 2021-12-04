@@ -1,6 +1,6 @@
 import type { EngineTypes } from "@lib/engine/types";
-import type { ServerSlice } from "./storeSlices";
-import type { AppPrimitives } from "./";
+import type { ServerSlice } from "./server";
+import type { AppPrimitives } from "../";
 
 type HashStatus = {
   id?: string;

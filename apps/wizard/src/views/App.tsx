@@ -1,4 +1,4 @@
-import type { AppProps } from "../types";
+import type { AppProps } from "./types";
 
 import { useRefreshOnResize } from "@lib/premix";
 import { rotateArray, rotateIndex } from "@lib/array";

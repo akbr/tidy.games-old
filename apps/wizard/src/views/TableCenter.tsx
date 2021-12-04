@@ -1,12 +1,10 @@
-import { styled } from "goober";
-import { WizardProps } from "./types";
+import { AppProps } from "./types";
 
-import { DeadCenterWrapper } from "@lib/components/common";
 import { Appear } from "@lib/components/common";
 import { BidInput } from "./BidInput";
 import { TrumpInput } from "./TrumpInput";
 
-export function TableCenter({ state, room, actions }: WizardProps) {
+export function TableCenter({ state, room, actions }: AppProps) {
   if (!state || !room) return null;
 
   const active = room.seatIndex === state.activePlayer;

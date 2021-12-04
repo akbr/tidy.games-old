@@ -33,7 +33,7 @@ export const PlayInfo = ({
   const displayCard = getDisplayCard(trumpCard, trumpSuit);
 
   return (
-    <div class="flex flex-col gap-0 text-right p-2 bg-black bg-opacity-20 rounded-bl-md">
+    <div class="flex flex-col gap-1 text-right p-2 bg-black bg-opacity-20 rounded-bl-md">
       <div>
         Round: <span>{turn}</span>
       </div>
@@ -46,7 +46,7 @@ export const PlayInfo = ({
       {bidsComplete && (
         <Appear>
           {
-            <div class="pt-2">
+            <div class="pt-1">
               Bids:{" "}
               <span>
                 {bidsDiff === 0

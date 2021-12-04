@@ -1,3 +1,5 @@
+if (process.env.NODE_ENV === "development") require("preact/debug");
+
 import { setup, styled, css, keyframes } from "goober";
 import { ComponentChildren, FunctionalComponent, h, render } from "preact";
 import {
@@ -9,63 +11,83 @@ import {
   useEffect,
 } from "preact/hooks";
 
+import { PositionSeats } from "@lib/components/PositionSeats";
 import { Twemoji } from "@lib/components/Twemoji";
+import { spec } from "@lib/premix";
 
 setup(h);
 
+const EntryContainer = spec(
+  <div class="inline-flex items-center w-[42px] h-[24px]" />
+);
+const EntryNumber = spec(
+  <div class="flex content-center text-[14px] ml-1 w-full" />
+);
 const Entry = ({ char = "X", num = 0 }: { char: string; num: number }) => {
   const opacity = num === 0 ? 0.3 : 1;
   return (
-    <div class="inline-flex items-center w-[42px] h-[24px]" style={{ opacity }}>
+    <EntryContainer style={{ opacity }}>
       <Twemoji char={char} size={18} />
-      <div class="flex content-center text-[14px] ml-1 w-full">x{num}</div>
-    </div>
+      <EntryNumber>x{num}</EntryNumber>
+    </EntryContainer>
   );
 };
 
-const playArea = "flex flex-col border border-white rounded";
-const row = "flex justify-around items-center p-1";
-const modifiersRow = `${row} bg-black bg-opacity-20`;
-const total = "flex items-center p-1 bg-red-600 rounded-md";
+const PlayArea = spec(
+  <div class="flex flex-col border border-white rounded" />
+);
+const Row = spec(<div class="flex justify-around items-center p-1" />);
+const Total = spec(<div class="flex items-center p-1 bg-red-600 rounded-md" />);
 
 const CardMat = () => {
   return (
-    <div class={playArea}>
-      <div class={modifiersRow}>
+    <PlayArea>
+      <Row class="bg-black bg-opacity-20">
         <Entry char="🥁" num={1} />
         <Entry char="❄️" num={0} />
-        <div class={total}>30</div>
-      </div>
-      <div class={row}>
+        <Total>30</Total>
+      </Row>
+      <Row>
         <Entry char="1️⃣" num={1} />
         <Entry char="2️⃣" num={2} />
         <Entry char="3️⃣" num={0} />
-      </div>
-      <div class={row}>
+      </Row>
+      <Row>
         <Entry char="4️⃣" num={1} />
         <Entry char="5️⃣" num={0} />
         <Entry char="6️⃣" num={1} />
-      </div>
-      <div class={row}>
+      </Row>
+      <Row>
         <Entry char="🔟" num={0} />
         <Entry char="🗡️" num={0} />
         <Entry char="💨" num={0} />
-      </div>
-    </div>
+      </Row>
+    </PlayArea>
   );
 };
 
-const WIP = () => {
+const PlayerMatContainer = spec(<div class="w-[160px]" />);
+const BottomStuff = spec(<div class="flex items-center justify-around mt-1" />);
+const Mat = () => {
   return (
-    <div class="w-[160px]">
+    <PlayerMatContainer>
       <CardMat />
-      <div class="flex items-center justify-around mt-1">
+      <BottomStuff>
         <div>Meety</div>
         <Entry char="🎴" num={12} />
-      </div>
-    </div>
+      </BottomStuff>
+    </PlayerMatContainer>
   );
 };
+
+const WIP = () => (
+  <PositionSeats>
+    <Mat />
+    <Mat />
+    <Mat />
+    <Mat />
+  </PositionSeats>
+);
 
 let $app = document.getElementById("app")!;
 render(<WIP />, $app);

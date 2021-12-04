@@ -1,18 +1,12 @@
 import { EngineTypes } from "@lib/engine/types";
 import { ServerApi, ServerOutputs, ServerInputs } from "@lib/server/types";
-import { createMeter, Meter } from "@lib/timing";
 import { createSocketManager, SocketManager } from "@lib/socket/socketManager";
+import { createMeter, Meter } from "@lib/timing";
 import { createStore, StoreApi } from "@lib/store";
 
-import {
-  createServerSlice,
-  connectServerSlice,
-  createDialogSlice,
-  ServerSlice,
-  DialogSlice,
-} from "./storeSlices";
-
-import { connectHashListener } from "./mixers";
+import { server, ServerSlice } from "./extensions/server";
+import { dialog, DialogSlice } from "./extensions/dialog";
+import { connectHashListener } from "./extensions/hash";
 
 export type AppPrimitives<
   ET extends EngineTypes,
@@ -29,21 +23,27 @@ export type StoreState<ET extends EngineTypes> = ServerState<ET> &
   DialogState<ET>;
 
 export const createAppScaffolding = <ET extends EngineTypes>(
-  server: ServerApi<ET> | string
-): AppPrimitives<ET> => {
+  gameServer: ServerApi<ET> | string
+) => {
   const api = {
-    manager: createSocketManager(server),
+    manager: createSocketManager(gameServer),
     store: createStore({
-      ...createServerSlice<ET>(),
-      ...createDialogSlice<ET>(),
+      ...server.createSlice<ET>(),
+      ...dialog.createSlice<ET>(),
     }),
     meter: createMeter<ET["states"]>(),
   };
 
+  const actions = {
+    ...server.createActions(api),
+    ...dialog.createActions(api),
+    waitFor: api.meter.waitFor,
+  };
+
   api.manager.openSocket();
 
-  connectServerSlice(api);
+  server.connectSlice(api);
   connectHashListener(api);
 
-  return api;
+  return { api, actions };
 };

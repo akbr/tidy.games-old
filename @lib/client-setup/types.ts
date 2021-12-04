@@ -4,7 +4,8 @@ import { SocketManager } from "@lib/socket/socketManager";
 import type { Meter } from "@lib/timing";
 import { StoreApi } from "@lib/store";
 
-import type { ServerSlice, DialogSlice } from "./storeSlices";
+import type { ServerSlice } from "./extensions/server";
+import type { DialogSlice } from "./extensions/dialog";
 
 export type ServerState<ET extends EngineTypes> = ServerSlice<ET>;
 export type DialogState<ET extends EngineTypes> = DialogSlice<ET>;

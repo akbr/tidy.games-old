@@ -6,7 +6,6 @@ import { PositionSeats } from "@lib/components/PositionSeats";
 import { Badge } from "@lib/components/Badge";
 import { Twemoji } from "@lib/components/Twemoji";
 
-import { Player } from "./types";
 import { getScore } from "../derivations";
 
 const BidInfo = styled("div")`
@@ -97,6 +96,7 @@ export const PlayerDisplay = ({
   );
 };
 
+type Player = { avatar: string; name: string; active: boolean };
 type PlayersProps = {
   type: WizardShape["states"]["type"];
   players: Player[];

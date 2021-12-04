@@ -10,6 +10,32 @@ import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
 import { WaitRequest, debounce } from "@lib/timing";
 import shallow from "zustand/shallow";
 
+export const spec =
+  (node: any) =>
+  ({
+    children,
+    ...props
+  }: h.JSX.HTMLAttributes<EventTarget> &
+    h.JSX.SVGAttributes<SVGElement> &
+    Record<string, any> & { children?: ComponentChildren }) => {
+    let modClass: string | null = null;
+    if (props.class || props.className) {
+      modClass = node.props.class || node.props.className || "";
+      if (props.class) modClass += ` ${props.class}`;
+      if (props.className) modClass += ` ${props.className}`;
+    }
+    let modProps = {
+      ...node.props,
+      ...props,
+      class: modClass
+        ? modClass
+        : node.props.class
+        ? node.props.class
+        : node.props.className,
+    };
+    return h(node.type, modProps, children || node.props.children);
+  };
+
 let waitRequests: WaitRequest[] = [];
 export function render(
   component: ComponentChild,

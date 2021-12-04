@@ -1,5 +1,6 @@
 import { setup, styled, css, keyframes } from "goober";
-import { ComponentChildren, FunctionalComponent, h, render } from "preact";
+import { ComponentChildren, h, render, cloneElement, VNode } from "preact";
+import { spec } from "@lib/premix";
 import {
   useRef,
   Ref,
@@ -12,25 +13,14 @@ import { debounce } from "@lib/timing";
 
 setup(h);
 
+import { DialogOf } from "@lib/components/Dialog";
 // -------------------------------
 
-const Block = styled("div")`
-  width: 30px;
-  height: 30px;
-  background-color: mediumblue;
-  border: 2px solid lightblue;
-`;
-
-const Card = styled("div")`
-  position: absolute;
-  width: 80px;
-  height: 112px;
-  background-color: white;
-  border: 2px solid black;
-`;
-
 const WIP = () => {
-  return <div class="bg-green-700 absolute right-0">Helo</div>;
+  return (
+    <DialogOf close={() => console.log("hi")}>
+      <div class="text-black">!!!</div>
+    </DialogOf>
+  );
 };
-
 render(<WIP />, document.getElementById("app")!);

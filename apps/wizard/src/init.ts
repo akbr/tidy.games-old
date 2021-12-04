@@ -13,6 +13,7 @@ import { createAppScaffolding } from "@lib/client-setup";
 
 import { App } from "./views/App";
 import { Errors } from "./views/Errors";
+import { Dialog } from "./views/Dialog";
 
 export function init() {
   // Init goober
@@ -24,19 +25,30 @@ export function init() {
     ? createServer(engine)
     : location.origin.replace(/^http/, "ws");
 
-  const api = createAppScaffolding(server);
+  const { api, actions } = createAppScaffolding(server);
   const { store, meter } = api;
 
-  const actions = createActions(api);
+  const allActions = {
+    ...actions,
+    ...createActions(api),
+  };
 
   // Set up the views
   const $app = document.getElementById("app")!;
   initDragListeners(api, $app);
 
   store.subscribe(
-    ({ state, room, connected }) => ({ state, room, connected }),
+    ({ state, room, connected }) => ({
+      state,
+      room,
+      connected,
+    }),
     ({ state, room, connected }) =>
-      render(h(App, { state, room, connected, actions }), $app, meter.waitFor)
+      render(
+        h(App, { state, room, connected, actions: allActions }),
+        $app,
+        meter.waitFor
+      )
   );
 
   const $errors = document.getElementById("errors")!;
@@ -45,5 +57,12 @@ export function init() {
     (err) => render(h(Errors, { err }), $errors, meter.waitFor)
   );
 
-  return { ...api, actions, server };
+  const $dialog = document.getElementById("dialogs")!;
+  store.subscribe(
+    (x) => x,
+    (x) =>
+      render(h(Dialog, { ...x, actions: allActions }), $dialog, meter.waitFor)
+  );
+
+  return { ...api, actions: allActions, server };
 }

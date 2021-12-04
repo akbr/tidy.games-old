@@ -1,32 +1,42 @@
-import { styled } from "goober";
+import { spec } from "@lib/premix";
 import { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
-import { Button } from "./common";
 
-const Core = styled("div")`
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-`;
+const OuterContainer = spec(
+  <div class="w-full h-full flex items-center justify-center pointer-events-none" />
+);
+const ShadedBackdrop = spec(
+  <div class="absolute w-full h-full bg-black bg-opacity-40" />
+);
+const DialogContainer = spec(
+  <div class="relative max-w-[calc(85%)] max-h-[calc(85%)] bg-blue-300 rounded pointer-events-auto" />
+);
+const CloseButtonPositioner = spec(
+  <div class="absolute rounded top-[-9px] right-[-9px] bg-red-700 cursor-pointer" />
+);
+const CloseButtonSVG = spec(
+  <svg
+    stroke="currentColor"
+    fill="currentColor"
+    stroke-width="0"
+    viewBox="0 0 352 512"
+    height="22"
+    width="22"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"></path>
+  </svg>
+);
+const CloseButton = spec(
+  <CloseButtonPositioner>
+    <CloseButtonSVG />
+  </CloseButtonPositioner>
+);
+const DialogContentWrapper = spec(
+  <div class="rounded max-h-[calc(85%)] overflow-auto p-4" />
+);
 
-const Backdrop = styled(Core)`
-  background-color: rgba(0, 0, 0, var(--backdrop-opacity));
-`;
-
-const DialogWrapper = styled(Core)`
-  display: grid;
-  place-items: center;
-  margin-top: -5em;
-`;
-
-type DialogHolderProps = {
-  close: () => void;
-  children?: ComponentChildren;
-  visible: boolean;
-};
-
-const WithPrevChild = ({ children }: { children: ComponentChildren }) => {
+const _WithPrevChild = ({ children }: { children: ComponentChildren }) => {
   const [prevChild, setPrevChild] = useState<ComponentChildren>(null);
 
   if (children === null) {
@@ -37,83 +47,25 @@ const WithPrevChild = ({ children }: { children: ComponentChildren }) => {
   }
 };
 
-export const DialogHolder = ({
-  close,
-  children,
-  visible,
-}: DialogHolderProps) => {
-  return (
-    <>
-      <Backdrop
-        onClick={close}
-        style={{
-          "--backdrop-opacity": visible ? 0.5 : 0,
-          pointerEvents: visible ? "auto" : "none",
-          transition: "background-color 200ms",
-        }}
-      ></Backdrop>
-      <DialogWrapper
-        style={{
-          pointerEvents: "none",
-          opacity: visible ? 1 : 0,
-          transition: "opacity 300ms",
-        }}
-      >
-        <div style={{ pointerEvents: visible ? "initial" : "none" }}>
-          {children}
-        </div>
-      </DialogWrapper>
-    </>
-  );
-};
-
-const Container = styled("div")`
-  position: relative;
-  display: inline-block;
-  background-color: lightblue;
-  min-width: 200px;
-  min-height: 100px;
-  border-radius: 6px;
-  padding: 10px;
-  color: black;
-`;
-
-const Closer = styled(Button)`
-  position: absolute;
-  bottom: 90%;
-  left: 90%;
-  padding: 10px;
-  border-radius: 10px;
-`;
-
-type DialogInnerProps = {
-  close: () => void;
-  children?: ComponentChildren;
-};
-
-export const DialogInner = ({ children, close }: DialogInnerProps) => {
-  return (
-    <Container>
-      <Closer onClick={close}>X</Closer>
-      {children}
-    </Container>
-  );
-};
-
-export function DialogOf({
+export const DialogOf = ({
   close,
   children,
 }: {
   close: () => void;
   children: ComponentChildren;
-}) {
+}) => {
   const visible = children !== null;
 
   return (
-    <DialogHolder close={close} visible={visible}>
-      <DialogInner close={close}>
-        <WithPrevChild>{children}</WithPrevChild>
-      </DialogInner>
-    </DialogHolder>
+    <OuterContainer style={{ display: visible ? "" : "none" }}>
+      <ShadedBackdrop
+        onClick={close}
+        style={{ pointerEvents: visible ? "auto" : "none" }}
+      />
+      <DialogContainer>
+        <CloseButton onClick={close} />
+        <DialogContentWrapper>{children}</DialogContentWrapper>
+      </DialogContainer>
+    </OuterContainer>
   );
-}
+};

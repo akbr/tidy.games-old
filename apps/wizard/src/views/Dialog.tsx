@@ -1,12 +1,19 @@
-import type { FunctionalComponent } from "preact";
-import { DialogProps } from "../types";
+import { DialogContainerProps } from "./types";
 import { DialogOf } from "@lib/components/Dialog";
 
-const Dialog = ({ dialog, state, actions }: DialogProps) => {
+export const Dialog = ({
+  dialog,
+  state,
+  room,
+  actions,
+}: DialogContainerProps) => {
   if (typeof dialog === "function") {
     const Dialog = dialog;
-    return <Dialog state={state} setDialog={actions.setDialog} />;
+    return (
+      <DialogOf close={() => actions.setDialog(null)}>
+        <Dialog state={state} room={room} actions={actions} />
+      </DialogOf>
+    );
   }
-
-  return <>{dialog}</>;
+  return <DialogOf close={() => actions.setDialog(null)}>{dialog}</DialogOf>;
 };
