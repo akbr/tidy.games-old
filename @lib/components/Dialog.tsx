@@ -9,7 +9,7 @@ const ShadedBackdrop = spec(
   <div class="absolute w-full h-full bg-black bg-opacity-40" />
 );
 const DialogContainer = spec(
-  <div class="relative max-w-[calc(85%)] max-h-[calc(85%)] bg-blue-300 rounded pointer-events-auto" />
+  <div class="relative max-w-[calc(90%)] max-h-[calc(90%)] bg-blue-300 rounded pointer-events-auto" />
 );
 const CloseButtonPositioner = spec(
   <div class="absolute rounded top-[-9px] right-[-9px] bg-red-700 cursor-pointer" />
@@ -33,7 +33,7 @@ const CloseButton = spec(
   </CloseButtonPositioner>
 );
 const DialogContentWrapper = spec(
-  <div class="rounded max-h-[calc(85%)] overflow-auto p-4" />
+  <div class="rounded max-h-[calc(90%)] overflow-auto" />
 );
 
 const _WithPrevChild = ({ children }: { children: ComponentChildren }) => {

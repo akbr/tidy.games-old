@@ -228,15 +228,16 @@ export const leaveRoom = <ET extends EngineTypes>(
 
 export const broadcastStateUpdate = <ET extends EngineTypes>(
   { engine }: ServerContext<ET>,
+  state: ET["states"],
   room: Room<ET>
 ) => {
   room.seats.forEach((socket, seatIndex) => {
-    if (socket && room.state)
+    if (socket)
       socket.send([
         "engine",
         engine.adapt
-          ? engine.adapt(room.state, seatIndex, room.seats.length)
-          : room.state,
+          ? engine.adapt(state, seatIndex, room.seats.length)
+          : state,
       ]);
   });
 };
@@ -244,49 +245,31 @@ export const broadcastStateUpdate = <ET extends EngineTypes>(
 export const updateThroughReducer = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   room: Room<ET>,
-  socket: ServerSocket<ET>,
-  action: ET["actions"]
+  input?: {
+    socket: ServerSocket<ET>;
+    action: ET["actions"];
+  }
 ) => {
-  const { rooms, sockets, engine } = ctx;
-
-  if (!room.state) {
-    if (socket) {
-      socket.send([
-        "serverMsg",
-        { type: "error", data: "Game hasn't yet started." },
-      ]);
-    }
-    return;
-  }
-
-  let nextState = engine.reducer(
-    room.state,
-    { numSeats: room.seats.length },
-    { action, seatIndex: room.seats.indexOf(socket) }
-  );
-
-  if (nextState === room.state) return;
-
-  if (!engine.isState(nextState)) {
-    socket.send(["engineMsg", nextState]);
-    return;
-  }
-
-  room.state = nextState;
-  broadcastStateUpdate(ctx, room);
-};
-
-export const recurseThroughReducer = <ET extends EngineTypes>(
-  ctx: ServerContext<ET>,
-  room: Room<ET>
-): void => {
   const { engine } = ctx;
-
   if (!room.state) return;
 
-  const nextState = engine.reducer(room.state, { numSeats: room.seats.length });
-  if (nextState === room.state) return;
-  room.state = nextState;
-  broadcastStateUpdate(ctx, room);
-  return recurseThroughReducer(ctx, room);
+  const inputAction = input
+    ? {
+        ...input.action,
+        playerIndex: room.seats.indexOf(input.socket),
+      }
+    : undefined;
+  const nextStates = engine.reducer(room.state, inputAction);
+
+  if (nextStates.length === 0) return;
+
+  const isMsg = engine.isMsg(nextStates[0]);
+  if (isMsg) {
+    input && input.socket.send(["engineMsg", nextStates[0]]);
+    return;
+  }
+
+  room.state = nextStates[nextStates.length - 1];
+
+  nextStates.forEach((state) => broadcastStateUpdate(ctx, state, room));
 };

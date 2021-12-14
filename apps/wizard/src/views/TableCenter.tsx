@@ -7,22 +7,24 @@ import { TrumpInput } from "./TrumpInput";
 export function TableCenter({ state, room, actions }: AppProps) {
   if (!state || !room) return null;
 
-  const active = room.seatIndex === state.activePlayer;
+  const { data } = state;
+
+  const active = room.seatIndex === data.activePlayer;
 
   return (
     <>
       {state.type === "deal" ? (
         <Appear>
-          <h2>Round {state.turn}</h2>
+          <h2>Round {data.turn}</h2>
         </Appear>
       ) : state.type === "bid" ? (
         <Appear>
           <BidInput
             {...{
               active,
-              numPlayers: state.numPlayers,
-              bids: state.bids,
-              turn: state.turn,
+              numPlayers: data.numPlayers,
+              bids: data.bids,
+              turn: data.turn,
               submit: actions.bid,
             }}
           />

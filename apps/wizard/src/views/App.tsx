@@ -26,7 +26,7 @@ export function App(props: AppProps) {
     return <Title join={actions.join} />;
   }
 
-  const activePlayer = state ? state.activePlayer : null;
+  const activePlayer = state ? state.data.activePlayer : null;
   const players = room.seats.map(({ avatar, name }, idx) => ({
     avatar,
     name,
@@ -56,8 +56,8 @@ export function App(props: AppProps) {
   if (state.type === "showScores") waitFor(3500);
 
   const { seatIndex } = room;
+  const { type, data } = state;
   const {
-    type,
     numPlayers,
     turn,
     bids,
@@ -66,16 +66,16 @@ export function App(props: AppProps) {
     trickLeader,
     trumpCard,
     trumpSuit,
-  } = state;
+  } = state.data;
 
-  const hand = state.hands[seatIndex];
+  const hand = data.hands[seatIndex];
 
   const { tableDimensions, appDimensions } = getDimensions(hand.length || 1);
   const tableHeight = tableDimensions[1];
 
   const winningIndex =
     state.type === "trickEnd"
-      ? rotateIndex(state.numPlayers, state.trickWinner, -state.trickLeader)
+      ? rotateIndex(data.numPlayers, data.trickWinner!, -data.trickLeader)
       : undefined;
 
   return (

@@ -6,7 +6,7 @@ export type ServerSlice<ET extends EngineTypes> = {
   connected: boolean;
   state: ET["states"] | null;
   room: RoomState["data"];
-  err: ET["msgs"] | ServerTypes<ET>["msgs"] | null;
+  err: ServerTypes<ET>["msgs"] | ET["msgs"] | null;
 };
 
 const createSlice = <ET extends EngineTypes>(): ServerSlice<ET> => ({

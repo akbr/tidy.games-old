@@ -1,4 +1,4 @@
-import type { EngineTypes, Engine } from "../engine/types";
+import type { EngineTypes, Engine } from "@lib/engine/types";
 import { Socket } from "@lib/socket/types";
 import type { ServerApi, ServerOutputs, ServerInputs } from "./types";
 
@@ -9,7 +9,6 @@ import {
   createBot,
   broadcastStateUpdate,
   updateThroughReducer,
-  recurseThroughReducer,
 } from "./methods";
 
 export type ServerSocket<ET extends EngineTypes> = Socket<
@@ -118,8 +117,8 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
 
         room.state = ctx.engine.getInitialState(room.seats.length, action.data);
 
-        broadcastStateUpdate(ctx, room);
-        recurseThroughReducer(ctx, room);
+        broadcastStateUpdate(ctx, room.state, room);
+        updateThroughReducer(ctx, room);
         return;
       }
 
@@ -133,8 +132,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
     // Engine envelope
     // ---------------
     if (envelope[0] === "engine" && room) {
-      updateThroughReducer(ctx, room, socket, envelope[1]);
-      recurseThroughReducer(ctx, room);
+      updateThroughReducer(ctx, room, { socket, action: envelope[1] });
     }
   };
 

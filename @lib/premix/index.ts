@@ -8,7 +8,6 @@ import {
 } from "preact";
 import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
 import { WaitRequest, debounce } from "@lib/timing";
-import shallow from "zustand/shallow";
 
 export const spec =
   (node: any) =>
@@ -82,15 +81,12 @@ export const WithUpdate = <T>({
     //@ts-ignore
     let $el = elRef.current.base ? elRef.current.base : elRef.current;
     //@ts-ignore
-    if (!shallow(props, propsRef.current)) {
-      //@ts-ignore
-      let result = fn($el, props, propsRef.current);
-      if (result) {
-        waitRequests.push(result);
-      }
-      //@ts-ignore
-      propsRef.current = props;
+    let result = fn($el, props, propsRef.current);
+    if (result) {
+      waitRequests.push(result);
     }
+    //@ts-ignore
+    propsRef.current = props;
   }, [elRef, fn, props]);
 
   return h(Fragment, null, children);

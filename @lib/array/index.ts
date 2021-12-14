@@ -33,6 +33,17 @@ export function shuffle<T>(array: T[]) {
   return array;
 }
 
+export function deal<T>(deck: T[], handSpecs: number[]): T[][] {
+  const expectedNumCards = handSpecs.reduce((a, b) => a + b, 0);
+  if (deck.length < expectedNumCards)
+    throw new Error("Not enough cards in deck.");
+
+  const deckCopy = [...deck];
+  return Array.from({ length: handSpecs.length }).map((_, idx) =>
+    Array.from({ length: handSpecs[idx] }).map(() => deckCopy.pop()!)
+  );
+}
+
 export function indexOfMax(arr: number[]) {
   if (arr.length === 0) return -1;
 
@@ -48,3 +59,19 @@ export function indexOfMax(arr: number[]) {
 
   return maxIndex;
 }
+
+export function maxInt(arr: number[]) {
+  const index = indexOfMax(arr);
+  return arr[index];
+}
+
+export const sortBySpec = <T>(arr: T[], sortSpec: T[]) => {
+  const sortMap = new Map(sortSpec.map((value, index) => [value, index]));
+  return arr.sort((a, b) => (sortMap.get(a) || 0) - (sortMap.get(b) || 0));
+};
+
+export const removeOne = <T>(arr: T[], value: T) => {
+  const i = arr.indexOf(value);
+  if (i === -1) return arr;
+  return arr.slice(0, i).concat(arr.slice(i + 1, arr.length));
+};

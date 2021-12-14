@@ -11,16 +11,13 @@ export const initDragListeners = <Slice extends ServerSlice<WizardShape>>(
   const isValidPlay = (cardId: string) => {
     let { state, room } = store.get();
     if (!room || !state) return false;
-    let nextState = engine.reducer(
-      state,
-      { numSeats: room.seats.length },
-      {
-        action: { type: "play", data: cardId },
-        seatIndex: room.seatIndex,
-      }
-    );
-    if (nextState.type === "err") {
-      store.set({ err: nextState });
+    let nextState = engine.reducer(state, {
+      type: "play",
+      data: cardId,
+      playerIndex: room.seatIndex,
+    });
+    if (nextState[0].type === "err") {
+      store.set({ err: nextState[0] });
       return false;
     } else {
       return true;
@@ -33,7 +30,7 @@ export const initDragListeners = <Slice extends ServerSlice<WizardShape>>(
       const { state, room } = store.get();
       const cardEl = $target.closest(selector) as HTMLElement;
       if (!cardEl || !(typeof cardEl.dataset.cardId === "string")) return false;
-      const hands = !room || !state ? [] : state.hands[room.seatIndex];
+      const hands = !room || !state ? [] : state.data.hands[room.seatIndex];
       return hands.includes(cardEl.dataset.cardId);
     },
     onDrop: ($target, [iX, iY], [pX, pY]) => {

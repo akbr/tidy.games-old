@@ -7,7 +7,7 @@ function Scorez({ state, room }: DialogProps) {
     return (
       <div style={{ display: "grid", placeContent: "center" }}>
         <ScoreTable
-          scores={state.scores}
+          scores={state.data.scores}
           avatars={room.seats.map(({ avatar }) => avatar)}
           playerIndex={room.seatIndex}
         />

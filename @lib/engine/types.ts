@@ -1,4 +1,4 @@
-export type Packet = { type: string; [key: string]: any };
+export type Packet = { type: string; data?: any };
 export type Options = { [key: string]: any };
 
 export type EngineTypes = {
@@ -21,14 +21,10 @@ export type Engine<ET extends EngineTypes> = {
   autoStart?: boolean;
   getInitialState: (numSeats: number, options?: ET["options"]) => ET["states"];
   reducer: (
-    state: ET["states"],
-    context: { numSeats: number },
-    input?: {
-      action: ET["actions"];
-      seatIndex: number;
-    }
-  ) => ET["states"] | ET["msgs"];
-  isState: <ReducerOutput extends Packet>(output: ReducerOutput) => boolean;
+    state: ET["states"] | ET["msgs"],
+    action?: ET["actions"] & { playerIndex: number }
+  ) => (ET["states"] | ET["msgs"])[];
+  isMsg: (state: ET["states"] | ET["msgs"]) => boolean;
   adapt?: (
     state: ET["states"],
     seatIndex: number,

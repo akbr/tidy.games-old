@@ -1,23 +1,19 @@
 import { Engine } from "@lib/engine/types";
+import { UnionizeObj, ReducerFns } from "@lib/fsm";
 
 export type WizardShape = {
-  states:
-    | Deal
-    | SelectTrump
-    | Bid
-    | BidEnd
-    | Play
-    | TrickEnd
-    | TurnEnd
-    | ShowScores
-    | GameEnd;
-  actions: SelectTrumpAction | BidAction | PlayAction;
-  msgs: Err;
+  states: UnionizeObj<StateGlossary>;
+  msgs: UnionizeObj<MsgGlossary>;
+  actions: UnionizeObj<ActionGlossary>;
   options: { canadian: boolean };
   botOptions: void;
 };
 
 export type WizardEngine = Engine<WizardShape>;
+export type WizardReducerFns = ReducerFns<
+  StateGlossary & MsgGlossary,
+  ActionGlossary
+>;
 
 // ---
 
@@ -39,42 +35,30 @@ export type Core = {
 };
 
 type Active = { activePlayer: number };
+type TrickWinner = { trickWinner: number };
+export type StateGlossary = {
+  deal: Core;
+  selectTrump: Core & Active;
+  bid: Core & Active;
+  bidEnd: Core;
+  play: Core & Active;
+  trickEnd: Core & TrickWinner;
+  turnEnd: Core;
+  showScores: Core;
+  gameEnd: Core;
+};
 
-/**
- * States
- */
+export type MsgGlossary = {
+  err: string;
+};
 
-export type Err = { type: "err"; data: string };
-
-export type Deal = { type: "deal" } & Core;
-export type SelectTrump = { type: "selectTrump" } & Core & Active;
-export type Bid = { type: "bid" } & Core & Active;
-export type BidEnd = { type: "bidEnd" } & Core;
-export type Play = { type: "play" } & Core & Active;
-export type TrickEnd = { type: "trickEnd" } & Core & { trickWinner: number };
-export type TurnEnd = { type: "turnEnd" } & Core;
-export type ShowScores = { type: "showScores" } & Core;
-export type GameEnd = { type: "gameEnd" } & Core;
+export type ActionGlossary = {
+  selectTrump: string;
+  bid: number;
+  play: string;
+};
 
 export type Seed = {
   numPlayers: number;
-  options: WizardShape["options"];
-};
-
-/**
- * Actions
- */
-export type SelectTrumpAction = {
-  type: "selectTrump";
-  data: string;
-};
-
-export type BidAction = {
-  type: "bid";
-  data: number;
-};
-
-export type PlayAction = {
-  type: "play";
-  data: string;
+  options?: WizardShape["options"];
 };
