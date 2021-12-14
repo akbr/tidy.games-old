@@ -1,5 +1,5 @@
-import { Engine } from "@lib/engine/types";
-import { UnionizeObj, ReducerFns } from "@lib/fsm";
+import { Engine } from "@lib/io/engine";
+import { UnionizeObj, ReducerFns } from "@lib/io/reducer";
 
 export type WizardShape = {
   states: UnionizeObj<StateGlossary>;
@@ -56,9 +56,4 @@ export type ActionGlossary = {
   selectTrump: string;
   bid: number;
   play: string;
-};
-
-export type Seed = {
-  numPlayers: number;
-  options?: WizardShape["options"];
 };

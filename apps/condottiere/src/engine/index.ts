@@ -7,9 +7,8 @@ export const engine: CondottiereEngine = {
   shouldStart: (numSeats) => numSeats >= 2,
   getInitialState: (numPlayers) => startRound({ numPlayers }),
   reducer: createReducer(reducerFns),
-  isState: (s) => s.type !== "err",
+  isMsg: (s) => s.type === "err",
   adapt: (s, seatIndex) => {
-    if (s.type === "err") return s;
     return {
       type: s.type,
       data: {

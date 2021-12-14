@@ -75,10 +75,3 @@ assert.equal(isWinner({ ...closeMap, ven: 1 }, 3), 1);
 
 assert.equal(getNextPlayer(0, [true, false, true]), 2);
 assert.equal(getNextPlayer(2, [false, true, true]), 1);
-
-console.log(`
------------------
-All tests passed!
------------------
-`);
-setTimeout(() => true, 1000 * 60 * 60);

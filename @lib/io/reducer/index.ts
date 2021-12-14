@@ -1,5 +1,3 @@
-import e from "express";
-
 export type UnionizeObj<Obj extends object> = {
   [Key in keyof Obj]: { type: Key; data: Obj[Key] };
 }[keyof Obj];

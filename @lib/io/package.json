@@ -1,5 +1,5 @@
 {
-  "name": "@lib/socket",
+  "name": "@lib/io",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

@@ -1,5 +1,5 @@
-import type { EngineTypes } from "../engine/types";
-import { SocketServer } from "@lib/socket/types";
+import type { EngineTypes } from "@lib/io/engine";
+import { SocketServer } from "@lib/io/socket/types";
 
 export type ServerApi<ET extends EngineTypes> = SocketServer<
   ServerInputs<ET>,
@@ -18,7 +18,10 @@ export type ServerOutputs<ET extends EngineTypes> =
 
 export type ServerTypes<ET extends EngineTypes> = {
   states: RoomState;
-  msgs: ErrorMsg;
+  msgs: {
+    type: "err";
+    data: string;
+  };
   actions:
     | {
         type: "join";
@@ -26,11 +29,11 @@ export type ServerTypes<ET extends EngineTypes> = {
       }
     | {
         type: "start";
-        data?: ET["options"];
+        data: ET["options"];
       }
     | {
         type: "addBot";
-        data?: ET["options"];
+        data: ET["options"];
       };
 };
 
@@ -46,9 +49,4 @@ export type RoomState = {
     seatIndex: number;
     started: boolean;
   } | null;
-};
-
-type ErrorMsg = {
-  type: "error";
-  data: string;
 };

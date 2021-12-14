@@ -1,4 +1,4 @@
-import type { WizardReducerFns, WizardShape, Core, Seed } from "./types";
+import type { WizardReducerFns, WizardShape, Core } from "./types";
 import { rotateIndex } from "@lib/array";
 import {
   getDealtCards,
@@ -16,7 +16,7 @@ export const err = (data: string) =>
   } as const);
 
 export const toDeal = (
-  s: Seed | StateOf<"turnEnd">["data"]
+  s: { numPlayers: number } | StateOf<"turnEnd">["data"]
 ): StateOf<"deal"> => {
   const dealer = "dealer" in s ? rotateIndex(s.numPlayers, s.dealer) : 0;
   return {
@@ -35,7 +35,7 @@ export const toDeal = (
       actuals: Array.from({ length: s.numPlayers }, () => 0),
       scores: "scores" in s ? s.scores : [],
       // Carry over
-      options: s.options || { canadian: false },
+      options: { canadian: false },
       numPlayers: s.numPlayers,
     },
   };

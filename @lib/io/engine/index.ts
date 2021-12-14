@@ -9,22 +9,20 @@ export type EngineTypes = {
   botOptions: Options | void;
 };
 
-export type Bot<ET extends EngineTypes> = (
-  state: ET["states"],
-  botPlayerIndex: number | undefined
-) => void;
-
-export type Engine<ET extends EngineTypes> = {
+export interface Engine<
+  ET extends EngineTypes,
+  AllStates = ET["states"] | ET["msgs"]
+> {
   shouldAddSeat?: (numSeats: number, gameStarted: boolean) => boolean;
   shouldRemoveSeat?: (numSeats: number, gameStarted: boolean) => boolean;
   shouldStart?: (numSeats: number) => boolean;
   autoStart?: boolean;
   getInitialState: (numSeats: number, options?: ET["options"]) => ET["states"];
   reducer: (
-    state: ET["states"] | ET["msgs"],
+    state: AllStates,
     action?: ET["actions"] & { playerIndex: number }
-  ) => (ET["states"] | ET["msgs"])[];
-  isMsg: (state: ET["states"] | ET["msgs"]) => boolean;
+  ) => AllStates[];
+  isMsg: (state: AllStates) => boolean;
   adapt?: (
     state: ET["states"],
     seatIndex: number,
@@ -33,5 +31,5 @@ export type Engine<ET extends EngineTypes> = {
   createBot?: (
     socket: { send: (action: ET["actions"]) => void; close: () => void },
     options: ET["botOptions"]
-  ) => Bot<ET>;
-};
+  ) => (state: ET["states"], botPlayerIndex: number | undefined) => void;
+}

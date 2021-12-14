@@ -3,13 +3,14 @@ if (process.env.NODE_ENV === "development") require("preact/debug");
 import { setup } from "goober";
 import { h } from "preact";
 import { render } from "@lib/premix";
-import { createServer } from "@lib/server";
-import { initDragListeners } from "./initDragListeners";
-import { createActions } from "./createActions";
+
+import { createServer } from "@lib/io/server";
+import { createAppScaffolding } from "@lib/io/client";
 
 import { engine } from "./engine";
 
-import { createAppScaffolding } from "@lib/client-setup";
+import { initDragListeners } from "./initDragListeners";
+import { createActions } from "./createActions";
 
 import { App } from "./views/App";
 import { Errors } from "./views/Errors";

@@ -6,12 +6,7 @@ const clamp = (num: number, min = 0, max = Infinity) =>
   Math.min(Math.max(num, min), max);
 
 const computeBid = (
-  {
-    hands,
-    trumpSuit,
-    numPlayers,
-    turn,
-  }: Exclude<WizardShape["states"], { type: "err" }>["data"],
+  { hands, trumpSuit, numPlayers, turn }: WizardShape["states"]["data"],
   playerIndex: number
 ) => {
   let hand = hands[playerIndex];
@@ -29,8 +24,6 @@ const computeBid = (
 export const createBot: WizardEngine["createBot"] =
   ({ send }) =>
   (state, playerIndex) => {
-    if (state.type === "err") return;
-
     const itsMyTurn = state.data.activePlayer === playerIndex;
 
     if (!itsMyTurn) return;

@@ -1,4 +1,4 @@
-import type { EngineTypes } from "../engine/types";
+import type { EngineTypes } from "@lib/io/engine";
 import type { ServerContext, Room, ServerSocket, BotSocket } from ".";
 
 import { getRandomRoomID } from "./utils";
@@ -22,7 +22,7 @@ export const getRoomForSocket = <ET extends EngineTypes>(
 ) => {
   let id = sockets.get(socket);
   if (id) {
-    let room = rooms.get(id);
+    let room = id ? rooms.get(id) : null;
     return room ? room : null;
   }
   return null;

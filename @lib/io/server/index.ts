@@ -1,5 +1,5 @@
-import type { EngineTypes, Engine } from "@lib/engine/types";
-import { Socket } from "@lib/socket/types";
+import type { EngineTypes, Engine } from "@lib/io/engine";
+import { Socket } from "@lib/io/socket/types";
 import type { ServerApi, ServerOutputs, ServerInputs } from "./types";
 
 import {
@@ -68,14 +68,14 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
         leaveRoom(ctx, socket);
         let { id, seatIndex } = action.data || {};
         let err = joinRoom(ctx, socket, id, seatIndex);
-        if (err) socket.send(["serverMsg", { type: "error", data: err }]);
+        if (err) socket.send(["serverMsg", { type: "err", data: err }]);
         return;
       }
 
       if (!room) {
         socket.send([
           "serverMsg",
-          { type: "error", data: "You are not in a room." },
+          { type: "err", data: "You are not in a room." },
         ]);
         return;
       }
@@ -84,7 +84,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
         if (!engine.createBot) {
           socket.send([
             "serverMsg",
-            { type: "error", data: "No bot creator specified." },
+            { type: "err", data: "No bot creator specified." },
           ]);
         }
         createBot(ctx, room.id, action.data);
@@ -97,7 +97,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
         if (!isPlayer0) {
           socket.send([
             "serverMsg",
-            { type: "error", data: "You aren't the room creator." },
+            { type: "err", data: "You aren't the room creator." },
           ]);
         }
 
@@ -108,7 +108,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
           socket.send([
             "serverMsg",
             {
-              type: "error",
+              type: "err",
               data: "Wrong number of players.",
             },
           ]);
@@ -124,7 +124,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
 
       socket.send([
         "serverMsg",
-        { type: "error", data: "Invalid server command." },
+        { type: "err", data: "Invalid server command." },
       ]);
     }
 

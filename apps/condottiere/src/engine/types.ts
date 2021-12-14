@@ -3,14 +3,17 @@ import { Engine } from "@lib/engine/types";
 
 export type CondottiereTypes = {
   states: UnionizeObj<StateGlossary>;
+  msgs: UnionizeObj<MsgGlossary>;
   actions: UnionizeObj<ActionGlossary>;
   options: void;
   botOptions: void;
 };
 export type CondottiereEngine = Engine<CondottiereTypes>;
-export type CondottiereReducerFns = ReducerFns<StateGlossary, ActionGlossary>;
 
-// --
+export type CondottiereReducerFns = ReducerFns<
+  StateGlossary & MsgGlossary,
+  ActionGlossary
+>;
 
 type Mercenaries = 1 | 2 | 3 | 4 | 5 | 6 | 10;
 type Specials = "s" | "d" | "b" | "m" | "w" | "h";
@@ -64,6 +67,9 @@ export type StateGlossary = {
   discard: Core;
   discardResults: Core;
   gameEnd: Core;
+};
+
+export type MsgGlossary = {
   err: string;
 };
 
