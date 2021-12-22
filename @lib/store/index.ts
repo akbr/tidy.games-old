@@ -1,5 +1,3 @@
-import deepEquals from "fast-deep-equal";
-
 export type State = object;
 export type StateSelector<T extends State, U> = (state: T) => U;
 export type Listener<T> = (curr: T, prev: T) => void;
@@ -29,11 +27,13 @@ export type StoreApi<T extends State> = {
     <U>(selector: (state: T) => U): U;
   };
   set: SetState<T>;
-  subscribe: <U>(
-    selector: StateSelector<T, U>,
-    fn: Listener<U>,
-    equalityFn?: (curr: U, prev: U) => boolean
-  ) => () => void;
+  subscribe: {
+    <U>(
+      selector: StateSelector<T, U>,
+      fn: Listener<U>,
+      equalityFn?: (curr: U, prev: U) => boolean
+    ): () => void;
+  };
 };
 
 export const createStore = <T extends State>(initialValue: T): StoreApi<T> => {
@@ -62,7 +62,7 @@ export const createStore = <T extends State>(initialValue: T): StoreApi<T> => {
       update();
     },
     subscribe: (selector, fn, equalityFn) => {
-      const test = equalityFn || deepEquals;
+      const test = equalityFn || ((a, b) => a === b);
       subscribers.push((curr, prev) => {
         const currPartial = selector(curr);
         const prevPartial = selector(prev);

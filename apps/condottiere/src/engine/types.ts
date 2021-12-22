@@ -1,24 +1,16 @@
-import { UnionizeObj, ReducerFns } from "@lib/fsm";
-import { Engine } from "@lib/engine/types";
+import { CreateEngineTypes } from "@lib/io/engine/";
 
-export type CondottiereTypes = {
-  states: UnionizeObj<StateGlossary>;
-  msgs: UnionizeObj<MsgGlossary>;
-  actions: UnionizeObj<ActionGlossary>;
-  options: void;
-  botOptions: void;
-};
-export type CondottiereEngine = Engine<CondottiereTypes>;
-
-export type CondottiereReducerFns = ReducerFns<
-  StateGlossary & MsgGlossary,
-  ActionGlossary
+export type CondottiereTypes = CreateEngineTypes<
+  StateGlossary,
+  MsgGlossary,
+  ActionGlossary,
+  { seed?: string },
+  void
 >;
 
-type Mercenaries = 1 | 2 | 3 | 4 | 5 | 6 | 10;
-type Specials = "s" | "d" | "b" | "m" | "w" | "h";
+export type Mercenaries = 1 | 2 | 3 | 4 | 5 | 6 | 10;
+export type Specials = "s" | "d" | "b" | "m" | "w" | "h";
 export type Cards = Mercenaries | Specials;
-
 export type Cities =
   | "tor"
   | "mil"
@@ -38,17 +30,16 @@ export type Cities =
   | "rom"
   | "nap";
 
-// --
-
 export type Core = {
   round: number;
   numPlayers: number;
   condotierre: number;
-  activePlayer: number | null;
+  activePlayer: number;
   map: Record<Cities, null | number>;
   hands: Cards[][];
   lines: Cards[][];
   playStatus: boolean[];
+  seed?: string;
   // ---
   winner: number | null;
   discardStatus: null | (null | boolean)[];

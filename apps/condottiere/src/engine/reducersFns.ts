@@ -1,4 +1,5 @@
-import type { CondottiereTypes, CondottiereReducerFns } from "./types";
+import type { ReducerFns } from "@lib/io/engine/reducer";
+import type { CondottiereTypes } from "./types";
 import { removeOne, rotateIndex } from "@lib/array";
 import {
   canDiscard,
@@ -9,30 +10,38 @@ import {
   isWinner,
 } from "./logic";
 
+type CondottiereReducerFns = ReducerFns<CondottiereTypes>;
+
 type StateType<T extends string> = Extract<
   CondottiereTypes["states"],
   { type: T }
 >;
 
 export const startRound = (
-  data: { numPlayers: number } | StateType<"discardResults">["data"]
+  data:
+    | { numPlayers: number; seed?: string }
+    | StateType<"discardResults">["data"]
 ): StateType<"deal"> => {
+  const round = "round" in data ? data.round + 1 : 1;
   const map = "map" in data ? data.map : createMap();
+  const condotierre = "condotierre" in data ? data.condotierre : 0;
+  const nextSeed = data.seed ? data.seed + round : undefined;
 
   return {
     type: "deal",
     data: {
-      round: "round" in data ? data.round + 1 : 1,
+      round,
       numPlayers: data.numPlayers,
-      condotierre: "condotierre" in data ? data.condotierre : 0,
-      activePlayer: null,
+      condotierre,
+      activePlayer: condotierre,
       map,
-      hands: createHands(data.numPlayers, map),
+      hands: createHands(data.numPlayers, map, nextSeed),
       lines: Array.from({ length: data.numPlayers }).map(() => []),
       playStatus: Array.from({ length: data.numPlayers }).map(() => true),
       discardStatus: null,
       retreatStatus: null,
       winner: null,
+      seed: data.seed,
     },
   };
 };
@@ -67,7 +76,6 @@ const playedOrRetreated = (
       condotierre: isTied
         ? rotateIndex(s.data.numPlayers, s.data.condotierre)
         : battleStatus,
-      activePlayer: null,
       retreatStatus: null,
     },
   };
@@ -95,7 +103,6 @@ export const reducerFns: CondottiereReducerFns = {
           data: {
             ...s.data,
             map: { ...s.data.map, [city]: -1 },
-            activePlayer: null,
           },
         };
   },
@@ -122,7 +129,6 @@ export const reducerFns: CondottiereReducerFns = {
           playStatus: s.data.playStatus.map((status, idx) =>
             idx === activePlayer ? false : status
           ),
-          activePlayer: null,
         },
       };
     }
@@ -153,7 +159,6 @@ export const reducerFns: CondottiereReducerFns = {
       type: "played",
       data: {
         ...s.data,
-        activePlayer: null,
         hands,
         lines,
       },
@@ -192,7 +197,6 @@ export const reducerFns: CondottiereReducerFns = {
         type: "gameEnd",
         data: {
           ...s.data,
-          activePlayer: null,
           winner: winningIndex,
         },
       };
@@ -212,8 +216,7 @@ export const reducerFns: CondottiereReducerFns = {
   },
   discard: (s, a) => {
     if (!a) return s;
-    if (!(a.type === s.type && a.playerIndex === s.data.activePlayer))
-      return { type: "err", data: "Wrong action type or it's not your turn." };
+    if (a.type !== s.type) return { type: "err", data: "Wrong action type." };
 
     if (a.data === true && !canDiscard(s.data.hands[a.playerIndex]))
       return { type: "err", data: "You have mercanies in your hand." };

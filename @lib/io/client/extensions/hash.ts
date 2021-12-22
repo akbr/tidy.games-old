@@ -1,6 +1,5 @@
-import type { EngineTypes } from "@lib/engine/types";
-import type { ServerSlice } from "./server";
-import type { AppPrimitives } from "../";
+import type { EngineTypes } from "../../engine";
+import type { Client } from "../.";
 
 type HashStatus = {
   id?: string;
@@ -33,19 +32,19 @@ export function getHash(): HashStatus {
   return { id, playerIndex };
 }
 
-export function connectHashListener<
-  ET extends EngineTypes,
-  Slice extends ServerSlice<ET>
->({ store, manager }: AppPrimitives<ET, Slice>) {
+export function connectHashListener<ET extends EngineTypes>({
+  store,
+  manager,
+}: Client<ET>) {
   function onHashChange() {
     let { id, playerIndex } = getHash();
-    let room = store.get((x) => x.room);
+    let room = store.get((x) => x.server);
     if (room && room.id === id && room.seatIndex === playerIndex) return;
     if (id) {
-      manager.send([
-        "server",
-        { type: "join", data: { id, seatIndex: playerIndex } },
-      ]);
+      manager.send({
+        type: "server",
+        data: { type: "join", data: { id, seatIndex: playerIndex } },
+      });
     }
   }
 
@@ -53,7 +52,7 @@ export function connectHashListener<
   onHashChange();
 
   store.subscribe(
-    ({ room }) => room,
+    ({ server }) => server,
     (currRoom, prevRoom) => {
       if (currRoom === prevRoom) return;
       replaceHash(

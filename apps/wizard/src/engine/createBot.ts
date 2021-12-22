@@ -1,4 +1,5 @@
-import { WizardEngine, WizardShape } from "./types";
+import { WizardTypes } from "./types";
+import { Engine } from "@lib/io/engine";
 import { randomFromArray } from "@lib/random";
 import { getPlayableCards, getSuit, getTuple } from "./logic";
 
@@ -6,7 +7,7 @@ const clamp = (num: number, min = 0, max = Infinity) =>
   Math.min(Math.max(num, min), max);
 
 const computeBid = (
-  { hands, trumpSuit, numPlayers, turn }: WizardShape["states"]["data"],
+  { hands, trumpSuit, numPlayers, turn }: WizardTypes["states"]["data"],
   playerIndex: number
 ) => {
   let hand = hands[playerIndex];
@@ -21,7 +22,7 @@ const computeBid = (
   return clamp(numWizards + (trumpValue % 8), 0, turn);
 };
 
-export const createBot: WizardEngine["createBot"] =
+export const createBot: Engine<WizardTypes>["createBot"] =
   ({ send }) =>
   (state, playerIndex) => {
     const itsMyTurn = state.data.activePlayer === playerIndex;

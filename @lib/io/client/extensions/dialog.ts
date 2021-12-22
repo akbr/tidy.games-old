@@ -1,7 +1,7 @@
-import type { EngineTypes } from "@lib/engine/types";
 import type { ComponentChildren, FunctionComponent } from "preact";
-import type { ServerSlice } from "./server";
+import type { EngineTypes } from "../../engine/";
 import type { AppPrimitives } from "../";
+import type { ServerSlice } from "./server";
 
 export type DialogProps<ET extends EngineTypes> = Pick<
   ServerSlice<ET>,

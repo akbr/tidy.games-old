@@ -1,3 +1,5 @@
+import { createPRNG } from "@lib/random/prng";
+
 export function rotateIndex(length: number, index: number, steps = 1) {
   if (index < 0) return index;
   const modSteps = Math.abs(steps) > length - 1 ? steps % length : steps;
@@ -18,13 +20,15 @@ export function rotateArray<T>(array: T[], numSteps = 1) {
   return rotatedArray;
 }
 
-export function shuffle<T>(array: T[]) {
+export function shuffle<T>(array: T[], seed?: string) {
+  const random = createPRNG(seed);
+
   let length = array.length;
   let t: T;
   let i: number;
 
   while (length) {
-    i = Math.floor(Math.random() * length--);
+    i = Math.floor(random() * length--);
     t = array[length];
     array[length] = array[i];
     array[i] = t;
@@ -38,9 +42,9 @@ export function deal<T>(deck: T[], handSpecs: number[]): T[][] {
   if (deck.length < expectedNumCards)
     throw new Error("Not enough cards in deck.");
 
-  const deckCopy = [...deck];
+  deck = [...deck];
   return Array.from({ length: handSpecs.length }).map((_, idx) =>
-    Array.from({ length: handSpecs[idx] }).map(() => deckCopy.pop()!)
+    Array.from({ length: handSpecs[idx] }).map(() => deck.pop()!)
   );
 }
 

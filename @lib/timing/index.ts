@@ -81,6 +81,7 @@ export interface Meter<T> {
   push: (...states: T[]) => void;
   waitFor: (...req: WaitRequest[]) => void;
   subscribe: (emit: (t: T) => void) => () => void;
+  onStatus: (status: boolean) => void | void;
   empty: () => void;
 }
 
@@ -89,15 +90,24 @@ export const createMeter = <T>() => {
   let waitRequests: WaitRequest[] = [];
   let listeners: ((t: T) => void)[] = [];
   let pending: Task | void;
+  let status = false;
 
   function go() {
     if (pending) return;
-    if (queue.length === 0) return;
+    if (queue.length === 0) {
+      if (status === true) {
+        status = false;
+        if (api.onStatus) api.onStatus(status);
+      }
+      return;
+    }
 
     let nextState = queue.shift()!;
     listeners.forEach((fn) => fn(nextState));
 
     if (waitRequests.length !== 0) {
+      status = true;
+      if (api.onStatus) api.onStatus(status);
       let timings = waitRequests.filter(
         (x) => typeof x === "number"
       ) as number[];
@@ -114,7 +124,7 @@ export const createMeter = <T>() => {
     go();
   }
 
-  return <Meter<T>>{
+  const api = <Meter<T>>{
     push: (...states) => {
       queue.push(...states);
       go();
@@ -132,6 +142,8 @@ export const createMeter = <T>() => {
       queue = [];
     },
   };
+
+  return api;
 };
 
 export function debounce(func: Function, wait: number, immediate: boolean) {

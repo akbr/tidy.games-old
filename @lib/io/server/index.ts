@@ -1,5 +1,5 @@
-import type { EngineTypes, Engine } from "@lib/io/engine";
-import { Socket } from "@lib/io/socket/types";
+import type { EngineTypes, Engine } from "../engine";
+import type { Socket } from "../socket/types";
 import type { ServerApi, ServerOutputs, ServerInputs } from "./types";
 
 import {
@@ -37,7 +37,7 @@ export type ServerContext<ET extends EngineTypes> = {
 };
 
 export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
-  const api = {} as ServerApi<ET>;
+  const api = { engine } as ServerApi<ET>;
 
   const ctx: ServerContext<ET> = {
     engine,
@@ -48,7 +48,7 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
   };
 
   api.onOpen = (socket) => {
-    socket.send(["server", { type: "room", data: null }]);
+    socket.send({ type: "server", data: { type: "room", data: null } });
   };
 
   api.onClose = (socket) => {
@@ -58,34 +58,32 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
   api.onInput = (socket, envelope) => {
     const room = getRoomForSocket(ctx, socket);
 
-    // ---------------
-    // Server envelope
-    // ---------------
-    if (envelope[0] === "server") {
-      let action = envelope[1];
+    if (envelope.type === "server") {
+      let action = envelope.data;
 
       if (action.type === "join") {
         leaveRoom(ctx, socket);
         let { id, seatIndex } = action.data || {};
         let err = joinRoom(ctx, socket, id, seatIndex);
-        if (err) socket.send(["serverMsg", { type: "err", data: err }]);
+        if (err)
+          socket.send({ type: "serverMsg", data: { type: "err", data: err } });
         return;
       }
 
       if (!room) {
-        socket.send([
-          "serverMsg",
-          { type: "err", data: "You are not in a room." },
-        ]);
+        socket.send({
+          type: "serverMsg",
+          data: { type: "err", data: "You are not in a room." },
+        });
         return;
       }
 
       if (action.type === "addBot") {
         if (!engine.createBot) {
-          socket.send([
-            "serverMsg",
-            { type: "err", data: "No bot creator specified." },
-          ]);
+          socket.send({
+            type: "serverMsg",
+            data: { type: "err", data: "No bot creator specified." },
+          });
         }
         createBot(ctx, room.id, action.data);
         return;
@@ -95,23 +93,20 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
         let isPlayer0 = room.seats.indexOf(socket) === 0;
 
         if (!isPlayer0) {
-          socket.send([
-            "serverMsg",
-            { type: "err", data: "You aren't the room creator." },
-          ]);
+          socket.send({
+            type: "serverMsg",
+            data: { type: "err", data: "You aren't the room creator." },
+          });
         }
 
         let shouldStart = ctx.engine.shouldStart
           ? ctx.engine.shouldStart(room.seats.length)
           : true;
         if (!shouldStart) {
-          socket.send([
-            "serverMsg",
-            {
-              type: "err",
-              data: "Wrong number of players.",
-            },
-          ]);
+          socket.send({
+            type: "serverMsg",
+            data: { type: "err", data: "Wrong number of players." },
+          });
           return;
         }
 
@@ -122,17 +117,39 @@ export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
         return;
       }
 
-      socket.send([
-        "serverMsg",
-        { type: "err", data: "Invalid server command." },
-      ]);
+      socket.send({
+        type: "serverMsg",
+        data: { type: "err", data: "Invalid server action." },
+      });
     }
 
     // ---------------
     // Engine envelope
     // ---------------
-    if (envelope[0] === "engine" && room) {
-      updateThroughReducer(ctx, room, { socket, action: envelope[1] });
+    if (envelope.type === "engine") {
+      if (!room) {
+        socket.send({
+          type: "serverMsg",
+          data: {
+            type: "err",
+            data: "You are not in a room.",
+          },
+        });
+        return;
+      }
+
+      if (!room.state) {
+        socket.send({
+          type: "serverMsg",
+          data: {
+            type: "err",
+            data: "This room's game has not started.",
+          },
+        });
+        return;
+      }
+
+      updateThroughReducer(ctx, room, { socket, action: envelope.data });
     }
   };
 

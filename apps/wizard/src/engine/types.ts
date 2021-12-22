@@ -1,24 +1,15 @@
-import { Engine } from "@lib/io/engine";
-import { UnionizeObj, ReducerFns } from "@lib/io/reducer";
+import { CreateEngineTypes } from "@lib/io/engine";
 
-export type WizardShape = {
-  states: UnionizeObj<StateGlossary>;
-  msgs: UnionizeObj<MsgGlossary>;
-  actions: UnionizeObj<ActionGlossary>;
-  options: { canadian: boolean };
-  botOptions: void;
-};
-
-export type WizardEngine = Engine<WizardShape>;
-export type WizardReducerFns = ReducerFns<
-  StateGlossary & MsgGlossary,
-  ActionGlossary
+export type WizardTypes = CreateEngineTypes<
+  StateGlossary,
+  MsgGlossary,
+  ActionGlossary,
+  Options,
+  void
 >;
 
-// ---
-
-export type Core = {
-  options: WizardShape["options"];
+type Core = {
+  options: WizardTypes["options"];
   numPlayers: number;
   turn: number;
   activePlayer: number | null;
@@ -35,24 +26,27 @@ export type Core = {
 };
 
 type Active = { activePlayer: number };
+type NotActive = { activePlayer: null };
 type TrickWinner = { trickWinner: number };
 export type StateGlossary = {
-  deal: Core;
+  deal: Core & NotActive;
   selectTrump: Core & Active;
   bid: Core & Active;
-  bidEnd: Core;
+  bidEnd: Core & NotActive;
   play: Core & Active;
-  trickEnd: Core & TrickWinner;
-  turnEnd: Core;
-  showScores: Core;
-  gameEnd: Core;
+  trickEnd: Core & TrickWinner & NotActive;
+  turnEnd: Core & NotActive;
+  showScores: Core & NotActive;
+  gameEnd: Core & NotActive;
 };
 
-export type MsgGlossary = {
+type MsgGlossary = {
   err: string;
 };
 
-export type ActionGlossary = {
+type Options = { canadian: boolean };
+
+type ActionGlossary = {
   selectTrump: string;
   bid: number;
   play: string;

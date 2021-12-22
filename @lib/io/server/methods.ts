@@ -1,4 +1,4 @@
-import type { EngineTypes } from "@lib/io/engine";
+import type { EngineTypes } from "../engine";
 import type { ServerContext, Room, ServerSocket, BotSocket } from ".";
 
 import { getRandomRoomID } from "./utils";
@@ -47,9 +47,9 @@ export const broadcastRoomStatus = <ET extends EngineTypes>(
 
   [...seats, ...spectators].forEach((socket) => {
     if (!socket) return;
-    socket.send([
-      "server",
-      {
+    socket.send({
+      type: "server",
+      data: {
         type: "room",
         data: {
           id,
@@ -59,7 +59,7 @@ export const broadcastRoomStatus = <ET extends EngineTypes>(
           started,
         },
       },
-    ]);
+    });
   });
 };
 
@@ -89,16 +89,16 @@ export const joinRoom = <ET extends EngineTypes>(
     broadcastRoomStatus(ctx, room);
 
     if (room.state) {
-      socket.send([
-        "engine",
-        engine.adapt
+      socket.send({
+        type: "engine",
+        data: engine.adapt
           ? engine.adapt(
               room.state,
               room.seats.indexOf(socket),
               room.seats.length
             )
           : room.state,
-      ]);
+      });
     }
   };
 
@@ -156,14 +156,14 @@ export const createBot = <ET extends EngineTypes>(
 
   let botFn = engine.createBot(
     {
-      send: (action) => botSocket.send(["engine", action]),
+      send: (action) => botSocket.send({ type: "engine", data: action }),
       close: botSocket.close,
     },
     undefined
   );
 
   serverSocket = {
-    send: ([type, data]) => {
+    send: ({ type, data }) => {
       if (type !== "engine") {
         if (type === "engineMsg")
           console.warn("Bot reiceived engine error", data);
@@ -178,13 +178,13 @@ export const createBot = <ET extends EngineTypes>(
 
   botSockets.add(serverSocket);
 
-  api.onInput(serverSocket, [
-    "server",
-    {
+  api.onInput(serverSocket, {
+    type: "server",
+    data: {
       type: "join",
       data: { id },
     },
-  ]);
+  });
 };
 
 export const leaveRoom = <ET extends EngineTypes>(
@@ -211,7 +211,7 @@ export const leaveRoom = <ET extends EngineTypes>(
     socketsToEject.forEach((socket) => {
       sockets.delete(socket);
       botSockets.delete(socket);
-      socket.send(["server", { type: "room", data: null }]);
+      socket.send({ type: "server", data: { type: "room", data: null } });
     });
     rooms.delete(room.id);
   } else {
@@ -233,12 +233,12 @@ export const broadcastStateUpdate = <ET extends EngineTypes>(
 ) => {
   room.seats.forEach((socket, seatIndex) => {
     if (socket)
-      socket.send([
-        "engine",
-        engine.adapt
+      socket.send({
+        type: "engine",
+        data: engine.adapt
           ? engine.adapt(state, seatIndex, room.seats.length)
           : state,
-      ]);
+      });
   });
 };
 
@@ -265,7 +265,7 @@ export const updateThroughReducer = <ET extends EngineTypes>(
 
   const isMsg = engine.isMsg(nextStates[0]);
   if (isMsg) {
-    input && input.socket.send(["engineMsg", nextStates[0]]);
+    input && input.socket.send({ type: "engineMsg", data: nextStates[0] });
     return;
   }
 

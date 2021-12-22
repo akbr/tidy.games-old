@@ -33,7 +33,11 @@ export const createDeck = () => {
   return deck;
 };
 
-export const createHands = (numPlayers: number, map: Core["map"]) => {
+export const createHands = (
+  numPlayers: number,
+  map: Core["map"],
+  seed?: string
+) => {
   const handSpecs = Array.from({ length: numPlayers }).map(() => 10);
   Object.values(map)
     .filter((control): control is number => control !== null && control > -1)
@@ -41,7 +45,7 @@ export const createHands = (numPlayers: number, map: Core["map"]) => {
       handSpecs[controllingPlayer] += 2;
     });
 
-  const deck = shuffle(createDeck());
+  const deck = shuffle(createDeck(), seed);
 
   return deal(deck, handSpecs).map((hand) => sortBySpec(hand, handOrder));
 };

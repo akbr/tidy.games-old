@@ -1,4 +1,4 @@
-import type { SocketServer, Socket } from "@lib/socket/types";
+import type { SocketServer, Socket } from "../../socket/types";
 import { Server } from "ws";
 
 function addHeartbeat(wss: Server, ms = 25000) {

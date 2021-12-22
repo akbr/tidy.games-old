@@ -1,4 +1,6 @@
-import type { WizardReducerFns, WizardShape, Core } from "./types";
+import type { ReducerFns } from "@lib/io/engine/reducer";
+import type { WizardTypes, StateGlossary } from "./types";
+
 import { rotateIndex } from "@lib/array";
 import {
   getDealtCards,
@@ -7,17 +9,16 @@ import {
   isValidBid,
 } from "./logic";
 
-type StateOf<T> = Extract<WizardShape["states"], { type: T }>;
+type WizardReducerFns = ReducerFns<WizardTypes>;
 
-export const err = (data: string) =>
-  ({
-    type: "err",
-    data,
-  } as const);
+export const err = (data: string): WizardTypes["msgs"] => ({
+  type: "err",
+  data,
+});
 
 export const toDeal = (
-  s: { numPlayers: number } | StateOf<"turnEnd">["data"]
-): StateOf<"deal"> => {
+  s: { numPlayers: number } | StateGlossary["deal"]
+): WizardTypes["states"] => {
   const dealer = "dealer" in s ? rotateIndex(s.numPlayers, s.dealer) : 0;
   return {
     type: "deal",
@@ -31,7 +32,7 @@ export const toDeal = (
       trick: [],
       trickLeader: rotateIndex(s.numPlayers, dealer),
       trickWinner: null,
-      bids: Array.from({ length: s.numPlayers }, () => null) as Core["bids"],
+      bids: Array.from({ length: s.numPlayers }, () => null),
       actuals: Array.from({ length: s.numPlayers }, () => 0),
       scores: "scores" in s ? s.scores : [],
       // Carry over
@@ -42,23 +43,17 @@ export const toDeal = (
 };
 
 export const reducerFns: WizardReducerFns = {
-  deal: (s) => {
-    const { hands, trumpCard, trumpSuit } = getDealtCards(
-      s.data.numPlayers,
-      s.data.turn
-    );
-    const trumpCardIsWizard = trumpSuit === "w";
-
+  deal: ({ data }) => {
+    const cards = getDealtCards(data.numPlayers, data.turn);
+    const trumpCardIsWizard = cards.trumpSuit === "w";
     return {
       type: trumpCardIsWizard ? "selectTrump" : "bid",
       data: {
-        ...s.data,
+        ...data,
         activePlayer: trumpCardIsWizard
-          ? s.data.dealer
-          : rotateIndex(s.data.numPlayers, s.data.dealer),
-        hands,
-        trumpCard,
-        trumpSuit: trumpCardIsWizard ? null : trumpSuit,
+          ? data.dealer
+          : rotateIndex(data.numPlayers, data.dealer),
+        ...cards,
       },
     };
   },
@@ -224,7 +219,7 @@ export const reducerFns: WizardReducerFns = {
   }),
   showScores: ({ data }) => {
     const gameIsOver = data.turn * data.numPlayers === 60;
-    const scores = [...data.scores, data.bids, data.actuals] as Core["scores"];
+    const scores = [...data.scores, data.bids, data.actuals] as number[][];
 
     return gameIsOver
       ? {

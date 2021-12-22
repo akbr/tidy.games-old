@@ -1,49 +1,112 @@
-import { EngineTypes } from "@lib/engine/types";
-import { ServerApi, ServerOutputs, ServerInputs } from "@lib/server/types";
-import { createSocketManager, SocketManager } from "@lib/socket/socketManager";
-import { createMeter, Meter } from "@lib/timing";
+import type { EngineTypes, Glossary, ActionStubs } from "../engine";
+import type {
+  ServerTypes,
+  ServerInputs,
+  ServerOutputs,
+  ServerActionGlossary,
+  ServerApi,
+} from "../server/types";
+import { createSocketManager, SocketManager } from "../socket/socketManager";
 import { createStore, StoreApi } from "@lib/store";
+import { createMeter, Meter } from "@lib/timing";
 
-import { server, ServerSlice } from "./extensions/server";
-import { dialog, DialogSlice } from "./extensions/dialog";
-import { connectHashListener } from "./extensions/hash";
-
-export type AppPrimitives<
-  ET extends EngineTypes,
-  StateShape extends object = StoreState<ET>
-> = {
-  manager: SocketManager<ServerInputs<ET>, ServerOutputs<ET>>;
+export interface Client<ET extends EngineTypes> {
+  store: StoreApi<ClientState<ET>>;
   meter: Meter<ET["states"]>;
-  store: StoreApi<StateShape>;
+  manager: SocketManager<ServerInputs<ET>, ServerOutputs<ET>>;
+  actions: {
+    server: ConnectedActions<ServerActionGlossary<ET>>;
+    engine: ConnectedActions<ET["actionGlossary"]>;
+  };
+}
+
+export type ClientState<ET extends EngineTypes> = {
+  state: ET["states"] | null;
+  server: ServerTypes<ET>["states"]["data"];
+  msg: ServerTypes<ET>["msgs"] | ET["msgs"] | null;
+  connected: boolean;
+  meter: boolean;
 };
 
-export type ServerState<ET extends EngineTypes> = ServerSlice<ET>;
-export type DialogState<ET extends EngineTypes> = DialogSlice<ET>;
-export type StoreState<ET extends EngineTypes> = ServerState<ET> &
-  DialogState<ET>;
-
-export const createAppScaffolding = <ET extends EngineTypes>(
-  gameServer: ServerApi<ET> | string
-) => {
-  const api = {
-    manager: createSocketManager(gameServer),
-    store: createStore({
-      ...server.createSlice<ET>(),
-      ...dialog.createSlice<ET>(),
-    }),
-    meter: createMeter<ET["states"]>(),
-  };
-
-  const actions = {
-    ...server.createActions(api),
-    ...dialog.createActions(api),
-    waitFor: api.meter.waitFor,
-  };
-
-  api.manager.openSocket();
-
-  server.connectSlice(api);
-  connectHashListener(api);
-
-  return { api, actions };
+export type ConnectedActions<G extends Glossary> = {
+  [Key in keyof G]: (data: G[Key]) => void;
 };
+
+export function createClient<ET extends EngineTypes>(
+  server: ServerApi<ET> | string,
+  engineActions: ActionStubs<ET["actionGlossary"]>
+): Client<ET> {
+  const manager = createSocketManager(server);
+
+  const meter = createMeter<ET["states"]>();
+
+  const initialState: ClientState<ET> = {
+    connected: false,
+    meter: false,
+    state: null,
+    server: null,
+    msg: null,
+  };
+  const store = createStore(initialState);
+
+  meter.subscribe((state) => {
+    store.set({ state });
+  });
+
+  meter.onStatus = (meter) => {
+    store.set({ meter });
+  };
+
+  manager.onStatus = (connected) => {
+    store.set({ connected });
+  };
+
+  manager.onData = (res) => {
+    if (res.type === "engine") {
+      meter.push(res.data);
+    } else if (res.type === "engineMsg") {
+      store.set({ msg: res.data });
+    } else if (res.type === "server") {
+      store.set({ server: res.data.data });
+    } else if (res.type === "serverMsg") {
+      store.set({ msg: res.data });
+    }
+  };
+
+  manager.openSocket();
+
+  const connectActions = <G extends Glossary>(
+    superType: string,
+    actionFns: ActionStubs<G>
+  ): ConnectedActions<G> => {
+    const connectedActions = {} as ConnectedActions<G>;
+    for (let key in actionFns) {
+      //@ts-ignore
+      connectedActions[key] = (data) => {
+        manager.send({
+          //@ts-ignore
+          type: superType,
+          //@ts-ignore
+          data: { type: key, data },
+        });
+      };
+    }
+    return connectedActions;
+  };
+
+  const serverActions: ActionStubs<ServerActionGlossary<ET>> = {
+    join: null,
+    start: null,
+    addBot: null,
+  };
+
+  return {
+    store,
+    meter,
+    manager,
+    actions: {
+      server: connectActions("server", serverActions),
+      engine: connectActions("engine", engineActions),
+    },
+  };
+}

@@ -1,27 +1,21 @@
-import { mkAlea } from "./alea";
+import { createPRNG } from "./prng";
 
-const stock = { random: () => Math.random() };
+export const random = (seed?: string): number => createPRNG(seed)();
 
-export function randomBetween(n1: number, n2: number, seed?: number | string) {
-  const { random } = seed ? mkAlea(String(seed)) : stock;
-  let max = n1 > n2 ? n1 : n2;
-  let min = n1 === max ? n2 : n1;
-  return random() * (max - min) + min;
+export function randomBetween(n1: number, n2: number, seed?: string) {
+  const max = n1 > n2 ? n1 : n2;
+  const min = n1 === max ? n2 : n1;
+  return random(seed) * (max - min) + min;
 }
 
-export function randomIntBetween(
-  n1: number,
-  n2: number,
-  seed?: number | string
-) {
-  const { random } = seed ? mkAlea(String(seed)) : stock;
-  let max = n1 > n2 ? n1 : n2;
-  let min = n1 === max ? n2 : n1;
-  return Math.floor(random() * (max - min + 1) + min);
+export function randomIntBetween(n1: number, n2: number, seed?: string) {
+  const max = n1 > n2 ? n1 : n2;
+  const min = n1 === max ? n2 : n1;
+  return Math.floor(random(seed) * (max - min + 1) + min);
 }
 
-export function randomFromArray<T>(arr: T[], seed?: number | string) {
+export function randomFromArray<T>(arr: T[], seed?: string) {
   if (arr.length === 1) return arr[0];
-  let index = Math.round(randomBetween(0, arr.length - 1, seed));
+  const index = Math.round(randomBetween(0, arr.length - 1, seed));
   return arr[index];
 }

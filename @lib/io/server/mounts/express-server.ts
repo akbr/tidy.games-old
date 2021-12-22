@@ -1,10 +1,10 @@
-import type { Engine, EngineTypes } from "@lib/engine/types";
-
 import { default as express } from "express";
 import * as path from "path";
 
+import type { Engine, EngineTypes } from "../../engine";
+import { createServer } from "../../server";
+
 import { mountWSServer } from "./ws-server";
-import { createServer } from "@lib/server";
 
 const PORT = process.env.PORT || 5000;
 const distPath = path.resolve("dist/");

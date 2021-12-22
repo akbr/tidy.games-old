@@ -1,20 +1,26 @@
-import type { EngineTypes } from "@lib/io/engine";
-import { SocketServer } from "@lib/io/socket/types";
+import type { Engine, EngineTypes, PacketsOf } from "../engine";
+import { SocketServer } from "../socket/types";
 
 export type ServerApi<ET extends EngineTypes> = SocketServer<
   ServerInputs<ET>,
   ServerOutputs<ET>
->;
+> & { engine: Engine<ET> };
 
 export type ServerInputs<ET extends EngineTypes> =
-  | ["engine", ET["actions"]]
-  | ["server", ServerTypes<ET>["actions"]];
+  | { type: "engine"; data: ET["actions"] }
+  | { type: "server"; data: ServerTypes<ET>["actions"] };
 
 export type ServerOutputs<ET extends EngineTypes> =
-  | ["engine", ET["states"]]
-  | ["engineMsg", ET["msgs"]]
-  | ["server", ServerTypes<ET>["states"]]
-  | ["serverMsg", ServerTypes<ET>["msgs"]];
+  | { type: "engine"; data: ET["states"] }
+  | { type: "engineMsg"; data: ET["msgs"] }
+  | { type: "server"; data: ServerTypes<ET>["states"] }
+  | { type: "serverMsg"; data: ServerTypes<ET>["msgs"] };
+
+export type ServerActionGlossary<ET extends EngineTypes> = {
+  join: { id: string; seatIndex?: number } | void;
+  start: ET["options"] | void;
+  addBot: ET["botOptions"] | void;
+};
 
 export type ServerTypes<ET extends EngineTypes> = {
   states: RoomState;
@@ -22,19 +28,7 @@ export type ServerTypes<ET extends EngineTypes> = {
     type: "err";
     data: string;
   };
-  actions:
-    | {
-        type: "join";
-        data?: { id: string; seatIndex?: number };
-      }
-    | {
-        type: "start";
-        data: ET["options"];
-      }
-    | {
-        type: "addBot";
-        data: ET["options"];
-      };
+  actions: PacketsOf<ServerActionGlossary<ET>>;
 };
 
 export type RoomState = {
