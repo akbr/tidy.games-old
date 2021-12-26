@@ -9,6 +9,7 @@ import type {
 import { createSocketManager, SocketManager } from "../socket/socketManager";
 import { createStore, StoreApi } from "@lib/store";
 import { createMeter, Meter } from "@lib/timing";
+import { patchWithPrev } from "./utils";
 
 export interface Client<ET extends EngineTypes> {
   store: StoreApi<ClientState<ET>>;
@@ -50,6 +51,10 @@ export function createClient<ET extends EngineTypes>(
   const store = createStore(initialState);
 
   meter.subscribe((state) => {
+    const lastState = store.get().state;
+    if (lastState) {
+      state.data = patchWithPrev(state.data, lastState.data);
+    }
     store.set({ state });
   });
 

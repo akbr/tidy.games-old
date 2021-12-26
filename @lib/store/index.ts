@@ -51,9 +51,21 @@ export const createStore = <T extends State>(initialValue: T): StoreApi<T> => {
     return selector ? get(selector(curr)) : curr;
   }
 
+  function partialIsEqual(partial: any) {
+    const state = get();
+    let isEqual = true;
+    for (let key in partial) {
+      if (!isEqual) return isEqual;
+      //@ts-ignore
+      isEqual = partial[key] === state[key];
+    }
+    return isEqual;
+  }
+
   return {
     get,
     set: (partial) => {
+      if (partialIsEqual(partial)) return;
       prev = curr;
       curr = {
         ...curr,

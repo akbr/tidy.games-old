@@ -1,9 +1,11 @@
 import type { ReducerFns } from "@lib/io/engine/reducer";
-import type { CondottiereTypes } from "./types";
+import type { Cities, CondottiereTypes } from "./types";
+
 import { removeOne, rotateIndex } from "@lib/array";
 import {
   canDiscard,
   createHands,
+  sortHand,
   createMap,
   getBattleStatus,
   getNextPlayer,
@@ -24,7 +26,7 @@ export const startRound = (
 ): StateType<"deal"> => {
   const round = "round" in data ? data.round + 1 : 1;
   const map = "map" in data ? data.map : createMap();
-  const condotierre = "condotierre" in data ? data.condotierre : 0;
+  const condottiere = "condottiere" in data ? data.condottiere : 0;
   const nextSeed = data.seed ? data.seed + round : undefined;
 
   return {
@@ -32,15 +34,13 @@ export const startRound = (
     data: {
       round,
       numPlayers: data.numPlayers,
-      condotierre,
-      activePlayer: condotierre,
+      condottiere,
+      activePlayer: condottiere,
       map,
       hands: createHands(data.numPlayers, map, nextSeed),
       lines: Array.from({ length: data.numPlayers }).map(() => []),
-      playStatus: Array.from({ length: data.numPlayers }).map(() => true),
-      discardStatus: null,
-      retreatStatus: null,
-      winner: null,
+      status: Array.from({ length: data.numPlayers }).map(() => true),
+      msg: null,
       seed: data.seed,
     },
   };
@@ -49,15 +49,15 @@ export const startRound = (
 const playedOrRetreated = (
   s: StateType<"played"> | StateType<"retreated">
 ): StateType<"play"> | StateType<"battleEnd"> => {
-  const battleStatus = getBattleStatus(s.data.lines, s.data.playStatus);
+  const battleStatus = getBattleStatus(s.data.lines, s.data.status);
 
   if (battleStatus === undefined) {
     return {
       type: "play",
       data: {
         ...s.data,
-        activePlayer: getNextPlayer(s.data.activePlayer!, s.data.playStatus),
-        retreatStatus: null,
+        activePlayer: getNextPlayer(s.data.activePlayer!, s.data.status),
+        msg: null,
       },
     };
   }
@@ -71,12 +71,11 @@ const playedOrRetreated = (
     type: "battleEnd",
     data: {
       ...s.data,
-      winner: battleStatus,
+      msg: [battleStatus, city] as [number, Cities],
       map: { ...s.data.map, [city]: isTied ? null : battleStatus },
-      condotierre: isTied
-        ? rotateIndex(s.data.numPlayers, s.data.condotierre)
+      condottiere: isTied
+        ? rotateIndex(s.data.numPlayers, s.data.condottiere)
         : battleStatus,
-      retreatStatus: null,
     },
   };
 };
@@ -86,7 +85,7 @@ export const reducerFns: CondottiereReducerFns = {
     type: "choose",
     data: {
       ...s.data,
-      activePlayer: s.data.condotierre,
+      activePlayer: s.data.condottiere,
     },
   }),
   choose: (s, a) => {
@@ -103,6 +102,7 @@ export const reducerFns: CondottiereReducerFns = {
           data: {
             ...s.data,
             map: { ...s.data.map, [city]: -1 },
+            msg: city,
           },
         };
   },
@@ -110,7 +110,8 @@ export const reducerFns: CondottiereReducerFns = {
     type: "play",
     data: {
       ...s.data,
-      activePlayer: s.data.condotierre,
+      activePlayer: s.data.condottiere,
+      msg: null,
     },
   }),
   play: (s, a) => {
@@ -126,9 +127,10 @@ export const reducerFns: CondottiereReducerFns = {
         type: "played",
         data: {
           ...s.data,
-          playStatus: s.data.playStatus.map((status, idx) =>
+          status: s.data.status.map((status, idx) =>
             idx === activePlayer ? false : status
           ),
+          msg: order,
         },
       };
     }
@@ -161,30 +163,40 @@ export const reducerFns: CondottiereReducerFns = {
         ...s.data,
         hands,
         lines,
+        msg: order,
       },
     };
   },
   played: playedOrRetreated,
   retreat: (s, a) => {
+    if (!a) return s;
     const validAction =
-      a && a.type === s.type && a.playerIndex === s.data.activePlayer;
+      a.type === s.type && a.playerIndex === s.data.activePlayer;
     if (!validAction)
       return { type: "err", data: "Wrong action type or it's not your turn." };
 
     const order = a.data;
-    const { lines, activePlayer } = s.data;
+    const { lines, activePlayer, hands } = s.data;
+    const nextLines =
+      order === false
+        ? lines
+        : lines.map((line, idx) =>
+            idx === activePlayer ? removeOne(line, order) : line
+          );
+    const nextHands =
+      order === false
+        ? hands
+        : hands.map((hand, idx) =>
+            idx === activePlayer ? sortHand([...hand, order]) : hand
+          );
 
     return {
       type: "retreated",
       data: {
         ...s.data,
-        lines:
-          order === false
-            ? lines
-            : lines.map((line, idx) =>
-                idx === activePlayer ? removeOne(line, order) : line
-              ),
-        retreatStatus: order,
+        lines: nextLines,
+        hands: nextHands,
+        msg: order,
       },
     };
   },
@@ -197,7 +209,7 @@ export const reducerFns: CondottiereReducerFns = {
         type: "gameEnd",
         data: {
           ...s.data,
-          winner: winningIndex,
+          msg: winningIndex,
         },
       };
     }
@@ -207,10 +219,9 @@ export const reducerFns: CondottiereReducerFns = {
       data: {
         ...s.data,
         activePlayer: -1,
-        discardStatus: Array.from({ length: s.data.numPlayers }).map(
-          () => null
-        ),
-        winner: null,
+        lines: s.data.lines.map(() => []),
+        status: Array.from({ length: s.data.numPlayers }).map(() => null),
+        msg: null,
       },
     };
   },
@@ -221,7 +232,7 @@ export const reducerFns: CondottiereReducerFns = {
     if (a.data === true && !canDiscard(s.data.hands[a.playerIndex]))
       return { type: "err", data: "You have mercanies in your hand." };
 
-    const status = s.data.discardStatus!.map((status, idx) =>
+    const status = s.data.status!.map((status, idx) =>
       idx === a.playerIndex ? a.data : status
     );
     const discardsComplete = !status.includes(null);
@@ -230,12 +241,12 @@ export const reducerFns: CondottiereReducerFns = {
       type: discardsComplete ? "discardResults" : "discard",
       data: {
         ...s.data,
-        discardStatus: status,
+        status,
       },
     };
   },
   discardResults: (s) => {
-    const didDiscard = (idx: number) => s.data.discardStatus![idx];
+    const didDiscard = (idx: number) => s.data.status[idx];
     const hands = s.data.hands.map((hand, idx) =>
       didDiscard(idx) ? [] : hand
     );
@@ -249,10 +260,9 @@ export const reducerFns: CondottiereReducerFns = {
         type: "choose",
         data: {
           ...s.data,
-          activePlayer: s.data.condotierre,
+          activePlayer: s.data.condottiere,
           hands,
-          playStatus: hands.map((hand) => hand.length > 0),
-          discardResults: null,
+          status: hands.map((hand) => hand.length > 0),
         },
       };
     }

@@ -13,56 +13,27 @@ import { debounce } from "@lib/timing";
 
 setup(h);
 
-import { ResStream } from "./prototype";
-import { server } from "@lib/io/client/extensions/server";
 // -------------------------------
+import { JSONDiff } from "./protoView/json";
 
-export type UnionizeObj<Obj extends Record<string, (...args: any) => any>> = {
-  [Key in keyof Obj]: ReturnType<Obj[Key]> extends undefined
-    ? { type: Key; data?: undefined }
-    : { type: Key; data: ReturnType<Obj[Key]> };
-}[keyof Obj];
-
-const actions = {
-  start: () => undefined,
-  play: (input: 1 | 2 | null, bool: boolean) => input,
-};
-
-type Actions = UnionizeObj<typeof actions>;
-
-let test = wrap("hola", { name: "Aaron" });
-
-const serverActions: ActionFns<ActionGlossary> = {
-  join: () => ({ id: "test" }),
-  start: () => undefined,
-};
-
-const ActionInput = ({
-  actionKey,
-  fn,
-}: {
-  actionKey: string;
-  fn: (str: string) => object | undefined;
-}) => {
-  const button = <button>{actionKey}</button>;
-  if (fn.length > 0) {
-    return (
-      <div>
-        {button}
-        <input></input>
-      </div>
-    );
-  }
-  return button;
-};
+const prev = { name: "Aaron", age: 22, head: { hair: "brown" } };
+const curr = { name: "Aaron", age: 22, head: { hair: "brown" } };
 
 const WIP = () => {
   return (
-    <>
-      {Object.entries(serverActions).map(([actionKey, fn]) => (
-        <ActionInput actionKey={actionKey} fn={fn} />
-      ))}
-    </>
+    <div>
+      <div class="">
+        <pre class="font-bold text-lg">deal</pre>
+        <JSONDiff curr={curr} prev={prev} />
+      </div>
+    </div>
   );
 };
 render(<WIP />, document.getElementById("app")!);
+
+/**
+      <div class="absolute top-1 left-1 ">
+        <pre class="inline bg-green-700 ">connected</pre>
+        <JSONDisplay obj={{ room: "data", name: "bob", players: [1, 2, 34] }} />
+      </div>
+ */

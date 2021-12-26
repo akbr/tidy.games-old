@@ -31,33 +31,38 @@ export type Cities =
   | "nap";
 
 export type Core = {
-  round: number;
+  // ------
+  // Static
+  // ------
   numPlayers: number;
-  condotierre: number;
+  seed?: string;
+  // -------
+  // Context
+  // -------
+  round: number;
   activePlayer: number;
+  condottiere: number;
+  status: (boolean | null)[]; // Players in active play OR async discard decisions
+  // ---------
+  // Materials
+  // ---------
   map: Record<Cities, null | number>;
   hands: Cards[][];
   lines: Cards[][];
-  playStatus: boolean[];
-  seed?: string;
-  // ---
-  winner: number | null;
-  discardStatus: null | (null | boolean)[];
-  retreatStatus: null | false | Mercenaries;
 };
 
 export type StateGlossary = {
-  deal: Core;
-  choose: Core;
-  chosen: Core;
-  play: Core;
-  played: Core;
-  retreat: Core;
-  retreated: Core;
-  battleEnd: Core;
-  discard: Core;
-  discardResults: Core;
-  gameEnd: Core;
+  deal: Core & { msg: null };
+  choose: Core & { msg: null };
+  chosen: Core & { msg: Cities };
+  play: Core & { msg: null };
+  played: Core & { msg: Cards | false };
+  retreat: Core & { msg: null };
+  retreated: Core & { msg: Cards | false };
+  battleEnd: Core & { msg: [number, Cities] };
+  discard: Core & { msg: null };
+  discardResults: Core & { msg: null };
+  gameEnd: Core & { msg: number };
 };
 
 export type MsgGlossary = {

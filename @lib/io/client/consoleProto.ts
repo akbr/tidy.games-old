@@ -25,7 +25,7 @@ export function consoleProto<ET extends EngineTypes>(
 
   client.store.subscribe(
     (x) => x.state,
-    (state) => {
+    (state, prev) => {
       if (state === null) return;
       console.log(
         `%c STATE ` + `%c ${state.type}` + `%c ${JSON.stringify(state.data)}`,

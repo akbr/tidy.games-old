@@ -33,6 +33,8 @@ export const createDeck = () => {
   return deck;
 };
 
+export const sortHand = (hand: Cards[]) => sortBySpec(hand, handOrder);
+
 export const createHands = (
   numPlayers: number,
   map: Core["map"],
@@ -47,7 +49,7 @@ export const createHands = (
 
   const deck = shuffle(createDeck(), seed);
 
-  return deal(deck, handSpecs).map((hand) => sortBySpec(hand, handOrder));
+  return deal(deck, handSpecs).map((hand) => sortHand(hand));
 };
 
 export const getBattleStrength = (line: Cards[], isWinter: boolean) => {
@@ -78,7 +80,7 @@ export const getBattleStrength = (line: Cards[], isWinter: boolean) => {
  */
 export const getBattleStatus = (
   lines: Cards[][],
-  playStatus: boolean[]
+  playStatus: Core["status"]
 ): number | void => {
   const cards = new Set(lines.flat());
 
@@ -127,7 +129,7 @@ export const isWinner = (map: Core["map"], numPlayers: number) => {
 
 export const getNextPlayer = (
   activePlayer: number,
-  playStatus: Core["playStatus"]
+  playStatus: Core["status"]
 ) => {
   let nextPlayer = null;
   let lastTried = activePlayer;
