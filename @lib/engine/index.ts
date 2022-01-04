@@ -128,7 +128,8 @@ interface Machine<ET extends EngineTypes> {
   getStream: (player?: number) => Stream<ET>;
   getState: (player?: number) => ET["states"];
   submit: (
-    action: ET["actions"]
+    action: ET["actions"],
+    player?: number
   ) => { type: "success"; data: null } | { type: "err"; data: string };
 }
 
@@ -153,7 +154,8 @@ export const createMachine = <ET extends EngineTypes>(
         : stream;
       return adaptedStream;
     },
-    submit: (action) => {
+    submit: (action, player) => {
+      action = { ...action, player };
       if (isErr(stream)) return envelop("err", stream);
       const nextStream = engine.next(getLastState(stream)!, action);
       if (isErr(nextStream)) return envelop("err", nextStream);

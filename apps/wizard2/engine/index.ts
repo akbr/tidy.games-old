@@ -84,7 +84,10 @@ const nextRound = (
 export const getInitialState: GetInitialState<WizardTypes> = (
   { numPlayers },
   options
-) => nextRound({ numPlayers, seed: options ? options.seed : undefined });
+) => {
+  if (numPlayers < 2 || numPlayers > 6) return "Invalid number of players.";
+  return nextRound({ numPlayers, seed: options ? options.seed : undefined });
+};
 
 export const chart: Chart<WizardTypes> = {
   startRound: ({ data }) => {

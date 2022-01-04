@@ -1,4 +1,3 @@
-import type { CreateEngineTypes, GetInitialState, Chart } from "@lib/engine";
 import { createMachine } from "@lib/engine";
 import { engine } from "./engine";
 
@@ -7,9 +6,12 @@ import { expect } from "chai";
 const res = createMachine(engine, { numPlayers: 2 }, { seed: "test" });
 
 if (res.type === "success") {
-  let machine = res.data;
-  console.log(machine.submit({ type: "bid", data: 1, player: 1 }));
-  console.log(machine.getStream());
-  console.log(machine.submit({ type: "bid", data: 1, player: 0 }));
-  console.log(machine.getStream());
+  let { submit, getStream, getState } = res.data;
+  submit({ type: "bid", data: 1 }, 1);
+  submit({ type: "bid", data: 1 }, 0);
+  submit({ type: "play", data: "8|c" }, 1);
+  submit({ type: "play", data: "13|c" }, 0);
+  console.log(getState());
+} else if (res.type === "err") {
+  console.log(res);
 }
