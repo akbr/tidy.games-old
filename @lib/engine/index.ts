@@ -130,7 +130,7 @@ interface Machine<ET extends EngineTypes> {
   submit: (
     action: ET["actions"],
     player?: number
-  ) => { type: "success"; data: null } | { type: "err"; data: string };
+  ) => { type: "success"; data: Stream<ET> } | { type: "err"; data: string };
 }
 
 export const createMachine = <ET extends EngineTypes>(
@@ -149,14 +149,10 @@ export const createMachine = <ET extends EngineTypes>(
   const machine: Machine<ET> = {
     getStream: (player) => {
       const shouldAdapt = player !== undefined && engine.adapt;
-      const adaptedStream = shouldAdapt
-        ? stream.map((i) => engine.adapt!(i, player))
-        : stream;
-      return adaptedStream;
+      return shouldAdapt ? stream.map((i) => engine.adapt!(i, player)) : stream;
     },
     submit: (action, player) => {
       action = { ...action, player };
-      if (isErr(stream)) return envelop("err", stream);
       const nextStream = engine.next(getLastState(stream)!, action);
       if (isErr(nextStream)) return envelop("err", nextStream);
       if (nextStream === null)
@@ -165,15 +161,14 @@ export const createMachine = <ET extends EngineTypes>(
           "State did not advance, and no error message was provided."
         );
       stream = nextStream;
-      return envelop("success", null);
+      return envelop("success", stream);
     },
     getState: (player) => {
       const shouldAdapt = player !== undefined && engine.adapt;
-      const state = getLastState(stream)!;
-      const adaptedState = shouldAdapt
-        ? engine.adapt!(envelop("state", state), player).data
-        : state;
-      return adaptedState;
+      const lastState = getLastState(stream)!;
+      return shouldAdapt
+        ? engine.adapt!(envelop("state", lastState), player).data
+        : lastState;
     },
   };
 
