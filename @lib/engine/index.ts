@@ -124,36 +124,34 @@ export const createNext =
     return stateChanged ? stream : null;
   };
 
-type MachineRes<ET extends EngineTypes> =
-  | { type: "stream"; data: Stream<ET> }
-  | { type: "err"; data: string };
 interface Machine<ET extends EngineTypes> {
-  init: (ctx: InitCtx, options?: ET["options"]) => MachineRes<ET>;
-  get: (playerPerpsective?: number) => MachineRes<ET>;
-  submit: (action: ET["actions"]) => MachineRes<ET>;
+  getStream: (player?: number) => Stream<ET>;
+  getState: (player?: number) => ET["states"];
+  submit: (
+    action: ET["actions"]
+  ) => { type: "success"; data: null } | { type: "err"; data: string };
 }
 
 export const createMachine = <ET extends EngineTypes>(
-  engine: Engine<ET>
-): Machine<ET> => {
-  let stream: Stream<ET> | string = "Game not yet initiated.";
+  engine: Engine<ET>,
+  ctx: InitCtx,
+  options?: ET["options"]
+): { type: "success"; data: Machine<ET> } | { type: "err"; data: string } => {
+  let stream: Stream<ET> = [];
 
-  return {
-    init: (ctx, options) => {
-      let initialState = engine.getInitialState(ctx, options);
-      if (isErr(initialState)) return envelop("err", initialState);
-      let nextStream = engine.next(initialState);
-      if (isErr(nextStream)) return envelop("err", nextStream);
-      stream = [envelop("state", initialState), ...(nextStream || [])];
-      return envelop("stream", stream);
-    },
-    get: (player) => {
-      if (isErr(stream)) return envelop("err", stream);
+  let initialState = engine.getInitialState(ctx, options);
+  if (isErr(initialState)) return envelop("err", initialState);
+  let nextStream = engine.next(initialState);
+  if (isErr(nextStream)) return envelop("err", nextStream);
+  stream = [envelop("state", initialState), ...(nextStream || [])];
+
+  const machine: Machine<ET> = {
+    getStream: (player) => {
       const shouldAdapt = player !== undefined && engine.adapt;
       const adaptedStream = shouldAdapt
         ? stream.map((i) => engine.adapt!(i, player))
         : stream;
-      return envelop("stream", adaptedStream);
+      return adaptedStream;
     },
     submit: (action) => {
       if (isErr(stream)) return envelop("err", stream);
@@ -162,10 +160,20 @@ export const createMachine = <ET extends EngineTypes>(
       if (nextStream === null)
         return envelop(
           "err",
-          "State did not advance, but no error message was provided."
+          "State did not advance, and no error message was provided."
         );
       stream = nextStream;
-      return envelop("stream", nextStream);
+      return envelop("success", null);
+    },
+    getState: (player) => {
+      const shouldAdapt = player !== undefined && engine.adapt;
+      const state = getLastState(stream)!;
+      const adaptedState = shouldAdapt
+        ? engine.adapt!(envelop("state", state), player).data
+        : state;
+      return adaptedState;
     },
   };
+
+  return envelop("success", machine);
 };
