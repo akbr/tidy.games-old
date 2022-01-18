@@ -2,7 +2,6 @@
   --app-max-width: 700px;
   --app-min-width: 300px;
   --app-min-height: 500px;
-  --backdrop-background: #2a1b0e;
   --table-background: radial-gradient(
     circle,
     rgb(0, 133, 11) 20%,
@@ -15,8 +14,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   overflow: hidden;
   width: 100%;
-  background-color: #333;
-  color: white;
+  background-color: #666;
 }
 
 #root {
@@ -24,4 +22,12 @@ body {
   margin: auto;
   height: 100%;
   overflow: hidden;
+}
+
+.transformVars {
+  transform: translate(
+      calc(var(--d-x, 0px) + var(--t-x, 0px)),
+      calc(var(--d-y, 0px) + var(--t-y, 0px))
+    )
+    scale(var(--t-s, 1));
 }

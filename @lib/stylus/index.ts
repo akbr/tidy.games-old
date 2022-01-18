@@ -4,13 +4,13 @@ import { Task } from "../timing";
 import {
   extractTransforms,
   compileTransforms,
-  stripStyles
+  stripStyles,
 } from "./transforms";
 import {
   applyStyles,
   wrap,
   resolveFnValues,
-  createAnimationTask
+  createAnimationTask,
 } from "./utils";
 import { all } from "../timing";
 
@@ -52,11 +52,11 @@ export function style(
       let transform = compileTransforms({
         ...baseTransforms,
         ...stringTransforms,
-        ...styles
+        ...styles,
       });
       return {
         ...stripStyles(styles),
-        transform
+        transform,
       };
     });
 

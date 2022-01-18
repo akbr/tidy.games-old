@@ -58,7 +58,7 @@ export const WithUpdate = <T>({
   fn,
   children,
 }: {
-  props: T;
+  props?: T;
   fn: Updater<T>;
   children?: ComponentChildren;
 }) => {
@@ -87,7 +87,7 @@ export const WithUpdate = <T>({
     }
     //@ts-ignore
     propsRef.current = props;
-  }, [elRef, fn, props]);
+  });
 
   return h(Fragment, null, children);
 };
