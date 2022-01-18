@@ -1,11 +1,20 @@
-export type Els = Element | Element[];
-export type RawStylesBlock = {
-  [key: string]: string | number | FnValue<string | number>;
+type Value = string | number;
+type ValueFn = (idx: number, length: number) => Value;
+type Input = Value | ValueFn;
+
+interface CSSStyleDeclarationWithTransforms extends CSSStyleDeclaration {
+  x: string;
+  y: string;
+  s: string;
+  r: string;
+}
+
+export type Styles = {
+  [key in keyof CSSStyleDeclarationWithTransforms]?: Input;
 };
-export type StylesInput =
-  | RawStylesBlock
-  | RawStylesBlock[]
-  | FnValue<RawStylesBlock | RawStylesBlock[]>;
-export type Options = RawStylesBlock | FnValue<RawStylesBlock>;
-export type Styles = { [key: string]: string | number };
-export type FnValue<T> = (idx: number, length: number) => T;
+
+export type Options = {
+  [key in keyof KeyframeAnimationOptions]?: Input;
+};
+
+export type Resolvable = Record<string, Input | undefined>;

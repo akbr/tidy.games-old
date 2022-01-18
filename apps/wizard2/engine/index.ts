@@ -210,34 +210,34 @@ export const chart: Chart<WizardTypes> = {
       },
     };
   },
-  playEnd: (s) => {
-    const roundContinues = s.data.hands[0].length > 0;
+  playEnd: ({ data }) => {
+    const roundContinues = data.hands[0].length > 0;
     if (roundContinues) {
       let trickLeader = rotateIndex(
-        s.data.numPlayers,
-        s.data.trickWinner!,
-        s.data.trickLeader
+        data.numPlayers,
+        data.trickWinner!,
+        data.trickLeader
       );
       return {
         type: "play",
         data: {
-          ...s.data,
+          ...data,
           trickLeader,
           player: trickLeader,
         },
       };
     }
 
-    const gameContinues = s.data.numPlayers * s.data.round !== 60;
+    const gameContinues = data.numPlayers * data.round !== 60;
     if (gameContinues) {
-      return nextRound(s.data);
+      return nextRound(data);
     }
 
     return {
       type: "end",
       data: {
-        ...s.data,
-        scores: [...s.data.scores, s.data.bids, s.data.actuals] as number[][],
+        ...data,
+        scores: [...data.scores, data.bids, data.actuals] as number[][],
       },
     };
   },

@@ -1,86 +1,54 @@
-import { Els, RawStylesBlock, StylesInput, Options } from "./types";
-import { Task } from "../timing";
-
+import type { Styles, Options } from "./types";
 import {
-  extractTransforms,
-  compileTransforms,
-  stripStyles,
-} from "./transforms";
-import {
-  applyStyles,
-  wrap,
-  resolveFnValues,
-  createAnimationTask,
-} from "./utils";
-import { all } from "../timing";
+  resolveValues,
+  ensureArray,
+  setStyles,
+  stylesAreRedundant,
+  createAnimationWrapper,
+} from "./core";
+import { setUnits } from "./units";
+import { applyTransforms } from "./transforms";
 
-export function style(elInput: Els, stylesInput: StylesInput): void;
 export function style(
-  elInput: Els,
-  stylesInput: StylesInput,
-  options: Options
-): Task;
-export function style(
-  elInput: Els,
-  stylesInput: StylesInput,
-  options?: Options
+  els: Element | Element[],
+  inputStyles: Styles | Styles[],
+  options?: Options | Options[]
 ) {
-  let els: HTMLElement[] = wrap(elInput) as HTMLElement[];
+  const elsArr = ensureArray(els);
+  const length = elsArr.length;
 
-  let allStyles: RawStylesBlock[][] = Array.isArray(stylesInput)
-    ? [stylesInput]
-    : typeof stylesInput === "function"
-    ? els.map((_, idx, arr) => wrap(stylesInput(idx, arr.length)))
-    : [[stylesInput]];
+  const stylesArr = Array.isArray(inputStyles)
+    ? inputStyles
+    : Array.from({ length }, () => inputStyles);
+  const compiledStyles = stylesArr
+    .map((styles, idx) => resolveValues(styles, idx, length))
+    .map(setUnits)
+    .map((styles, idx) => applyTransforms(styles, elsArr[idx]));
 
-  let allOptions: RawStylesBlock[];
-  if (options) {
-    allOptions =
-      typeof options === "function"
-        ? els.map((_, idx, arr) => options(idx, arr.length))
-        : [options];
-  }
+  const optionsArr = Array.isArray(options)
+    ? options
+    : Array.from({ length }, () => options);
+  const compiledOptions = optionsArr.map(
+    (options, idx) => options && resolveValues(options, idx, length)
+  );
 
-  let tasks = els.map((el, index, arr) => {
-    let myStyleList =
-      typeof stylesInput === "function" ? allStyles[index] : allStyles[0];
-    let baseTransforms = extractTransforms(el.style.transform);
+  const results = elsArr.map(($el, idx) => {
+    const styles = compiledStyles[idx];
+    const options = compiledOptions[idx];
 
-    let myStyleBlocks = myStyleList.map((rawStyles) => {
-      let styles = resolveFnValues(rawStyles, index, arr.length);
-      let stringTransforms = extractTransforms(styles.transform as string);
-      let transform = compileTransforms({
-        ...baseTransforms,
-        ...stringTransforms,
-        ...styles,
-      });
-      return {
-        ...stripStyles(styles),
-        transform,
-      };
-    });
-
-    let lastStyleBlock = myStyleBlocks[myStyleBlocks.length - 1];
+    if (!styles) return undefined;
 
     if (!options) {
-      return applyStyles(el, lastStyleBlock);
+      setStyles($el, styles);
+      return undefined;
     }
 
-    let myOptions =
-      typeof options === "function"
-        ? resolveFnValues(allOptions[index], index, arr.length)
-        : resolveFnValues(allOptions[0], index, arr.length);
+    if (stylesAreRedundant($el, styles)) {
+      return null;
+    }
 
-    myOptions.easing = myOptions.easing || "ease";
-
-    let task = createAnimationTask(
-      el.animate(myStyleBlocks, myOptions),
-      el,
-      lastStyleBlock
-    );
-
-    return task;
+    return createAnimationWrapper($el, styles, options);
   });
 
-  return options ? all(tasks as Task[]) : undefined;
+  return results;
 }

@@ -37,8 +37,8 @@ const useInitDrag = (ref: RefObject<HTMLElement>) => {
         const played = y < -50;
         const styles = { x: 0, y: 0 };
         style($el, played ? { ...styles, top: "0px", left: "0px" } : styles, {
-          duration: 200,
-        }).finished.then(() => {
+          duration: 150,
+        })[0]!.finished.then(() => {
           played && console.log("played", $el.dataset.card);
         });
       },
