@@ -1,6 +1,4 @@
-import { styled } from "goober";
-import { colors } from "./createCard";
-
+/**
 const Card = styled("div")`
   display: inline-block;
   background-color: #fffff4;
@@ -43,3 +41,5 @@ export const MiniCard = ({ suit, value }: MiniCardProps) => {
     </Card>
   );
 };
+
+ */

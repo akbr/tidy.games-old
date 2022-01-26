@@ -1,8 +1,8 @@
 const shorthands: Record<string, string> = {
   translateX: "x",
   translateY: "y",
-  rotate: "r",
-  scale: "s",
+  rotate: "rotate",
+  scale: "scale",
 };
 
 export function extractTransforms(tranformStr: string) {
@@ -19,10 +19,10 @@ export function extractTransforms(tranformStr: string) {
 export const createTransformString = ({
   x = "0px",
   y = "0px",
-  r = "0deg",
-  s = "1",
+  rotate = "0deg",
+  scale = "1",
 }: Record<string, string>) =>
-  `translateX(${x}) translateY(${y}) rotate(${r}) scale(${s})`;
+  `translateX(${x}) translateY(${y}) rotate(${rotate}) scale(${scale})`;
 
 function stripUndefined<T>(obj: Record<string, T>) {
   const next: Record<string, T> = {};
@@ -30,31 +30,22 @@ function stripUndefined<T>(obj: Record<string, T>) {
   return next;
 }
 
-function hasIndividualTransforms({ x, y, s, r }: Record<string, string>) {
-  return (
-    x !== undefined || y !== undefined || s !== undefined || r !== undefined
-  );
-}
+export function mungeTransforms(
+  styles: Record<string, string | string[]>,
+  currentTransformString: string
+) {
+  const { x, y, rotate, scale, ...nextStyles } = styles;
 
-export function applyTransforms(styles: Record<string, string>, el?: Element) {
-  if (!hasIndividualTransforms(styles)) return styles;
+  const transforms = [x, y, rotate, scale];
 
-  const { transform, x, y, r, s, ...nextStyles } = styles;
+  if (!transforms.find((x) => x !== undefined)) return styles;
 
-  if (transform) {
-    nextStyles.transform = transform;
-    return nextStyles;
-  }
-
-  const nextTransforms = stripUndefined({ x, y, r, s });
-
-  const prevTransforms = el
-    ? extractTransforms((el as HTMLElement).style.transform)
-    : {};
+  if (transforms.find((x) => Array.isArray(x)))
+    throw new Error("Cannot use array keyframes for individual transforms.");
 
   nextStyles.transform = createTransformString({
-    ...prevTransforms,
-    ...nextTransforms,
+    ...extractTransforms(currentTransformString),
+    ...(stripUndefined({ x, y, rotate, scale }) as Record<string, string>),
   });
 
   return nextStyles;

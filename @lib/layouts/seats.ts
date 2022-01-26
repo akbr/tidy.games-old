@@ -1,5 +1,7 @@
 import { Vec } from "@lib/vector";
 
+type Dimensions = { width: number; height: number };
+
 const topCenter = [0.5, 0];
 const leftCenter = [0, 0.5];
 const leftTop = [0, 1 / 3];
@@ -35,14 +37,14 @@ const ratio2CSSDirection = ([x, y]: number[]) => {
 export const getSeatRatio = (numPlayers: number, seatIndex: number) =>
   seatRatios[numPlayers - 1][seatIndex];
 
-export const getSeatPosition = (
-  numPlayers: number,
-  seatIndex: number,
-  [tableWidth, tableHeight]: number[]
-) => Vec.mulV(getSeatRatio(numPlayers, seatIndex), [tableWidth, tableHeight]);
-
 export const getSeatDirectionVector = (numPlayers: number, seatIndex: number) =>
   ratio2DirectionVec(getSeatRatio(numPlayers, seatIndex));
 
 export const getSeatCSSDirection = (numPlayers: number, seatIndex: number) =>
   ratio2CSSDirection(getSeatRatio(numPlayers, seatIndex));
+
+export const getSeatPosition = (
+  numPlayers: number,
+  seatIndex: number,
+  { width, height }: Dimensions
+) => Vec.mulV(getSeatRatio(numPlayers, seatIndex), [width, height]);

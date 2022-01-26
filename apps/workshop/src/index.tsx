@@ -1,89 +1,92 @@
 if (process.env.NODE_ENV === "development") require("preact/debug");
-import { setup, styled, css, keyframes } from "goober";
-import {
-  ComponentChildren,
-  h,
-  render,
-  cloneElement,
-  VNode,
-  RefObject,
-} from "preact";
-import { Updater, useRefreshOnResize, WithUpdate } from "@lib/premix";
-import {
-  useRef,
-  Ref,
-  useState,
-  useLayoutEffect,
-  useCallback,
-  useEffect,
-} from "preact/hooks";
-
-setup(h);
-
 // -------------------------------
-import { Card, CardProps } from "./cards";
-import { dragify } from "./dragify";
-import { style } from "@lib/stylus";
+import { h, Fragment, render, FunctionComponent } from "preact";
+import { useRefreshOnResize } from "@lib/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+// -------------------------------
+import { createStore } from "@lib/state/store";
 
-const useInitDrag = (ref: RefObject<HTMLElement>) => {
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    dragify(ref.current, {
-      onStart: ($el) => {},
-      onDrag: ($el, x, y) => {
-        style($el, { x, y });
-      },
-      onEnd: ($el, x, y) => {
-        const played = y < -50;
-        const styles = { x: 0, y: 0 };
-        style($el, played ? { ...styles, top: "0px", left: "0px" } : styles, {
-          duration: 150,
-        })[0]!.finished.then(() => {
-          played && console.log("played", $el.dataset.card);
-        });
-      },
-    });
-  }, [ref]);
-};
+import { getHandHeight } from "@lib/layouts/hand";
 
-const usePositionInHand = (ref: RefObject<HTMLElement>, idx: number) => {
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-    style(ref.current, {
-      left: idx * 100,
-      top: 500,
-    });
-  });
-};
+import { TrickSection } from "@lib/components/TrickSection";
+import { HandSection } from "@lib/components/HandSection";
+import { Card } from "@lib/components/cards";
 
-const WizardCard = ({ suit, value, idx }: { idx: number } & CardProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useInitDrag(ref);
-  usePositionInHand(ref, idx);
+import { HandCard } from "./HandCard";
+const store = createStore({ hand: [] as string[], trick: [] as string[] });
+const { play } = store.createActions((set, get) => ({
+  play: (id: string) => {
+    const { hand, trick } = get();
+    set({ hand: hand.filter((x) => x !== id), trick: [...trick, id] });
+  },
+}));
 
-  return (
-    <div ref={ref} data-card={`${value}|${suit}`} class="absolute">
-      <Card suit={suit} value={value} />
-    </div>
-  );
-};
-
-const cards = [
-  { suit: "c", value: 2 },
-  { suit: "d", value: 12 },
-  { suit: "d", value: 4 },
-  { suit: "d", value: 5 },
-];
-
-const WIP = () => {
+const Table: FunctionComponent<{ heightOffset: number }> = ({
+  heightOffset,
+  children,
+}) => {
   useRefreshOnResize();
-
   return (
-    <>
-      {cards.map(({ suit, value }, idx) => (
-        <WizardCard key={suit + value} suit={suit} value={value} idx={idx} />
-      ))}
-    </>
+    <section
+      id="table"
+      class="absolute w-full bg-green-900"
+      style={{ height: `calc(100% - ${heightOffset}px)` }}
+    >
+      {children}
+    </section>
   );
 };
-render(<WIP />, document.getElementById("app")!);
+
+const TrickCard = ({ cardId }: { cardId: string }) => (
+  <div key={cardId} class="absolute">
+    <Card card={cardId} />
+  </div>
+);
+
+store.subscribe(({ hand, trick }) => {
+  const heightOffset = getHandHeight(
+    hand.length || 1,
+    document.body.getBoundingClientRect()
+  );
+
+  render(
+    <Table heightOffset={heightOffset}>
+      <TrickSection numPlayers={4} leadPlayer={0} perspective={0}>
+        {trick.map((cardId) => (
+          <TrickCard key={cardId} cardId={cardId} />
+        ))}
+      </TrickSection>
+
+      <HandSection>
+        {hand.map((cardId) => (
+          <HandCard key={cardId} play={play} card={cardId} />
+        ))}
+      </HandSection>
+    </Table>,
+    document.getElementById("root")!
+  );
+});
+
+store.set({
+  hand: [
+    "2|c",
+    "3|c",
+    "4|c",
+    "5|c",
+    "6|c",
+    "7|c",
+    "8|c",
+    "9|c",
+    "2|d",
+    "3|d",
+    "4|d",
+    "5|d",
+    "6|d",
+    "7|d",
+    "8|d",
+    "9|d",
+  ],
+  trick: [],
+});
+
+//render(<WIP />, document.getElementById("app")!);

@@ -1,7 +1,6 @@
 import { h } from "preact";
-import { memo } from "preact/compat";
 
-export const values = {
+export const values: Partial<Record<string, () => h.JSX.Element>> = {
   2: () => (
     <svg viewBox="0 0 32 32">
       <path d="M6.227 31.999l0.166-2.011c0.527-6.106 1.936-8.163 9.911-14.536 3.872-3.089 5.142-4.614 5.319-6.381 0.509-4.17-3.45-5.473-6.027-5.492-3.33-0.030-6.807 1.729-5.741 6.276l-3.322 1.047c-0.753-4.11 0.022-7.967 3.529-9.677 4.682-2.23 10.687-1.356 13.719 2.158 2.038 2.358 2.505 5.62 1.409 8.174-3.194 6.524-14.028 9.395-14.921 16.944h11.975v-4.204h3.529v7.703z"></path>
@@ -70,7 +69,7 @@ export const values = {
   ),
 };
 
-export const suits = {
+export const suits: Partial<Record<string, () => h.JSX.Element>> = {
   j: () => (
     <svg viewBox="0 0 32 32">
       <path d="M31.010 32v-8.040h-3.216v4.824h-11.457v-11.94h5.829v3.216h3.216v-9.648h-3.216v3.216h-5.829v-10.412h11.457v4.020h3.216v-7.236h-22.513v3.216h4.020v22.191c0 3.176-1.286 3.578-3.861 3.546s-4.38-0.37-4.38-3.546v-4.663h-3.216c-0.074 1.544-0.086 3.081-0.050 4.671s-0.077 3.228 0.779 4.478c0.768 1.122 1.606 2.107 3.492 2.107z"></path>
@@ -103,7 +102,7 @@ export const suits = {
   ),
 };
 
-const colors = {
+export const colors: Partial<Record<string, string>> = {
   s: "black",
   c: "black",
   h: "#DC143C",
@@ -111,32 +110,3 @@ const colors = {
   w: "blue",
   j: "blue",
 };
-
-function hasKey<O>(obj: O, key: PropertyKey): key is keyof O {
-  return key in obj;
-}
-
-export type CardProps = { suit: string; value: number };
-
-export const Card = memo(({ suit, value }: CardProps) => {
-  const color = hasKey(colors, suit) ? colors[suit] : "black";
-  const showValue = !["w", "j"].includes(suit);
-
-  return (
-    <div class="relative w-[80px] h-[112px] rounded-[8px] bg-[#fffff4] shadow-lg">
-      <div
-        class="flex flex-col pt-[6px] pl-[2px] gap-[4px] w-[26px]"
-        style={{ fill: color }}
-      >
-        {showValue && hasKey(values, value) && values[value]()}
-        {hasKey(suits, suit) && suits[suit]()}
-      </div>
-      <div
-        class="absolute bottom-[6px] right-[2px] w-[54px]"
-        style={{ fill: color }}
-      >
-        {hasKey(suits, suit) && suits[suit]()}
-      </div>
-    </div>
-  );
-});

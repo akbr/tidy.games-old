@@ -107,25 +107,22 @@ export const chart: Chart<WizardTypes> = {
       },
     };
   },
-  deal: ({ data }) => {
-    if (data.trumpSuit === "w") {
-      return {
-        type: "select",
-        data: {
-          ...data,
-          player: data.dealer,
+  deal: ({ data }) =>
+    data.trumpSuit === "w"
+      ? {
+          type: "select",
+          data: {
+            ...data,
+            player: data.dealer,
+          },
+        }
+      : {
+          type: "bid",
+          data: {
+            ...data,
+            player: rotateIndex(data.numPlayers, data.dealer),
+          },
         },
-      };
-    }
-
-    return {
-      type: "bid",
-      data: {
-        ...data,
-        player: rotateIndex(data.numPlayers, data.dealer),
-      },
-    };
-  },
   select: (s, a) => {
     if (!a) return s;
     if (a.type !== s.type || a.player !== s.data.player)

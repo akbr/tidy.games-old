@@ -1,35 +1,31 @@
-type StateShape = { type: string; data?: any };
-type ActionShape = { type: string; data?: any; player?: number };
-type DictShape = Record<string, any>;
+export type Simplify<T> = { [KeyType in keyof T]: T[KeyType] };
 
-type UnionizeStates<Dict extends DictShape> = {
+type UnionizeStates<Dict extends Record<string, any>> = {
   [Key in keyof Dict]: Dict[Key] extends undefined
     ? { type: Key }
     : { type: Key; data: Dict[Key] };
 }[keyof Dict];
 
-type UnionizeActions<Dict extends DictShape> = {
+type UnionizeActions<Dict extends Record<string, any>> = {
   [Key in keyof Dict]: Dict[Key] extends undefined
     ? { type: Key; player?: number }
     : { type: Key; data: Dict[Key]; player?: number };
 }[keyof Dict];
 
 export type EngineTypes = {
-  stateDict: DictShape;
-  states: StateShape;
-  actionDict: DictShape;
-  actions: ActionShape;
+  states: { type: string; data?: any };
+  actions: { type: string; data?: any; player?: number };
+  stateDict: Record<string, any>;
   options: any;
 };
 
 export type CreateEngineTypes<
-  StateDict extends DictShape,
-  ActionDict extends DictShape,
+  StateDict extends Record<string, any>,
+  ActionDict extends Record<string, any>,
   Options extends any = void
 > = {
   stateDict: StateDict;
   states: UnionizeStates<StateDict>;
-  actionDict: ActionDict;
   actions: UnionizeActions<ActionDict>;
   options: Options;
 };
@@ -42,53 +38,38 @@ export type Chart<ET extends EngineTypes> = {
 };
 
 type InitCtx = { numPlayers: number };
-export type GetInitialState<
-  ET extends EngineTypes,
-  InitialState extends ET["states"] = ET["states"]
-> = (ctx: InitCtx, options?: ET["options"]) => InitialState | string;
+export type GetInitialState<ET extends EngineTypes> = (
+  ctx: InitCtx,
+  options?: ET["options"]
+) => ET["states"] | string;
 
-type StreamItem<ET extends EngineTypes> =
-  | { type: "state"; data: ET["states"] }
-  | { type: "action"; data: ET["actions"] };
-type Stream<ET extends EngineTypes> = StreamItem<ET>[];
+export type Update<ET extends EngineTypes> = {
+  action?: ET["actions"];
+  states: ET["states"][];
+};
 
 type Next<ET extends EngineTypes> = (
   state: ET["states"],
   action?: ET["actions"]
-) => Stream<ET> | string | null;
-
-type Adapt<ET extends EngineTypes> = <T extends StreamItem<ET>>(
-  stateOrAction: T,
-  player: number
-) => T;
+) => Update<ET> | string | null;
 
 export type Engine<ET extends EngineTypes> = {
   getInitialState: GetInitialState<ET>;
   next: Next<ET>;
-  adapt?: Adapt<ET>;
 };
 
 export const createEngine = <ET extends EngineTypes>({
   getInitialState,
   chart,
-  adapt,
 }: {
   getInitialState: GetInitialState<ET>;
   chart: Chart<ET>;
-  adapt?: Adapt<ET>;
 }): Engine<ET> => ({
   getInitialState,
   next: createNext(chart),
-  adapt,
 });
 
 export const isErr = (arg: unknown): arg is string => typeof arg === "string";
-export const getLastState = <ET extends EngineTypes>(stream: Stream<ET>) => {
-  let streamObj = [...stream].reverse().find(({ type }) => type === "state") as
-    | { type: "state"; data: ET["states"] }
-    | undefined;
-  return streamObj ? streamObj.data : undefined;
-};
 
 export const envelop = <T extends string, D>(type: T, data: D) => ({
   type,
@@ -97,15 +78,13 @@ export const envelop = <T extends string, D>(type: T, data: D) => ({
 
 export const createNext =
   <ET extends EngineTypes>(chart: Chart<ET>): Next<ET> =>
-  (state, action) => {
-    const stream: Stream<ET> = [];
-    if (action) stream.push(envelop("action", action));
-
-    const initialLength = stream.length;
+  (state, submittedAction) => {
+    const states: ET["states"][] = [];
     let finished = false;
+    let action = submittedAction;
 
     while (!finished) {
-      const prevState = getLastState(stream) || state;
+      const prevState = states[states.length - 1] || state;
       const nextState = chart[prevState.type](
         //@ts-ignore
         prevState,
@@ -114,23 +93,22 @@ export const createNext =
       action = undefined;
       if (isErr(nextState)) return nextState;
       if (nextState !== prevState) {
-        stream.push(envelop("state", nextState));
+        states.push(nextState);
         continue;
       }
       finished = true;
     }
 
-    const stateChanged = stream.length !== initialLength;
-    return stateChanged ? stream : null;
+    return states.length > 0 ? { action: submittedAction, states } : null;
   };
 
 interface Machine<ET extends EngineTypes> {
-  getStream: (player?: number) => Stream<ET>;
+  getUpdate: (player?: number) => Update<ET>;
   getState: (player?: number) => ET["states"];
   submit: (
     action: ET["actions"],
     player?: number
-  ) => { type: "success"; data: Stream<ET> } | { type: "err"; data: string };
+  ) => { type: "success"; data: Update<ET> } | { type: "err"; data: string };
 }
 
 export const createMachine = <ET extends EngineTypes>(
@@ -138,37 +116,38 @@ export const createMachine = <ET extends EngineTypes>(
   ctx: InitCtx,
   options?: ET["options"]
 ): { type: "success"; data: Machine<ET> } | { type: "err"; data: string } => {
-  let stream: Stream<ET> = [];
+  let update: Update<ET>;
 
   let initialState = engine.getInitialState(ctx, options);
   if (isErr(initialState)) return envelop("err", initialState);
-  let nextStream = engine.next(initialState);
-  if (isErr(nextStream)) return envelop("err", nextStream);
-  stream = [envelop("state", initialState), ...(nextStream || [])];
+  let initialUpdate = engine.next(initialState);
+  if (isErr(initialUpdate))
+    return envelop(
+      "err",
+      `Init failed on first update with error: ${initialUpdate}`
+    );
+  update =
+    initialUpdate === null
+      ? { states: [initialState] }
+      : { states: [initialState, ...initialUpdate.states] };
 
   const machine: Machine<ET> = {
-    getStream: (player) => {
-      const shouldAdapt = player !== undefined && engine.adapt;
-      return shouldAdapt ? stream.map((i) => engine.adapt!(i, player)) : stream;
-    },
+    getUpdate: (player) => update,
     submit: (action, player) => {
       action = { ...action, player };
-      const nextStream = engine.next(getLastState(stream)!, action);
-      if (isErr(nextStream)) return envelop("err", nextStream);
-      if (nextStream === null)
+      const prevState = update.states[update.states.length - 1];
+      const res = engine.next(prevState, action);
+      if (isErr(res)) return envelop("err", res);
+      if (res === null)
         return envelop(
           "err",
-          "State did not advance, and no error message was provided."
+          "State did not advance, but no error message was provided."
         );
-      stream = nextStream;
-      return envelop("success", stream);
+      update = res;
+      return envelop("success", update);
     },
     getState: (player) => {
-      const shouldAdapt = player !== undefined && engine.adapt;
-      const lastState = getLastState(stream)!;
-      return shouldAdapt
-        ? engine.adapt!(envelop("state", lastState), player).data
-        : lastState;
+      return update.states[update.states.length - 1];
     },
   };
 

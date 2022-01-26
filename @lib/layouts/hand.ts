@@ -1,94 +1,43 @@
-import { style } from "@lib/stylus";
+const X_PEEK = 35;
+const Y_PEEK = 60;
+const CHILD_WIDTH = 80;
 
-const getMaxInRow = (containerWidth: number, xPeek: number) =>
-  Math.floor(containerWidth / xPeek);
-
-const getNumRows = (
-  numChildren: number,
-  containerWidth: number,
-  xPeek: number
-) => Math.ceil(numChildren / getMaxInRow(containerWidth, xPeek));
+type Dimensions = { width: number; height: number };
 
 export const getHandHeight = (
   numChildren: number,
-  containerWidth: number,
-  xPeek: number,
-  yPeek: number
-) => getNumRows(numChildren, containerWidth, xPeek) * yPeek;
+  { width }: Dimensions,
+  xPeek = X_PEEK,
+  yPeek = Y_PEEK
+) => Math.ceil(numChildren / Math.floor(width / xPeek)) * yPeek;
 
-export const getHandPositions = (
-  children: unknown[],
-  containerDimensions: number[],
-  childWidth: number,
-  xPeek: number,
-  yPeek: number
+export const getIntraHandPosition = (
+  childIdx: number,
+  numChildren: number,
+  { width, height }: Dimensions,
+  childWidth = CHILD_WIDTH,
+  xPeek = X_PEEK,
+  yPeek = Y_PEEK
 ) => {
-  const [containerWidth, containerHeight] = containerDimensions;
-  const maxInRow = getMaxInRow(containerWidth, xPeek);
-  const numRows = getNumRows(children.length, containerWidth, xPeek);
+  const maxInRow = Math.floor(width / xPeek);
+  const numRows = Math.ceil(numChildren / maxInRow);
 
-  const shortBy = numRows * maxInRow - children.length;
+  const rowIdx = Math.floor(childIdx / maxInRow);
+  const childIdxInRow = childIdx % maxInRow;
+  const remainingCards = numChildren - (childIdx + 1);
+  const numInRow =
+    childIdxInRow + remainingCards >= maxInRow
+      ? maxInRow
+      : childIdxInRow + remainingCards + 1;
 
-  return children.map((_, idx) => {
-    const rowNum = Math.trunc((idx + shortBy) / maxInRow);
-    const isFirstRow = rowNum === 0;
-    if (!isFirstRow) idx = idx + shortBy;
+  const rowWidth = xPeek * numInRow + (childWidth - xPeek);
+  const rowExtraSpace = width - rowWidth;
+  const xBuffer = rowExtraSpace > 0 ? rowExtraSpace / 2 : 0;
+  const yBuffer = height - yPeek;
 
-    const pos = {
-      x: (idx % maxInRow) * xPeek,
-      y: containerHeight - (rowNum + 1) * yPeek,
-    };
-    const numInRow = isFirstRow ? maxInRow - shortBy : maxInRow;
-    const adj = containerWidth - (xPeek * (numInRow - 1) + childWidth);
-    if (adj > 0) pos.x += adj / 2;
-    return pos;
-  });
-};
-
-type PositionHandProps = {
-  containerDimensions: number[];
-  anim: "initial" | null;
-  xPeek?: number;
-  yPeek?: number;
-};
-
-export const positionHand = (
-  $root: HTMLElement,
-  { anim, containerDimensions, xPeek = 35, yPeek = 60 }: PositionHandProps
-) => {
-  const children = Array.from($root.childNodes) as HTMLElement[];
-  if (children.length === 0) return;
-
-  const childRect = children[0].getBoundingClientRect();
-  const [containerWidth, containerHeight] = containerDimensions;
-
-  let positions = getHandPositions(
-    children,
-    containerDimensions,
-    childRect.width,
-    xPeek,
-    yPeek
-  );
-
-  style(children, {
-    position: "absolute",
-  });
-
-  if (anim === "initial") {
-    style(children, (idx) => ({
-      x: positions[idx].x,
-      y: positions[idx].y + (yPeek + 10),
-      r: 0,
-    }));
-  }
-
-  style(
-    children,
-    (idx) => ({ ...positions[idx], r: 0 }),
-    anim
-      ? {
-          duration: 250,
-        }
-      : {}
-  );
+  return {
+    zIndex: numRows - rowIdx,
+    x: childIdxInRow * xPeek + xBuffer,
+    y: -rowIdx * yPeek + yBuffer,
+  };
 };

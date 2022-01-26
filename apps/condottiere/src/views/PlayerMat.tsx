@@ -1,31 +1,26 @@
 import { Twemoji } from "@lib/components/Twemoji";
 import { spec } from "@lib/premix";
+import { FunctionComponent } from "preact";
 
-const EntryContainer = spec(
-  <div class="inline-flex items-center w-[42px] h-[24px]" />
-);
-const EntryNumber = spec(
-  <div class="flex content-center text-[14px] ml-1 w-full" />
-);
-const Entry = ({ char = "X", num = 0 }: { char: string; num: number }) => {
+const Entry = ({ char = "X", num = 0 }) => {
   const opacity = num === 0 ? 0.3 : 1;
   return (
-    <EntryContainer style={{ opacity }}>
+    <div class="inline-flex items-center w-[42px] h-[24px]" style={{ opacity }}>
       <Twemoji char={char} size={18} />
-      <EntryNumber>x{num}</EntryNumber>
-    </EntryContainer>
+      <div class="flex content-center text-[14px] ml-1 w-full">x{num}</div>
+    </div>
   );
 };
 
-const PlayArea = spec(
-  <div class="flex flex-col border border-white rounded" />
+const Total: FunctionComponent = ({ children }) => (
+  <div class="flex items-center p-1 bg-red-600 rounded-md">{children}</div>
 );
+
 const Row = spec(<div class="flex justify-around items-center p-1" />);
-const Total = spec(<div class="flex items-center p-1 bg-red-600 rounded-md" />);
 
 const CardMat = () => {
   return (
-    <PlayArea>
+    <div class="flex flex-col border border-white rounded">
       <Row class="bg-black bg-opacity-20">
         <Entry char="🥁" num={1} />
         <Entry char="❄️" num={0} />
@@ -46,7 +41,7 @@ const CardMat = () => {
         <Entry char="🗡️" num={0} />
         <Entry char="💨" num={0} />
       </Row>
-    </PlayArea>
+    </div>
   );
 };
 

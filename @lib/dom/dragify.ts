@@ -58,4 +58,11 @@ export const dragify = (
   $el.addEventListener("mousedown", dragStart);
   $el.addEventListener("touchstart", dragStart);
   $el.ondragstart = () => false;
+
+  return () => {
+    toggleListeners(false);
+    $el.removeEventListener("mousedown", dragStart);
+    $el.removeEventListener("touchstart", dragStart);
+    $el.ondragstart = null;
+  };
 };

@@ -1,20 +1,26 @@
-type Value = string | number;
-type ValueFn = (idx: number, length: number) => Value;
-type Input = Value | ValueFn;
+export type Value =
+  | string
+  | number
+  | ((index: number, length: number) => string | number);
 
-interface CSSStyleDeclarationWithTransforms extends CSSStyleDeclaration {
-  x: string;
-  y: string;
-  s: string;
-  r: string;
+interface BaseStyles
+  extends Omit<CSSStyleDeclaration, "direction" | "transition"> {}
+
+interface TransformShorthands {
+  x?: Value;
+  y?: Value;
+  scale?: Value;
+  rotate?: Value;
 }
 
-export type Styles = {
-  [key in keyof CSSStyleDeclarationWithTransforms]?: Input;
-};
+export type SingleFrame = {
+  [K in keyof BaseStyles]?: Value | Value[];
+} & TransformShorthands;
+
+export type MultiFrame = {
+  [K in keyof BaseStyles]?: Value;
+} & TransformShorthands;
 
 export type Options = {
-  [key in keyof KeyframeAnimationOptions]?: Input;
+  [K in keyof KeyframeAnimationOptions]?: Value;
 };
-
-export type Resolvable = Record<string, Input | undefined>;
