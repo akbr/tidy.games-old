@@ -1,4 +1,5 @@
 import { shuffle, deal, indexOfMax } from "@lib/array";
+import { createPRNG } from "@lib/random/prng";
 
 const SEPERATOR = "|";
 export const createCard = (value: number, suit: string) =>
@@ -34,7 +35,7 @@ export const getDeal = (
   numCards: number,
   seed?: string
 ) => {
-  const deck = shuffle(createDeck(), seed);
+  const deck = shuffle(createDeck(), createPRNG(seed));
   const unsortedHands = deal(
     deck,
     Array.from({ length: numPlayers }, () => numCards)

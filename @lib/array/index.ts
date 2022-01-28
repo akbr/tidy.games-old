@@ -1,5 +1,3 @@
-import { createPRNG } from "@lib/random/prng";
-
 export function rotateIndex(length: number, index: number, steps = 1) {
   if (index < 0) return index;
   const modSteps = Math.abs(steps) > length - 1 ? steps % length : steps;
@@ -20,9 +18,11 @@ export function rotateArray<T>(array: T[], numSteps = 1) {
   return rotatedArray;
 }
 
-export function shuffle<T>(array: T[], seed?: string) {
-  const random = createPRNG(seed);
+export function lastOf<T>(array: T[]) {
+  return array[array.length - 1];
+}
 
+export function shuffle<T>(array: T[], random = Math.random) {
   let length = array.length;
   let t: T;
   let i: number;

@@ -1,4 +1,4 @@
-import type { EngineTypes } from "../../engine";
+import type { EngineTypes } from "@lib/engine";
 import type { Client } from "../.";
 
 type HashStatus = {
@@ -38,7 +38,7 @@ export function connectHashListener<ET extends EngineTypes>({
 }: Client<ET>) {
   function onHashChange() {
     let { id, playerIndex } = getHash();
-    let room = store.get((x) => x.server);
+    let room = store.get().server;
     if (room && room.id === id && room.seatIndex === playerIndex) return;
     if (id) {
       manager.send({
@@ -51,15 +51,12 @@ export function connectHashListener<ET extends EngineTypes>({
   window.onhashchange = onHashChange;
   onHashChange();
 
-  store.subscribe(
-    ({ server }) => server,
-    (currRoom, prevRoom) => {
-      if (currRoom === prevRoom) return;
-      replaceHash(
-        currRoom
-          ? { id: currRoom.id, playerIndex: currRoom.seatIndex }
-          : undefined
-      );
-    }
-  );
+  store.subscribe((curr, prev) => {
+    if (curr.server === prev.server) return;
+    replaceHash(
+      curr.server
+        ? { id: curr.server.id, playerIndex: curr.server.seatIndex }
+        : undefined
+    );
+  });
 }

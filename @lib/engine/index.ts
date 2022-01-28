@@ -1,155 +1,123 @@
-export type Simplify<T> = { [KeyType in keyof T]: T[KeyType] };
-
-type UnionizeStates<Dict extends Record<string, any>> = {
-  [Key in keyof Dict]: Dict[Key] extends undefined
-    ? { type: Key }
-    : { type: Key; data: Dict[Key] };
-}[keyof Dict];
-
-type UnionizeActions<Dict extends Record<string, any>> = {
-  [Key in keyof Dict]: Dict[Key] extends undefined
-    ? { type: Key; player?: number }
-    : { type: Key; data: Dict[Key]; player?: number };
-}[keyof Dict];
+import { lastOf } from "@lib/array";
 
 export type EngineTypes = {
   states: { type: string; data?: any };
   actions: { type: string; data?: any; player?: number };
-  stateDict: Record<string, any>;
   options: any;
 };
 
-export type CreateEngineTypes<
-  StateDict extends Record<string, any>,
-  ActionDict extends Record<string, any>,
-  Options extends any = void
-> = {
-  stateDict: StateDict;
-  states: UnionizeStates<StateDict>;
-  actions: UnionizeActions<ActionDict>;
-  options: Options;
-};
-
-export type Chart<ET extends EngineTypes> = {
-  [Key in keyof ET["stateDict"]]: (
-    stateData: { type: Key; data: ET["stateDict"][Key] },
-    action?: ET["actions"]
-  ) => ET["states"] | string;
-};
-
-type InitCtx = { numPlayers: number };
-export type GetInitialState<ET extends EngineTypes> = (
-  ctx: InitCtx,
-  options?: ET["options"]
-) => ET["states"] | string;
+export type Env = { numPlayers: number };
 
 export type Update<ET extends EngineTypes> = {
-  action?: ET["actions"];
+  action: (ET["actions"] & { player?: number }) | null;
   states: ET["states"][];
+  options: ET["options"];
+  env: Env;
 };
 
-type Next<ET extends EngineTypes> = (
-  state: ET["states"],
-  action?: ET["actions"]
-) => Update<ET> | string | null;
+export interface Engine<ET extends EngineTypes> {
+  getInitialUpdate: (env: Env, options: ET["options"]) => Update<ET> | string;
+  getNextUpdate: (
+    update: Update<ET>,
+    action?: ET["actions"]
+  ) => Update<ET> | null | string;
+  adaptUpdate: (update: Update<ET>, player: number) => Update<ET>;
+}
 
-export type Engine<ET extends EngineTypes> = {
-  getInitialState: GetInitialState<ET>;
-  next: Next<ET>;
+// ---
+
+export type GetInitialState<ET extends EngineTypes> = (
+  env: Env,
+  options: ET["options"]
+) => ET["states"] | string;
+
+export type Chart<ET extends EngineTypes> = {
+  [State in ET["states"] as State["type"]]: (
+    state: State,
+    context: {
+      action: (ET["actions"] & { player?: number }) | null;
+      options: ET["options"];
+      env: Env;
+    }
+  ) => ET["states"] | string | null;
 };
 
-export const createEngine = <ET extends EngineTypes>({
-  getInitialState,
-  chart,
-}: {
-  getInitialState: GetInitialState<ET>;
-  chart: Chart<ET>;
-}): Engine<ET> => ({
-  getInitialState,
-  next: createNext(chart),
-});
+export function createEngine<ET extends EngineTypes>(
+  getInitialState: GetInitialState<ET>,
+  chart: Chart<ET>,
+  adaptUpdate = ((x) => x) as Engine<ET>["adaptUpdate"]
+): Engine<ET> {
+  const getNextUpdate = createGetNextUpdate(chart);
+  const getInitialUpdate = createGetInitialUpdate(
+    getInitialState,
+    getNextUpdate
+  );
+  // Return the API.
+  return {
+    getInitialUpdate,
+    getNextUpdate,
+    adaptUpdate,
+  };
+}
 
 export const isErr = (arg: unknown): arg is string => typeof arg === "string";
 
-export const envelop = <T extends string, D>(type: T, data: D) => ({
-  type,
-  data,
-});
+const createGetNextUpdate =
+  <ET extends EngineTypes>(chart: Chart<ET>): Engine<ET>["getNextUpdate"] =>
+  (update, submittedAction) => {
+    const nextStates: ET["states"][] = [];
+    let finishedCollectingStates = false;
+    const initialAction = submittedAction || null;
+    let currentAction = initialAction;
 
-export const createNext =
-  <ET extends EngineTypes>(chart: Chart<ET>): Next<ET> =>
-  (state, submittedAction) => {
-    const states: ET["states"][] = [];
-    let finished = false;
-    let action = submittedAction;
-
-    while (!finished) {
-      const prevState = states[states.length - 1] || state;
+    const { options, env } = update;
+    while (!finishedCollectingStates) {
+      const prevState = lastOf(nextStates) || lastOf(update.states);
+      //@ts-ignore
       const nextState = chart[prevState.type](
         //@ts-ignore
         prevState,
-        action
+        { action: currentAction, options, env }
       );
-      action = undefined;
+      currentAction = null;
       if (isErr(nextState)) return nextState;
-      if (nextState !== prevState) {
-        states.push(nextState);
+      if (nextState !== null) {
+        nextStates.push(nextState);
         continue;
       }
-      finished = true;
+      finishedCollectingStates = true;
     }
 
-    return states.length > 0 ? { action: submittedAction, states } : null;
+    return nextStates.length > 0
+      ? {
+          action: initialAction,
+          states: nextStates,
+          options: update.options,
+          env,
+        }
+      : null;
   };
 
-interface Machine<ET extends EngineTypes> {
-  getUpdate: (player?: number) => Update<ET>;
-  getState: (player?: number) => ET["states"];
-  submit: (
-    action: ET["actions"],
-    player?: number
-  ) => { type: "success"; data: Update<ET> } | { type: "err"; data: string };
-}
-
-export const createMachine = <ET extends EngineTypes>(
-  engine: Engine<ET>,
-  ctx: InitCtx,
-  options?: ET["options"]
-): { type: "success"; data: Machine<ET> } | { type: "err"; data: string } => {
-  let update: Update<ET>;
-
-  let initialState = engine.getInitialState(ctx, options);
-  if (isErr(initialState)) return envelop("err", initialState);
-  let initialUpdate = engine.next(initialState);
-  if (isErr(initialUpdate))
-    return envelop(
-      "err",
-      `Init failed on first update with error: ${initialUpdate}`
-    );
-  update =
-    initialUpdate === null
-      ? { states: [initialState] }
-      : { states: [initialState, ...initialUpdate.states] };
-
-  const machine: Machine<ET> = {
-    getUpdate: (player) => update,
-    submit: (action, player) => {
-      action = { ...action, player };
-      const prevState = update.states[update.states.length - 1];
-      const res = engine.next(prevState, action);
-      if (isErr(res)) return envelop("err", res);
-      if (res === null)
-        return envelop(
-          "err",
-          "State did not advance, but no error message was provided."
-        );
-      update = res;
-      return envelop("success", update);
-    },
-    getState: (player) => {
-      return update.states[update.states.length - 1];
-    },
+const createGetInitialUpdate =
+  <ET extends EngineTypes>(
+    getInitialState: GetInitialState<ET>,
+    getNextUpdate: Engine<ET>["getNextUpdate"]
+  ) =>
+  (env: Env, options: ET["options"]) => {
+    let initialState = getInitialState(env, options);
+    if (isErr(initialState)) return initialState;
+    let initialRes = getNextUpdate({
+      states: [initialState],
+      action: null,
+      env,
+      options,
+    });
+    if (isErr(initialRes))
+      return `First update failed with error message: ${initialRes}`;
+    const states =
+      initialRes === null
+        ? [initialState]
+        : [initialState, ...initialRes.states];
+    const update: Update<ET> = { states, action: null, env, options };
+    return update;
   };
-
-  return envelop("success", machine);
-};

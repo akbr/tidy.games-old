@@ -41,7 +41,6 @@ export const createMeter = <T>(): Meter<T> => {
     // ...
     // listeners might have updated waitRequests for this frame
     // ...
-
     if (waitRequests.length !== 0) {
       let timings = waitRequests.filter(
         (x) => typeof x === "number"
@@ -51,17 +50,17 @@ export const createMeter = <T>(): Meter<T> => {
       ) as Task[];
 
       if (timings.length) tasks.push(delay(Math.max(...timings)));
-
       if (!tasks.length) {
         iterate();
         return;
       }
-
       const thisPending = all(tasks);
       pending = thisPending;
 
       thisPending.finished.then(() => {
-        if (pending !== thisPending) return;
+        if (pending !== thisPending) {
+          return;
+        }
         nextState();
       });
     }

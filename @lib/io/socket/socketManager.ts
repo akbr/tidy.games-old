@@ -29,8 +29,8 @@ export function createSocketManager<I, O>(arg: SocketServer<I, O> | string) {
     currentSocket.onopen = () => {
       currentSocketStatus = true;
       manager.onStatus(currentSocketStatus);
-      sendBuffer.forEach((action, idx) => {
-        setTimeout(() => manager.send(action), idx * 10);
+      sendBuffer.forEach((action) => {
+        manager.send(action);
       });
     };
 

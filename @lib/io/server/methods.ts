@@ -1,141 +1,163 @@
-import type { EngineTypes } from "../engine";
+import type { EngineTypes } from "@lib/engine";
+import { createMachine } from "@lib/engine/machine";
 import type { ServerContext, Room, ServerSocket, BotSocket } from ".";
 
-import { getRandomRoomID } from "./utils";
+import { getRandomRoomID, getSeatNumber } from "./utils";
 
-export const createRoom = <ET extends EngineTypes>(
-  { engine, rooms }: ServerContext<ET>,
-  id: string
-) => {
-  rooms.set(id, {
-    id,
-    seats: [],
-    spectators: [],
-    state: engine.autoStart ? engine.getInitialState(0) : false,
-  });
-  return rooms.get(id) as Room<ET>;
-};
+export const createMethods = <ET extends EngineTypes>({
+  engine,
+  rooms,
+  sockets,
+}: ServerContext<ET>) => {
+  const avatars = ["🦊", "🐷", "🐔", "🐻", "🐭", "🦁"];
+  //const botAvatar = "🤖";
 
-export const getRoomForSocket = <ET extends EngineTypes>(
-  { rooms, sockets }: ServerContext<ET>,
-  socket: ServerSocket<ET>
-) => {
-  let id = sockets.get(socket);
-  if (id) {
-    let room = id ? rooms.get(id) : null;
-    return room ? room : null;
+  function createRoom(id?: string) {
+    const resolvedId = id ? id : getRandomRoomID();
+    rooms.set(resolvedId, {
+      id: resolvedId,
+      seats: [],
+      machine: null,
+    });
+    return rooms.get(resolvedId)!;
   }
-  return null;
-};
 
-const avatars = ["🦊", "🐷", "🐔", "🐻", "🐭", "🦁"];
-const botAvatar = "🤖";
-export const broadcastRoomStatus = <ET extends EngineTypes>(
-  { botSockets }: ServerContext<ET>,
-  { id, seats, spectators, state }: Room<ET>
-) => {
-  const modSeats = seats.map((socket, idx) => {
-    const avatar = socket && botSockets.has(socket) ? botAvatar : avatars[idx];
-    return {
-      avatar,
-      name: `P${idx + 1}`,
-    };
-  });
+  function getSocketRoom(socket: ServerSocket<ET>) {
+    const id = sockets.get(socket);
+    return id ? rooms.get(id) : undefined;
+  }
 
-  const numSpectators = spectators.length;
-  const started = state ? true : false;
-
-  [...seats, ...spectators].forEach((socket) => {
-    if (!socket) return;
+  function sendStateUpdate(socket: ServerSocket<ET>) {
+    const room = getSocketRoom(socket);
+    if (!room || !room.machine) return;
+    const seatNum = room.seats.indexOf(socket);
     socket.send({
-      type: "server",
-      data: {
-        type: "room",
+      type: "engine",
+      data: room.machine.getUpdate(seatNum),
+    });
+  }
+
+  function broadcastStateUpdate(room: Room<ET>) {
+    room.seats.forEach((socket) => {
+      socket && sendStateUpdate(socket);
+    });
+  }
+
+  function joinRoom(
+    socket: ServerSocket<ET>,
+    id?: string,
+    requestedSeat?: number
+  ) {
+    const room = id ? rooms.get(id) || createRoom(id) : createRoom();
+    if (!room) return "Could not create a room.";
+
+    const seatIndex = getSeatNumber(room.seats, requestedSeat);
+
+    if (typeof seatIndex === "string") return seatIndex;
+
+    room.seats[seatIndex] = socket;
+    sockets.set(socket, room.id);
+
+    broadcastRoomStatus(room);
+    sendStateUpdate(socket);
+  }
+
+  function broadcastRoomStatus({ id, seats, machine }: Room<ET>) {
+    const modSeats = seats.map((socket, idx) => ({
+      avatar:
+        avatars[idx] /**socket && botSockets.has(socket) ? botAvatar :  */,
+      name: `P${idx + 1}`,
+    }));
+
+    seats.forEach((socket, seatIndex) => {
+      if (!socket) return;
+      socket.send({
+        type: "server",
         data: {
           id,
+          seatIndex,
           seats: modSeats,
-          spectators: numSpectators,
-          seatIndex: seats.indexOf(socket),
-          started,
+          started: machine ? true : false,
         },
-      },
-    });
-  });
-};
-
-export const joinRoom = <ET extends EngineTypes>(
-  ctx: ServerContext<ET>,
-  socket: ServerSocket<ET>,
-  id?: string,
-  requestedPlayerIndex?: number
-) => {
-  const { rooms, sockets, engine } = ctx;
-
-  let room: Room<ET>;
-  if (id !== undefined) {
-    id = id.toUpperCase();
-    if (id.length !== 4) return `Invalid room code format.`;
-    room = rooms.get(id) || createRoom(ctx, id);
-  } else {
-    let id = getRandomRoomID();
-    while (rooms.get(id)) id = getRandomRoomID();
-    room = createRoom(ctx, id);
-  }
-
-  let numSeats = room.seats.length;
-
-  const addSocket = () => {
-    sockets.set(socket, room.id);
-    broadcastRoomStatus(ctx, room);
-
-    if (room.state) {
-      socket.send({
-        type: "engine",
-        data: engine.adapt
-          ? engine.adapt(
-              room.state,
-              room.seats.indexOf(socket),
-              room.seats.length
-            )
-          : room.state,
       });
-    }
-  };
-
-  if (requestedPlayerIndex === undefined) {
-    let openSeats = room.seats.indexOf(false) > -1;
-    let roomForNewSeats = engine.shouldAddSeat
-      ? engine.shouldAddSeat(numSeats, room.state !== false)
-      : true;
-
-    if (!openSeats && !roomForNewSeats) {
-      room.spectators.push(socket);
-      return addSocket();
-    }
-
-    let firstOpenSeat = room.seats.indexOf(false);
-    if (firstOpenSeat > -1) {
-      room.seats[firstOpenSeat] = socket;
-    } else {
-      room.seats.push(socket);
-    }
-  } else {
-    if (requestedPlayerIndex > numSeats) {
-      return `Can't skip seats. Next seat is ${numSeats}`;
-    }
-
-    let seatOpen =
-      room.seats.length === 0 || room.seats[requestedPlayerIndex] === false;
-
-    if (!seatOpen) {
-      return `Seat ${requestedPlayerIndex} is occupied`;
-    }
-    room.seats[requestedPlayerIndex] = socket;
+    });
   }
 
-  return addSocket();
+  function startGame(socket: ServerSocket<ET>, options?: ET["options"]) {
+    const room = getSocketRoom(socket);
+
+    if (!room) return "You're not even in a room!";
+    if (room.seats.indexOf(socket) !== 0)
+      return "You have to be the first player to start the game.";
+
+    const machineContext = { numPlayers: room.seats.length };
+
+    const response = createMachine(engine, machineContext, options);
+
+    if (typeof response === "string") return response;
+
+    room.machine = response;
+    broadcastRoomStatus(room);
+    broadcastStateUpdate(room);
+  }
+
+  function submitAction(socket: ServerSocket<ET>, action: ET["actions"]) {
+    const room = getSocketRoom(socket);
+    if (!room)
+      return { type: "serverMsg", data: "You are not in a room." } as const;
+    if (!room.machine)
+      return {
+        type: "serverMsg",
+        data: "This room's game has not started.",
+      } as const;
+    const player = room.seats.indexOf(socket);
+
+    const res = room.machine.submit(action, player);
+    if (typeof res === "string")
+      return { type: "engineMsg", data: res } as const;
+    broadcastStateUpdate(room);
+  }
+
+  function leaveRoom(socket: ServerSocket<ET>) {
+    const room = getSocketRoom(socket);
+    if (!room) return "Socket is not connected to a room.";
+
+    const seatIndex = room.seats.indexOf(socket);
+    if (seatIndex !== -1) {
+      room.seats[seatIndex] = null;
+    } else {
+      return "Socket is not in a seat. (Huh? This shouldn't happen.)";
+    }
+
+    sockets.delete(socket);
+    //botSockets.delete(socket);
+    socket.send({ type: "server", data: null });
+
+    let roomIsEmpty =
+      room.seats.filter((socket) => socket).length ===
+      0; /**&& !botSockets.has(socket)) */
+
+    if (roomIsEmpty) {
+      room.seats.forEach((socket) => socket); /**&& botSockets.delete(socket) */
+      rooms.delete(room.id);
+    } else {
+      broadcastRoomStatus(room);
+    }
+  }
+
+  return {
+    createRoom,
+    getSocketRoom,
+    broadcastRoomStatus,
+    joinRoom,
+    broadcastStateUpdate,
+    startGame,
+    leaveRoom,
+    submitAction,
+  };
 };
 
+/**
 export const createBot = <ET extends EngineTypes>(
   ctx: ServerContext<ET>,
   id: string,
@@ -185,91 +207,4 @@ export const createBot = <ET extends EngineTypes>(
       data: { id },
     },
   });
-};
-
-export const leaveRoom = <ET extends EngineTypes>(
-  ctx: ServerContext<ET>,
-  socket: ServerSocket<ET>
-) => {
-  let { engine, rooms, sockets, botSockets } = ctx;
-
-  let room = getRoomForSocket(ctx, socket);
-  if (!room) return;
-
-  let seatIndex = room.seats.indexOf(socket);
-  if (seatIndex !== -1) {
-    room.seats[seatIndex] = false;
-  }
-
-  room.spectators = room.spectators.filter((x) => x !== socket);
-
-  let roomIsEmpty =
-    room.seats.filter((socket) => socket && !botSockets.has(socket)).length ===
-    0;
-  if (roomIsEmpty) {
-    let socketsToEject = [socket, ...room.spectators];
-    socketsToEject.forEach((socket) => {
-      sockets.delete(socket);
-      botSockets.delete(socket);
-      socket.send({ type: "server", data: { type: "room", data: null } });
-    });
-    rooms.delete(room.id);
-  } else {
-    let shouldRemove = engine.shouldRemoveSeat
-      ? engine.shouldRemoveSeat(room.seats.length, room.state !== false)
-      : false;
-    if (shouldRemove) {
-      room.seats = room.seats.filter((x) => x);
-    }
-
-    broadcastRoomStatus(ctx, room);
-  }
-};
-
-export const broadcastStateUpdate = <ET extends EngineTypes>(
-  { engine }: ServerContext<ET>,
-  state: ET["states"],
-  room: Room<ET>
-) => {
-  room.seats.forEach((socket, seatIndex) => {
-    if (socket)
-      socket.send({
-        type: "engine",
-        data: engine.adapt
-          ? engine.adapt(state, seatIndex, room.seats.length)
-          : state,
-      });
-  });
-};
-
-export const updateThroughReducer = <ET extends EngineTypes>(
-  ctx: ServerContext<ET>,
-  room: Room<ET>,
-  input?: {
-    socket: ServerSocket<ET>;
-    action: ET["actions"];
-  }
-) => {
-  const { engine } = ctx;
-  if (!room.state) return;
-
-  const inputAction = input
-    ? {
-        ...input.action,
-        playerIndex: room.seats.indexOf(input.socket),
-      }
-    : undefined;
-  const nextStates = engine.reducer(room.state, inputAction);
-
-  if (nextStates.length === 0) return;
-
-  const isMsg = engine.isMsg(nextStates[0]);
-  if (isMsg) {
-    input && input.socket.send({ type: "engineMsg", data: nextStates[0] });
-    return;
-  }
-
-  room.state = nextStates[nextStates.length - 1];
-
-  nextStates.forEach((state) => broadcastStateUpdate(ctx, state, room));
-};
+}; */

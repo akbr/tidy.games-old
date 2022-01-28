@@ -17,7 +17,9 @@ export function getPromiseParts() {
 const noop = function () {};
 export const delay = (ms: number, fn = noop): Task => {
   const { promise, resolve } = getPromiseParts();
-  const timeout = setTimeout(() => resolve(fn()), ms);
+  const timeout = setTimeout(() => {
+    resolve(fn());
+  }, ms);
   return {
     finished: promise,
     skip: () => {
