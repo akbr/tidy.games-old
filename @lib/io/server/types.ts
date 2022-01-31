@@ -6,7 +6,8 @@ export type ServerActions<ET extends EngineTypes> =
       type: "join";
       data?: { id: string; seatIndex?: number };
     }
-  | { type: "start"; data: ET["options"] };
+  | { type: "addBot"; data?: ET["botOptions"] }
+  | { type: "start"; data?: ET["options"] };
 
 export type RoomData = {
   id: string;

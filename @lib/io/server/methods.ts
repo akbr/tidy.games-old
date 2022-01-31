@@ -1,6 +1,6 @@
 import type { EngineTypes } from "@lib/engine";
 import { createMachine } from "@lib/engine/machine";
-import type { ServerContext, Room, ServerSocket, BotSocket } from ".";
+import type { ServerContext, Room, ServerSocket } from ".";
 
 import { getRandomRoomID, getSeatNumber } from "./utils";
 
@@ -8,9 +8,10 @@ export const createMethods = <ET extends EngineTypes>({
   engine,
   rooms,
   sockets,
+  botSockets,
 }: ServerContext<ET>) => {
   const avatars = ["🦊", "🐷", "🐔", "🐻", "🐭", "🦁"];
-  //const botAvatar = "🤖";
+  const botAvatar = "🤖";
 
   function createRoom(id?: string) {
     const resolvedId = id ? id : getRandomRoomID();
@@ -63,9 +64,9 @@ export const createMethods = <ET extends EngineTypes>({
   }
 
   function broadcastRoomStatus({ id, seats, machine }: Room<ET>) {
+    console.log(botSockets);
     const modSeats = seats.map((socket, idx) => ({
-      avatar:
-        avatars[idx] /**socket && botSockets.has(socket) ? botAvatar :  */,
+      avatar: socket && botSockets.has(socket) ? botAvatar : avatars[idx],
       name: `P${idx + 1}`,
     }));
 
@@ -118,6 +119,40 @@ export const createMethods = <ET extends EngineTypes>({
     broadcastStateUpdate(room);
   }
 
+  function addBot(socket: ServerSocket<ET>, options?: ET["botOptions"]) {
+    const room = getSocketRoom(socket);
+
+    if (!room) return "You're not even in a room!";
+    if (room.seats.indexOf(socket) !== 0)
+      return "You have to be the first player to add a bot.";
+    if (!engine.createBot) return "This engine does not support bots.";
+
+    const bot = engine.createBot(options);
+
+    const botSocket: ServerSocket<ET> = {
+      send: ({ type, data }) => {
+        if (type === "engineMsg" || type === "serverMsg")
+          console.warn("Bot received error", type, data);
+        if (type !== "engine") return;
+
+        const player = room.seats.indexOf(botSocket);
+
+        const action = bot(data, player);
+        if (action) {
+          setTimeout(() => {
+            submitAction(botSocket, action);
+          }, 0);
+        }
+      },
+      close: () => {
+        leaveRoom(socket);
+      },
+    };
+    botSockets.add(botSocket);
+    const result = joinRoom(botSocket, room.id);
+    if (result) return `Bot join error: ${result}`;
+  }
+
   function leaveRoom(socket: ServerSocket<ET>) {
     const room = getSocketRoom(socket);
     if (!room) return "Socket is not connected to a room.";
@@ -130,15 +165,21 @@ export const createMethods = <ET extends EngineTypes>({
     }
 
     sockets.delete(socket);
-    //botSockets.delete(socket);
+    botSockets.delete(socket);
     socket.send({ type: "server", data: null });
 
-    let roomIsEmpty =
-      room.seats.filter((socket) => socket).length ===
-      0; /**&& !botSockets.has(socket)) */
+    let shouldCloseRoom =
+      room.seats.filter((socket) => socket && !botSockets.has(socket))
+        .length === 0;
 
-    if (roomIsEmpty) {
-      room.seats.forEach((socket) => socket); /**&& botSockets.delete(socket) */
+    if (shouldCloseRoom) {
+      // Clear the bots
+      room.seats.forEach((socket) => {
+        if (socket) {
+          botSockets.delete(socket);
+          sockets.delete(socket);
+        }
+      });
       rooms.delete(room.id);
     } else {
       broadcastRoomStatus(room);
@@ -148,6 +189,7 @@ export const createMethods = <ET extends EngineTypes>({
   return {
     createRoom,
     getSocketRoom,
+    addBot,
     broadcastRoomStatus,
     joinRoom,
     broadcastStateUpdate,
@@ -156,55 +198,3 @@ export const createMethods = <ET extends EngineTypes>({
     submitAction,
   };
 };
-
-/**
-export const createBot = <ET extends EngineTypes>(
-  ctx: ServerContext<ET>,
-  id: string,
-  options?: ET["botOptions"]
-) => {
-  const { engine, botSockets, api } = ctx;
-
-  if (!engine.createBot) return;
-
-  let serverSocket: ServerSocket<ET>;
-
-  let botSocket: BotSocket<ET> = {
-    send: (action) => {
-      api.onInput(serverSocket, action);
-    },
-    close: () => api.onClose(serverSocket),
-  };
-
-  let botFn = engine.createBot(
-    {
-      send: (action) => botSocket.send({ type: "engine", data: action }),
-      close: botSocket.close,
-    },
-    undefined
-  );
-
-  serverSocket = {
-    send: ({ type, data }) => {
-      if (type !== "engine") {
-        if (type === "engineMsg")
-          console.warn("Bot reiceived engine error", data);
-        return;
-      }
-      let room = getRoomForSocket(ctx, serverSocket);
-      let playerIndex = room ? room.seats.indexOf(serverSocket) : undefined;
-      botFn(data, playerIndex);
-    },
-    close: () => api.onClose(serverSocket),
-  };
-
-  botSockets.add(serverSocket);
-
-  api.onInput(serverSocket, {
-    type: "server",
-    data: {
-      type: "join",
-      data: { id },
-    },
-  });
-}; */

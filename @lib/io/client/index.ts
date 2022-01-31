@@ -77,7 +77,6 @@ export function createClient<ET extends EngineTypes>(
       const prevUpdate = store.get().update;
       const update = res.data;
       store.set({ update });
-
       const { states, action, ...rest } = update;
 
       if (action && prevUpdate) {
@@ -124,6 +123,7 @@ export function createClient<ET extends EngineTypes>(
   const serverActions: ActionStubs<ServerActions<ET>> = {
     join: null,
     start: null,
+    addBot: null,
   };
 
   return {

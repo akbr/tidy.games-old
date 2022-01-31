@@ -1,47 +1,70 @@
-import { Chart, GetInitialState, createEngine } from "@lib/engine";
-import { proto } from "@lib/io/client/proto";
+import { lastOf } from "@lib/array";
+import {
+  CreateEngineTypes,
+  Chart,
+  GetInitialState,
+  isErr,
+  createMachineFactory,
+  createGame,
+  getStateActionList,
+  Bot,
+} from "@lib/engine-turn";
 
-type GoTypes = {
-  states: { type: "going"; data: number } | { type: "stopped" };
-  actions: { type: "go"; data: number };
+type AddGameTypes = CreateEngineTypes<{
+  states: { type: "playing"; data: number } | { type: "end" };
+  actions: { type: "add"; data: number } | { type: "sub"; data: number };
   options: { maxNum: number };
-};
+}>;
 
-const goChart: Chart<GoTypes> = {
-  going: ({ type, data }, { action, options, env }) => {
-    const { maxNum } = options;
-    const gameOver = data >= maxNum;
-    if (gameOver) return { type: "stopped" };
+const chart: Chart<AddGameTypes> = {
+  playing: ({ data: currentCount }, { options: { maxNum } }, action) => {
+    if (currentCount >= maxNum) return { type: "end" };
     if (action) {
-      if (action.data > 99) return "Whoa nelly; that's too much.";
-      return { type: "going", data: data + action.data };
+      const { type, data: num } = action;
+      const newCount = type === "add" ? currentCount + num : currentCount - num;
+      return { type: "playing", data: newCount };
     }
     return null;
   },
-  stopped: () => null,
+  end: (state, _, action) => null,
 };
 
-const getInitialState: GetInitialState<GoTypes> = (env, options) => ({
-  type: "going",
+const getInitialState: GetInitialState<AddGameTypes> = () => ({
+  type: "playing",
   data: 0,
 });
 
-const engine = createEngine(getInitialState, goChart);
-
-const sockets = proto(engine, {
-  go: null,
+const createMachine = createMachineFactory({
+  chart,
+  getInitialState,
+  getDefaultOptions: () => ({ maxNum: 10 }),
 });
 
-//@ts-ignore
-const s = (window.s = sockets[0]);
+const til9: Bot<AddGameTypes> = (segment, player) => {
+  if (isErr(segment)) return;
+  const state = lastOf(segment.states);
+  if (state.type === "playing" && state.data < 11) {
+    return { type: "add", data: 2 };
+  }
+};
 
-sockets[0].join({ id: "TEST" });
-sockets[2].join({ id: "TEST" });
-sockets[1].join({ id: "TEST" });
+const machine = createMachine({ ctx: { numPlayers: 2 } });
 
-setTimeout(() => {
-  sockets[0].start({ maxNum: 99 });
-  sockets[2].go(2);
-  sockets[1].go(1);
-  sockets[0].go(0);
-}, 1000);
+if (typeof machine !== "string") {
+  const r = machine.getRecord();
+
+  const game = createGame(machine);
+  game.setPlayerFn(0, til9);
+  game.setPlayerFn(1, (segment) => {});
+  getStateActionList(chart, machine.getRecord())
+    .map(([type, thing]) => {
+      if (type === "action") {
+        return `Player ${thing.player} ${thing.type}'ed ${thing.data}!`;
+      } else {
+        if (thing.type === "playing")
+          return `The total is now ${thing.data}. Waiting for next move...`;
+        return `The game has ended.`;
+      }
+    })
+    .forEach((x) => console.log(x));
+}

@@ -10,90 +10,76 @@ export type ServerSocket<ET extends EngineTypes> = Socket<
   ServerInputs<ET>
 >;
 
-export type BotSocket<ET extends EngineTypes> = Socket<
-  ServerInputs<ET>,
-  ServerOutputs<ET>
->;
-
 export type Room<ET extends EngineTypes> = {
   id: string;
   seats: (ServerSocket<ET> | null)[];
   machine: Machine<ET> | null;
 };
 
-export type ServerContext<ET extends EngineTypes> = {
+export interface ServerContext<ET extends EngineTypes> {
   engine: Engine<ET>;
   rooms: Map<string, Room<ET>>;
   sockets: Map<ServerSocket<ET>, string>;
-  api: ServerApi<ET>;
-};
-
-export function createServer<ET extends EngineTypes>(engine: Engine<ET>) {
-  const api = {} as ServerApi<ET>;
-
-  const { joinRoom, startGame, submitAction, leaveRoom } = createMethods({
-    engine,
-    rooms: new Map(),
-    sockets: new Map(),
-    api,
-  });
-
-  api.onOpen = (socket) => {
-    socket.send({ type: "server", data: null });
-  };
-
-  api.onClose = (socket) => {
-    leaveRoom(socket);
-  };
-
-  api.onInput = (socket, envelope) => {
-    // ---------------
-    // Server envelope
-    // ---------------
-    if (envelope.type === "server") {
-      const action = envelope.data;
-
-      if (action.type === "join") {
-        leaveRoom(socket);
-        const err = joinRoom(socket, action.data?.id, action.data?.seatIndex);
-        if (err) socket.send({ type: "serverMsg", data: err });
-        return;
-      }
-
-      if (action.type === "start") {
-        let err = startGame(socket, action.data);
-        if (err) socket.send({ type: "serverMsg", data: err });
-        return;
-      }
-
-      socket.send({
-        type: "serverMsg",
-        data: "Invalid server action.",
-      });
-    }
-
-    // ---------------
-    // Engine envelope
-    // ---------------
-    if (envelope.type === "engine") {
-      const err = submitAction(socket, envelope.data);
-      if (err) socket.send(err);
-    }
-  };
-
-  return api;
+  botSockets: Set<ServerSocket<ET>>;
 }
 
-/**
- * 
-      if (action.type === "addBot") {
-        if (!engine.createBot) {
-          socket.send({
-            type: "serverMsg",
-            data: { type: "err", data: "No bot creator specified." },
-          });
+export function createServer<ET extends EngineTypes>(
+  engine: Engine<ET>
+): ServerApi<ET> {
+  const { joinRoom, addBot, startGame, submitAction, leaveRoom } =
+    createMethods({
+      engine,
+      rooms: new Map(),
+      sockets: new Map(),
+      botSockets: new Set<ServerSocket<ET>>(),
+    });
+
+  return {
+    onOpen: (socket) => {
+      socket.send({ type: "server", data: null });
+    },
+    onClose: (socket) => {
+      leaveRoom(socket);
+    },
+    onInput: (socket, { type: envelopeType, data: action }) => {
+      // ---------------
+      // Server envelope
+      // ---------------
+      if (envelopeType === "server") {
+        if (action.type === "join") {
+          leaveRoom(socket);
+          const err = joinRoom(socket, action.data?.id, action.data?.seatIndex);
+          if (err) socket.send({ type: "serverMsg", data: err });
+          return;
         }
-        createBot(ctx, room.id, action.data);
-        return;
+
+        if (action.type === "addBot") {
+          const res = addBot(socket, action.data);
+          if (res) {
+            return socket.send({ type: "serverMsg", data: res });
+          }
+          return;
+        }
+
+        if (action.type === "start") {
+          let err = startGame(socket, action.data);
+          if (err) socket.send({ type: "serverMsg", data: err });
+          return;
+        }
+
+        socket.send({
+          type: "serverMsg",
+          data: "Invalid server action.",
+        });
       }
- */
+
+      // ---------------
+      // Engine envelope
+      // ---------------
+      if (envelopeType === "engine") {
+        const err = submitAction(socket, action);
+        if (err) socket.send(err);
+      }
+    },
+  };
+}
