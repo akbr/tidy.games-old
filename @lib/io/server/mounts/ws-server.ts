@@ -1,4 +1,4 @@
-import type { SocketServer, Socket } from "../../socket/types";
+import type { SocketServer, Socket } from "@lib/socket";
 import { Server } from "ws";
 
 function addHeartbeat(wss: Server, ms = 25000) {
@@ -32,7 +32,7 @@ function addHeartbeat(wss: Server, ms = 25000) {
 
 export const mountWSServer = (
   expressServer: any,
-  gameServer: SocketServer<any, any>
+  socketServer: SocketServer<any, any>
 ) => {
   const wss = new Server({ server: expressServer });
   addHeartbeat(wss);
@@ -41,20 +41,20 @@ export const mountWSServer = (
     const socket: Socket<any, any> = {
       send: (msg) => ws.send(JSON.stringify(msg)),
       close: () => {
-        gameServer.onClose(socket);
+        socketServer.onclose(socket);
       },
     };
-
-    gameServer.onOpen(socket);
 
     ws.on("message", function (msg: any) {
       msg = typeof msg === "string" ? msg : msg.toString();
       let action = JSON.parse(msg);
-      gameServer.onInput(socket, action);
+      socketServer.onmessage(socket, action);
     });
 
     ws.on("close", function () {
-      gameServer.onClose(socket);
+      socketServer.onclose(socket);
     });
+
+    socketServer.onopen(socket);
   });
 };

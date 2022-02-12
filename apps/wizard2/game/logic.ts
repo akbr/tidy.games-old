@@ -36,12 +36,12 @@ export const getDeal = (
   seed?: string
 ) => {
   const deck = shuffle(createDeck(), createPRNG(seed));
-  const unsortedHands = deal(
-    deck,
-    Array.from({ length: numPlayers }, () => numCards)
-  );
+  const unsortedHands = deal(deck, [
+    ...Array.from({ length: numPlayers }, () => numCards),
+    1, // deal a trump card
+  ]);
 
-  const trumpCard = deck.pop();
+  const [trumpCard] = unsortedHands.pop()!;
   const trumpSuit = trumpCard && getSuit(trumpCard);
   const hands = unsortedHands.map((hand) => sortHand(hand, trumpSuit));
 

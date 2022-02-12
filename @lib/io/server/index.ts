@@ -1,58 +1,30 @@
-import type { EngineTypes, Engine } from "@lib/engine";
-import type { Socket } from "../socket/types";
-import type { ServerApi, ServerOutputs, ServerInputs } from "./types";
-import { Machine } from "@lib/engine/machine";
-
+import type { EngineTypes, MachineSpec } from "@lib/engine-turn";
+import type { ServerApi } from "./types";
 import { createMethods } from "./methods";
 
-export type ServerSocket<ET extends EngineTypes> = Socket<
-  ServerOutputs<ET>,
-  ServerInputs<ET>
->;
-
-export type Room<ET extends EngineTypes> = {
-  id: string;
-  seats: (ServerSocket<ET> | null)[];
-  machine: Machine<ET> | null;
-};
-
-export interface ServerContext<ET extends EngineTypes> {
-  engine: Engine<ET>;
-  rooms: Map<string, Room<ET>>;
-  sockets: Map<ServerSocket<ET>, string>;
-  botSockets: Set<ServerSocket<ET>>;
-}
-
 export function createServer<ET extends EngineTypes>(
-  engine: Engine<ET>
-): ServerApi<ET> {
-  const { joinRoom, addBot, startGame, submitAction, leaveRoom } =
-    createMethods({
-      engine,
-      rooms: new Map(),
-      sockets: new Map(),
-      botSockets: new Set<ServerSocket<ET>>(),
-    });
+  machineSpec: MachineSpec<ET>
+) {
+  const { joinRoom, startGame, submitAction, leaveRoom } =
+    createMethods(machineSpec);
 
-  return {
-    onOpen: (socket) => {
-      socket.send({ type: "server", data: null });
+  const server: ServerApi<ET> = {
+    onopen: (socket) => {
+      socket.send(["server", null]);
     },
-    onClose: (socket) => {
+    onclose: (socket) => {
       leaveRoom(socket);
     },
-    onInput: (socket, { type: envelopeType, data: action }) => {
-      // ---------------
-      // Server envelope
-      // ---------------
-      if (envelopeType === "server") {
-        if (action.type === "join") {
+    onmessage: (socket, [msgType, msg]) => {
+      if (msgType === "server") {
+        if (msg.type === "join") {
           leaveRoom(socket);
-          const err = joinRoom(socket, action.data?.id, action.data?.seatIndex);
-          if (err) socket.send({ type: "serverMsg", data: err });
+          const err = joinRoom(socket, msg.data?.id, msg.data?.seatIndex);
+          if (err) socket.send(["serverMsg", err]);
           return;
         }
 
+        /**
         if (action.type === "addBot") {
           const res = addBot(socket, action.data);
           if (res) {
@@ -60,26 +32,23 @@ export function createServer<ET extends EngineTypes>(
           }
           return;
         }
+        **/
 
-        if (action.type === "start") {
-          let err = startGame(socket, action.data);
-          if (err) socket.send({ type: "serverMsg", data: err });
+        if (msg.type === "start") {
+          let err = startGame(socket, msg.data);
+          if (err) socket.send(["serverMsg", err]);
           return;
         }
 
-        socket.send({
-          type: "serverMsg",
-          data: "Invalid server action.",
-        });
+        socket.send(["serverMsg", "Invalid server action."]);
       }
 
-      // ---------------
-      // Engine envelope
-      // ---------------
-      if (envelopeType === "engine") {
-        const err = submitAction(socket, action);
-        if (err) socket.send(err);
+      if (msgType === "engine") {
+        const err = submitAction(socket, msg);
+        if (err) socket.send(["serverMsg", err]);
       }
     },
   };
+
+  return server;
 }

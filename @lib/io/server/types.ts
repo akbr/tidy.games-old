@@ -1,12 +1,12 @@
-import type { EngineTypes, Update } from "@lib/engine";
-import { SocketServer } from "../socket/types";
+import { EngineTypes, Segment } from "@lib/engine-turn";
+import { Socket, SocketServer } from "@lib/socket";
 
 export type ServerActions<ET extends EngineTypes> =
   | {
       type: "join";
       data?: { id: string; seatIndex?: number };
     }
-  | { type: "addBot"; data?: ET["botOptions"] }
+  | { type: "addBot" }
   | { type: "start"; data?: ET["options"] };
 
 export type RoomData = {
@@ -14,22 +14,28 @@ export type RoomData = {
   seats: {
     name: string;
     avatar: string;
+    connected: boolean;
   }[];
   seatIndex: number;
   started: boolean;
 } | null;
 
 export type ServerInputs<ET extends EngineTypes> =
-  | { type: "engine"; data: ET["actions"] }
-  | { type: "server"; data: ServerActions<ET> };
+  | ["engine", ET["actions"]]
+  | ["server", ServerActions<ET>];
 
 export type ServerOutputs<ET extends EngineTypes> =
-  | { type: "engine"; data: Update<ET> }
-  | { type: "engineMsg"; data: string }
-  | { type: "server"; data: RoomData }
-  | { type: "serverMsg"; data: string };
+  | ["engine", Segment<ET>]
+  | ["engineMsg", string]
+  | ["server", RoomData]
+  | ["serverMsg", string];
 
 export type ServerApi<ET extends EngineTypes> = SocketServer<
-  ServerInputs<ET>,
-  ServerOutputs<ET>
+  ServerOutputs<ET>,
+  ServerInputs<ET>
+>;
+
+export type ServerSocket<ET extends EngineTypes> = Socket<
+  ServerOutputs<ET>,
+  ServerInputs<ET>
 >;
