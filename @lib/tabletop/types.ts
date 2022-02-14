@@ -16,7 +16,7 @@ export type Spec = {
   edges: NonNullable<SpecOptions["edges"]>;
   gameTypes: Record<SpecOptions["states"], SpecOptions["game"]>;
   gameStates: [SpecOptions["states"], SpecOptions["game"]];
-  gamePatch: [SpecOptions["states"], Partial<SpecOptions["game"]>];
+  patches: [SpecOptions["states"], Partial<SpecOptions["game"]>];
   actions: SpecOptions["actions"];
   options: SpecOptions["options"];
 };
@@ -35,7 +35,7 @@ type _CreateSpec<
   game: I["game"];
   edges: Edges;
   gameTypes: GameTypes;
-  gamePatch: [I["states"], Partial<I["game"]>];
+  patches: [I["states"], Partial<I["game"]>];
   gameStates: GameStates;
   actions: I["actions"];
   options: Options;
@@ -54,7 +54,7 @@ export type Ctx<S extends Spec> = {
   seed: string | null;
 };
 
-export type CreateChart<
+export type Chart<
   S extends Spec,
   StateReturns = CreateStateReturns<S["gameTypes"]>,
   ChartReturns = CreateEdgeReturns<StateReturns, S["edges"]>
@@ -65,11 +65,12 @@ export type CreateChart<
     action: AuthenticatedAction<S> | null
   ) => Key extends keyof ChartReturns ? ChartReturns[Key] : never;
 };
+export type ChartReturns<S extends Spec> = S["patches"] | null | string | true;
 
 export type GameDefinition<S extends Spec> = {
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
-  chart: CreateChart<S>;
-  stripGame?: <G extends Partial<S["game"]>>(patch: G, player: number) => G;
+  chart: Chart<S>;
+  stripGame?: (patch: S["patches"], player: number) => S["patches"];
   stripAction?: (
     action: AuthenticatedAction<S>,
     player: number

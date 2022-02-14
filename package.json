@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "express": "^4.17.1",
-    "preact": "latest",
+    "preact": "10.6.5",
     "ws": "^8.2.3"
   },
   "devDependencies": {
@@ -28,7 +28,7 @@
     "autoprefixer": "^10.4.0",
     "chai": "^4.3.4",
     "nodemon": "^2.0.15",
-    "parcel": "latest",
+    "parcel": "2.3.1",
     "postcss": "^8.4.3",
     "tailwindcss": "^2.2.19",
     "ts-toolbelt": "^9.6.0",

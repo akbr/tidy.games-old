@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
     "strict": true,
     "module": "commonjs",
     "esModuleInterop": true,

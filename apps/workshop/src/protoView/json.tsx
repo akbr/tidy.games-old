@@ -1,3 +1,5 @@
+import { h, Fragment } from "preact";
+
 export const JSONPair = ({
   oKey,
   value,
@@ -9,7 +11,7 @@ export const JSONPair = ({
 }) => {
   return (
     <div>
-      <pre class={(equal ? "" : "bg-yellow-700") + " inline-block"}>
+      <pre class={(equal ? "" : "bg-yellow-300") + " inline-block"}>
         {oKey}: {typeof value === "object" ? JSON.stringify(value) : value}
       </pre>
     </div>
@@ -30,11 +32,12 @@ export const JSONDiff = ({
   prev,
 }: {
   curr: Record<string, any>;
-  prev?: Record<string, any>;
+  prev: Record<string, any>;
 }) => {
+  const aCurr = alphabetizeKeys(curr);
   return (
     <>
-      {Object.entries(alphabetizeKeys(curr)).map(([oKey, value]) => (
+      {Object.entries(aCurr).map(([oKey, value]) => (
         <JSONPair
           oKey={oKey}
           value={value}

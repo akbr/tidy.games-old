@@ -1,92 +1,92 @@
-if (process.env.NODE_ENV === "development") require("preact/debug");
-// -------------------------------
+import "preact/debug";
 import { h, Fragment, render, FunctionComponent } from "preact";
 import { useRefreshOnResize } from "@lib/hooks";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 // -------------------------------
 import { createStore } from "@lib/state/store";
 
-import { getHandHeight } from "@lib/layouts/hand";
+import { JSONDiff } from "./protoView/json";
 
-import { TrickSection } from "@lib/components/TrickSection";
-import { HandSection } from "@lib/components/HandSection";
-import { Card } from "@lib/components/cards";
-
-import { HandCard } from "./HandCard";
-const store = createStore({ hand: [] as string[], trick: [] as string[] });
-const { play } = store.createActions((set, get) => ({
-  play: (id: string) => {
-    const { hand, trick } = get();
-    set({ hand: hand.filter((x) => x !== id), trick: [...trick, id] });
-  },
-}));
-
-const Table: FunctionComponent<{ heightOffset: number }> = ({
-  heightOffset,
-  children,
+const Controls = ({
+  idx,
+  length,
+  set,
+}: {
+  idx: number;
+  length: number;
+  set: (n: number) => void;
 }) => {
-  useRefreshOnResize();
+  const atMin = idx === 0;
+  const atMax = idx === length - 1;
+
   return (
-    <section
-      id="table"
-      class="absolute w-full bg-green-900"
-      style={{ height: `calc(100% - ${heightOffset}px)` }}
-    >
-      {children}
-    </section>
+    <div>
+      <button disabled={atMin} onClick={() => set(0)}>
+        {"<<"}
+      </button>
+      <button disabled={atMin} onClick={() => set(idx - 1)}>
+        {"<"}
+      </button>
+      <div class="inline-block">
+        {idx}/{length - 1}
+      </div>
+      <button disabled={atMax} onClick={() => set(idx + 1)}>
+        {">"}
+      </button>
+      <button disabled={atMax} onClick={() => set(length - 1)}>
+        {">>"}
+      </button>
+    </div>
   );
 };
 
-const TrickCard = ({ cardId }: { cardId: string }) => (
-  <div key={cardId} class="absolute">
-    <Card card={cardId} />
-  </div>
+const App2 = ({ objs }: { objs: Record<string, any>[] }) => {
+  const [idx, setIdx] = useState(0);
+  const curr = objs[idx];
+  const prev = objs[idx - 1] || curr;
+
+  return (
+    <div>
+      <Controls idx={idx} length={objs.length} set={setIdx} />
+      {curr && <JSONDiff curr={curr} prev={prev} />}
+    </div>
+  );
+};
+
+const App = ({
+  numPlayers,
+  actions,
+}: {
+  numPlayers: number;
+  actions: Record<string, Function>;
+}) => {
+  const ref = useRef<HTMLSelectElement>(null);
+  const getPlayer = () => (ref.current ? parseInt(ref.current.value) : 0);
+
+  return (
+    <div>
+      <span>As player: </span>
+      <select ref={ref}>
+        {Array.from({ length: numPlayers }).map((_, idx) => {
+          return <option value={`${idx}`}>{idx}</option>;
+        })}
+      </select>
+      <div>
+        {Object.entries(actions).map(([key, fn]) => (
+          <div>
+            <input style={{ width: "32px" }} />
+            <button onClick={() => console.log(key, getPlayer())}>{key}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+render(
+  <App
+    numPlayers={2}
+    actions={{ select: () => 2, bid: () => 2, play: () => 2 }}
+  />,
+  document.getElementById("app")!
 );
-
-store.subscribe(({ hand, trick }) => {
-  const heightOffset = getHandHeight(
-    hand.length || 1,
-    document.body.getBoundingClientRect()
-  );
-
-  render(
-    <Table heightOffset={heightOffset}>
-      <TrickSection numPlayers={4} leadPlayer={0} perspective={0}>
-        {trick.map((cardId) => (
-          <TrickCard key={cardId} cardId={cardId} />
-        ))}
-      </TrickSection>
-
-      <HandSection>
-        {hand.map((cardId) => (
-          <HandCard key={cardId} play={play} card={cardId} />
-        ))}
-      </HandSection>
-    </Table>,
-    document.getElementById("root")!
-  );
-});
-
-store.set({
-  hand: [
-    "2|c",
-    "3|c",
-    "4|c",
-    "5|c",
-    "6|c",
-    "7|c",
-    "8|c",
-    "9|c",
-    "2|d",
-    "3|d",
-    "4|d",
-    "5|d",
-    "6|d",
-    "7|d",
-    "8|d",
-    "9|d",
-  ],
-  trick: [],
-});
-
-//render(<WIP />, document.getElementById("app")!);

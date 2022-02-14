@@ -1,9 +1,9 @@
-import type { CreateSpec, CreateChart, GameDefinition } from "@lib/tabletop";
+import type { CreateSpec, Chart, GameDefinition } from "@lib/tabletop";
 
 import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex } from "./logic";
 
-type WizardSpec = CreateSpec<{
+export type WizardSpec = CreateSpec<{
   states:
     | "roundStart"
     | "deal"
@@ -82,7 +82,7 @@ const getNextRound = (
   ];
 };
 
-export const chart: CreateChart<WizardSpec> = {
+export const chart: Chart<WizardSpec> = {
   roundStart: ({ round }, { numPlayers, seed }) =>
     seed ? ["deal", getDeal(numPlayers, round, seed + round)] : null,
   deal: ({ trumpSuit, dealer }, { numPlayers }) =>
@@ -197,11 +197,16 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
   },
   chart,
-  stripGame: (game, player) =>
-    game.hands
-      ? {
-          ...game,
-          hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
-        }
-      : game,
+  stripGame: (patch, player) => {
+    const [state, game] = patch;
+    return game.hands
+      ? [
+          state,
+          {
+            ...game,
+            hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
+          },
+        ]
+      : patch;
+  },
 };

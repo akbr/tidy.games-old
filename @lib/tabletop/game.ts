@@ -1,7 +1,7 @@
 import { Spec } from "./types";
-import { Machine, Status } from "./machine";
+import { Machine, Step } from "./machine";
 
-export type PlayerFn<S extends Spec> = (status: Status<S> | string) => void;
+export type PlayerFn<S extends Spec> = (step: Step<S> | string) => void;
 
 export const createGame = <S extends Spec>(machine: Machine<S>) => {
   const playerFns: (PlayerFn<S> | null)[] = Array.from(
@@ -28,7 +28,7 @@ export const createGame = <S extends Spec>(machine: Machine<S>) => {
 
       // Ensure every playerFn gets the current step before processing the next one
       working = true;
-      playerFns.forEach((fn, idx) => fn && fn(machine.get(idx)));
+      playerFns.forEach((fn, idx) => fn && fn(machine.get(idx - 1)));
       working = false;
 
       if (actionQueue.length) {
@@ -37,9 +37,10 @@ export const createGame = <S extends Spec>(machine: Machine<S>) => {
       }
     },
     setPlayerFn: (idx: number, fn: PlayerFn<S> | null) => {
+      idx = idx + 1;
       if (idx < 0 || idx > playerFns.length - 1) return "Invalid player index.";
       playerFns[idx] = fn;
-      if (fn) fn(machine.get(idx));
+      if (fn) fn(machine.get(idx - 1));
     },
   };
 };

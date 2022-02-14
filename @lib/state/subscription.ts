@@ -3,7 +3,6 @@ export type Listener<T> = (curr: T, prev: T) => void;
 export function createSubscription<T>() {
   let currentState: T;
   let previousState: T;
-
   let listeners: Listener<T>[] = [];
 
   return [
