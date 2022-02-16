@@ -3,7 +3,7 @@
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "lib": ["es2020"],
+    "lib": ["es2020", "dom"],
     "moduleResolution": "node",
     "outDir": "dist-node",
     "baseUrl": ".",
@@ -11,5 +11,5 @@
       "@lib": ["./@lib"]
     }
   },
-  "include": ["./**/index-server.ts"]
+  "include": ["**/*"]
 }

@@ -1,14 +1,25 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@lib/*": ["@lib/*"],
+      "@apps/*": ["apps/*"]
+    },
     "jsx": "preserve",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment",
+    "jsxFactory": "preact.h",
+    "jsxFragmentFactory": "preact.Fragment",
     "strict": true,
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "sourceMap": true,
+    "noEmit": true,
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "esnext",
     "lib": ["es2020", "dom"],
-    "moduleResolution": "node"
+    "resolveJsonModule": true
   },
-  "include": ["./apps/**/*", "./@lib/**/*.ts"]
+  "include": ["node_modules/wmr/types.d.ts", "./apps/**/*", "./@lib/**/*"],
+  "exclude": ["node_modules/**/*"],
+  "typeAcquisition": {
+    "enable": true
+  }
 }

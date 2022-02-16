@@ -1,33 +1,21 @@
 {
-  "name": "tidy.games",
-  "author": "Aaron Rieke",
-  "version": "1.0.0",
-  "engines": {
-    "npm": "8.1.0",
-    "node": "16.13.0"
-  },
-  "browserslist": "last 2 Chrome versions",
+  "name": "test",
+  "private": true,
   "scripts": {
-    "dev": "rm -r .parcel-cache/ || true && parcel ./apps/$npm_config_app_name/index.html",
-    "build-client": "parcel build apps/$npm_config_app_name/index.html",
-    "build-servers": "tsc --project tsconfig-server.json && tsc-alias -p tsconfig-server.json",
-    "heroku-deploy": "git push https://git.heroku.com/$npm_config_app_name-tidy-games.git HEAD:master --force",
+    "start": "wmr --public apps/$npm_config_app_id/",
+    "build": "wmr build --public apps/$npm_config_app_id/ --visualize true",
+    "serve": "wmr serve",
+    "build-node": "tsc --project tsconfig-node.json && tsc-alias -p tsconfig-node.json",
     "heroku-postbuild": "npm run build-client --app_name=$APP_NAME && npm run build-servers"
   },
-  "workspaces": [
-    "@lib/*"
-  ],
   "dependencies": {
-    "express": "^4.17.1",
-    "preact": "10.6.5",
-    "twind": "^0.16.16",
-    "ws": "^8.2.3"
+    "@twind/preact": "^1.0.5",
+    "preact": "^10.6.6",
+    "twind": "^0.16.16"
   },
   "devDependencies": {
-    "@types/express": "^4.17.13",
-    "@types/ws": "^8.2.0",
-    "parcel": "2.3.1",
-    "tsc-alias": "^1.4.1",
-    "typescript": "4.6.0-dev.20220127"
+    "typescript": "4.6.1-rc",
+    "tsc-alias": "^1.6.0",
+    "wmr": "^3.7.2"
   }
 }
