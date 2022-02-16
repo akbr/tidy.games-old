@@ -1,4 +1,4 @@
-import type { AuthenticatedAction, Ctx, Spec } from "./types";
+import type { AuthenticatedAction, Ctx, Spec, ActionStubs } from "./types";
 import type { Step } from "./machine";
 import type { PlayerFn } from "./game";
 import { lastOf } from "@lib/array";
@@ -35,12 +35,13 @@ export const getFrames = <S extends Spec>(step: Step<S>) => {
   return frames;
 };
 
-type ActionStubs<S extends Spec> = {
-  [X in S["actions"] as X["type"]]: (str: string) => X["data"];
+export type ConnectedAction<S extends Spec> = {
+  [X in S["actions"] as X["type"]]: (
+    player: number,
+    input: string | X["data"]
+  ) => void;
 };
-type ConnectedAction<S extends Spec> = {
-  [X in S["actions"] as X["type"]]: (player: number, str: string) => void;
-};
+
 export const createActionFns = <S extends Spec>(
   stubs: ActionStubs<S>,
   submit: (player: number, action: S["actions"]) => void
@@ -49,9 +50,7 @@ export const createActionFns = <S extends Spec>(
   for (let i in stubs) {
     const key = i as keyof ConnectedAction<S>;
     const fn = stubs[key];
-    fns[key] = (player, str) => {
-      submit(player, { type: key, data: fn(str) });
-    };
+    fns[key] = (player, str) => submit(player, { type: key, data: fn(str) });
   }
   return fns;
 };

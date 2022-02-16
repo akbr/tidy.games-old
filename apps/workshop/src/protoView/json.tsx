@@ -11,7 +11,11 @@ export const JSONPair = ({
 }) => {
   return (
     <div>
-      <pre class={(equal ? "" : "bg-yellow-300") + " inline-block"}>
+      <pre
+        class={
+          (equal ? "" : "bg-yellow-300 text-black p-[2px]") + " inline-block"
+        }
+      >
         {oKey}: {typeof value === "object" ? JSON.stringify(value) : value}
       </pre>
     </div>

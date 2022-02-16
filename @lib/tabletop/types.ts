@@ -1,26 +1,60 @@
+type States = string;
+type Edges = Record<States, (States | null | true)[]>;
+type Game = Record<string, any>;
+type Actions = { type: string; data?: any };
+type Options = Record<string, any> | null;
+
+export type Spec = {
+  game: Game;
+  edges: Edges;
+  gameTypes: Record<States, Game>;
+  gameStates: [States, Game];
+  patches: [States, Partial<Game>];
+  actions: Actions;
+  options: Options;
+};
+
+// ---
+
+export type Ctx<S extends Spec> = {
+  numPlayers: number;
+  options: S["options"];
+  seed: string | null;
+};
+export type AuthenticatedAction<S extends Spec> = S["actions"] & {
+  player: number;
+  time: number;
+};
+export type ActionStubs<S extends Spec> = {
+  [X in S["actions"] as X["type"]]: (input: string | X["data"]) => X["data"];
+};
+export type GameDefinition<S extends Spec> = {
+  setup: (ctx: Ctx<S>) => S["gameStates"] | string;
+  chart: Chart<S>;
+  actionStubs: ActionStubs<S>;
+  stripGame?: (patch: S["patches"], player: number) => S["patches"];
+  stripAction?: (
+    action: AuthenticatedAction<S>,
+    player: number
+  ) => AuthenticatedAction<S> | null;
+};
+
+// ---
+
 type SpecOptions = {
-  states: string;
-  game: Record<string, any>;
-  actions: { type: string; data?: any };
-  options: Record<string, any> | null;
+  states: States;
+  game: Game;
+  actions: Actions;
+  options: Options;
   edges?: {
     [Key in SpecOptions["states"]]: (SpecOptions["states"] | null | true)[];
   };
   gameTypes?: Partial<{
-    [Key in SpecOptions["states"]]: Partial<SpecOptions["game"]>;
+    [Key in SpecOptions["states"]]: Partial<Game>;
   }>;
 };
 
-export type Spec = {
-  game: SpecOptions["game"];
-  edges: NonNullable<SpecOptions["edges"]>;
-  gameTypes: Record<SpecOptions["states"], SpecOptions["game"]>;
-  gameStates: [SpecOptions["states"], SpecOptions["game"]];
-  patches: [SpecOptions["states"], Partial<SpecOptions["game"]>];
-  actions: SpecOptions["actions"];
-  options: SpecOptions["options"];
-};
-
+export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
 type _CreateSpec<
   I extends SpecOptions,
   GameTypes = CreateGameTypes<
@@ -41,41 +75,18 @@ type _CreateSpec<
   options: Options;
 };
 
-export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
-
-export type AuthenticatedAction<S extends Spec> = S["actions"] & {
-  player: number;
-  time: number;
-};
-
-export type Ctx<S extends Spec> = {
-  numPlayers: number;
-  options: S["options"];
-  seed: string | null;
-};
-
 export type Chart<
   S extends Spec,
   StateReturns = CreateStateReturns<S["gameTypes"]>,
-  ChartReturns = CreateEdgeReturns<StateReturns, S["edges"]>
+  EdgeReturns = CreateEdgeReturns<StateReturns, S["edges"]>
 > = {
   [Key in keyof S["gameTypes"]]: (
     game: S["gameTypes"][Key],
     ctx: Ctx<S>,
     action: AuthenticatedAction<S> | null
-  ) => Key extends keyof ChartReturns ? ChartReturns[Key] : never;
+  ) => Key extends keyof EdgeReturns ? EdgeReturns[Key] : never;
 };
 export type ChartReturns<S extends Spec> = S["patches"] | null | string | true;
-
-export type GameDefinition<S extends Spec> = {
-  setup: (ctx: Ctx<S>) => S["gameStates"] | string;
-  chart: Chart<S>;
-  stripGame?: (patch: S["patches"], player: number) => S["patches"];
-  stripAction?: (
-    action: AuthenticatedAction<S>,
-    player: number
-  ) => AuthenticatedAction<S> | null;
-};
 
 type CreateGameTypes<
   States extends string,

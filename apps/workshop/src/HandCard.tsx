@@ -45,9 +45,7 @@ export const HandCard = ({ card, play }: HandCardProps) => {
       });
   });
 
-  useLayoutEffect(() => {
-    return initCardEvents(ref.current!, setPlayAttempt);
-  }, [ref]);
+  useLayoutEffect(() => initCardEvents(ref.current!, setPlayAttempt), [ref]);
 
   return (
     <div ref={ref} data-card={card} class="absolute">

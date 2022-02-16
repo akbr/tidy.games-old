@@ -12,6 +12,7 @@ export type WizardSpec = CreateSpec<{
     | "bidsEnd"
     | "play"
     | "trickWon"
+    | "tallyScores"
     | "end";
   edges: {
     roundStart: [null, "deal"];
@@ -19,7 +20,8 @@ export type WizardSpec = CreateSpec<{
     select: [null, "bid"];
     bid: [null, "bid", "bidsEnd"];
     play: [null, "play", "trickWon"];
-    trickWon: ["play", "roundStart", "end"];
+    trickWon: ["play", "tallyScores"];
+    tallyScores: ["roundStart", "end"];
     end: [true];
   };
   game: {
@@ -42,7 +44,8 @@ export type WizardSpec = CreateSpec<{
     select: { player: number };
     bid: { player: number };
     play: { player: number };
-    trickWon: { player: null; trickWinner: number };
+    trickWon: { player: null };
+    tallyScores: { player: null };
     end: { player: null };
   };
   actions:
@@ -133,7 +136,7 @@ export const chart: Chart<WizardSpec> = {
     );
     const nextTrick = [...trick, action.data];
 
-    return trick.length < numPlayers
+    return nextTrick.length < numPlayers
       ? [
           "play",
           {
@@ -175,11 +178,14 @@ export const chart: Chart<WizardSpec> = {
       ];
     }
 
-    const { round } = state;
-    const gameContinues = numPlayers * round !== 60;
-    if (gameContinues) return getNextRound(ctx, state);
+    return ["tallyScores", {}];
+  },
+  tallyScores: (game, ctx) => {
+    const { round } = game;
+    const gameContinues = ctx.numPlayers * round !== 60;
+    if (gameContinues) return getNextRound(ctx, game);
 
-    const { scores, bids, actuals } = state;
+    const { scores, bids, actuals } = game;
     const nextScores = [...scores, bids, actuals] as number[][];
     return [
       "end",
@@ -197,6 +203,11 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
   },
   chart,
+  actionStubs: {
+    bid: (i) => (typeof i === "string" ? parseInt(i) : i),
+    play: (i) => i,
+    select: (i) => i,
+  },
   stripGame: (patch, player) => {
     const [state, game] = patch;
     return game.hands

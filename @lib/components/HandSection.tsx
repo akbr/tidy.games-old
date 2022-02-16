@@ -13,7 +13,7 @@ export const applyHandStyles = ($handContainer: HTMLElement) => {
       width,
       height: window.innerHeight,
     });
-    style($card, { zIndex, left: x, top: y }, { duration: 200 });
+    style($card, { zIndex, left: x, top: y });
   });
 };
 

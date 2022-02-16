@@ -24,6 +24,12 @@ export type Machine<S extends Spec> = {
   };
 };
 
+export type MachineOptions<S extends Spec> = {
+  ctx: Ctx<S>;
+  initial?: S["gameStates"];
+  actions?: AuthenticatedAction<S>[];
+};
+
 export type Status<S extends Spec> = {
   prev: S["gameStates"];
   patches: S["patches"][];
@@ -177,15 +183,7 @@ export const createStep = <S extends Spec>(
 
 export const createMachine = <S extends Spec>(
   definition: GameDefinition<S>,
-  {
-    ctx: inputCtx,
-    initial,
-    actions: inputActions,
-  }: {
-    ctx: Ctx<S>;
-    initial?: S["gameStates"];
-    actions?: AuthenticatedAction<S>[];
-  }
+  { ctx: inputCtx, initial, actions: inputActions }: MachineOptions<S>
 ): Machine<S> | string => {
   const { setup, chart } = definition;
   const ctx = {
