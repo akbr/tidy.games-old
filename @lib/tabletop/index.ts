@@ -1,4 +1,10 @@
 export type { CreateSpec, Spec, Chart, GameDefinition } from "./types";
-export type { createMachine, Status } from "./machine";
-export type { createGame, PlayerFn } from "./game";
-export type { getFrames, getCurrentGame, getGames, Frame } from "./utils";
+
+export { createMachine } from "./machine";
+export type { Status } from "./machine";
+
+export { createGame } from "./game";
+export type { PlayerFn } from "./game";
+
+export type { Frame } from "./utils";
+export { getFrames, getCurrentGame, getGames } from "./utils";

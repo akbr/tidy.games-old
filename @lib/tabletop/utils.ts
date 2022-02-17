@@ -35,7 +35,7 @@ export const getFrames = <S extends Spec>(step: Step<S>) => {
   return frames;
 };
 
-export type ConnectedAction<S extends Spec> = {
+export type ConnectedActions<S extends Spec> = {
   [X in S["actions"] as X["type"]]: (
     player: number,
     input: string | X["data"]
@@ -46,9 +46,9 @@ export const createActionFns = <S extends Spec>(
   stubs: ActionStubs<S>,
   submit: (player: number, action: S["actions"]) => void
 ) => {
-  const fns = {} as ConnectedAction<S>;
+  const fns = {} as ConnectedActions<S>;
   for (let i in stubs) {
-    const key = i as keyof ConnectedAction<S>;
+    const key = i as keyof ConnectedActions<S>;
     const fn = stubs[key];
     fns[key] = (player, str) => submit(player, { type: key, data: fn(str) });
   }

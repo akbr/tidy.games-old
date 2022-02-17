@@ -19,7 +19,7 @@ export type Spec = {
 export type Ctx<S extends Spec> = {
   numPlayers: number;
   options: S["options"];
-  seed: string | null;
+  seed?: string | null;
 };
 export type AuthenticatedAction<S extends Spec> = S["actions"] & {
   player: number;

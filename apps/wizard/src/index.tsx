@@ -1,5 +1,7 @@
-import { render } from "preact";
 import { setup } from "@twind/preact";
+
+import { createDebugView } from "@lib/tabletop/debug";
+import { wizardDefinition } from "./game";
 import { Game } from "./views/Game";
 
 setup({
@@ -7,4 +9,15 @@ setup({
   preflight: false,
 });
 
-render(<Game />, document.getElementById("app")!);
+createDebugView(
+  wizardDefinition,
+  {
+    ctx: {
+      numPlayers: 2,
+      options: null,
+      seed: "test",
+    },
+  },
+  document.getElementById("app")!,
+  Game
+);

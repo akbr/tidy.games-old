@@ -1,7 +1,8 @@
 import { FunctionalComponent, h } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
-import { useRefreshOnResize } from "@lib/hooks";
+import equal from "fast-deep-equal";
 
+import { useRefreshOnResize, useGameEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
 import { getHeldPosition, getPlayedPosition } from "@lib/layouts/trick";
@@ -23,13 +24,15 @@ export type TrickProps = {
 
 export const applyTrickStyles = (
   $trickContainer: HTMLElement,
-  {
+  curr: TrickProps,
+  prev?: TrickProps
+) => {
+  const {
     numPlayers,
     leadPlayer,
     perspective = 0,
     effect = { type: "none" },
-  }: TrickProps
-) => {
+  } = curr;
   // Create collections
   // ------------------
   const cardEls = Array.from($trickContainer.children) as HTMLElement[];
@@ -47,6 +50,9 @@ export const applyTrickStyles = (
     if (!$card) return;
     style($card, getPlayedPosition(numPlayers, idx, dimensions));
   });
+
+  // If just a resize, return
+  if (equal(curr, prev)) return;
 
   // Play effect
   // -----------
@@ -115,9 +121,7 @@ export const TrickSection: FunctionalComponent<TrickProps> = (props) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useRefreshOnResize();
-  useLayoutEffect(() => {
-    applyTrickStyles(ref.current!, props);
-  });
+  useGameEffect(applyTrickStyles, ref, props);
 
   return (
     <section id="trick" ref={ref}>
