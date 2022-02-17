@@ -1,6 +1,5 @@
-import { h } from "preact";
-import { memo } from "preact/compat";
 import { values, suits, colors } from "./core";
+import { memo } from "preact/compat";
 
 export const splitCard = (cardId: string): [number, string] => {
   const split = cardId.split("|");

@@ -6,6 +6,8 @@ import { Card } from "@lib/components/cards";
 import { getPlayedPosition } from "@lib/layouts/trick";
 import { getNearestDimensions } from "@lib/dom";
 
+import { HandSection } from "@lib/components/HandSection";
+
 const initCardEvents = (
   $el: HTMLElement,
   setPlayed: (cardId: string) => void
@@ -52,3 +54,17 @@ export const HandCard = ({ card, play }: HandCardProps) => {
     </div>
   );
 };
+
+export const Hand = ({
+  hand,
+  play,
+}: {
+  hand: string[];
+  play: (cardId: string) => void;
+}) => (
+  <HandSection>
+    {hand.map((id) => (
+      <HandCard card={id} play={play} />
+    ))}
+  </HandSection>
+);

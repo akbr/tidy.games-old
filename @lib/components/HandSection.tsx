@@ -1,9 +1,9 @@
 import { FunctionComponent, h } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-import { style } from "@lib/stylus";
-import { useRefreshOnResize } from "@lib/hooks";
-import { getIntraHandPosition } from "@lib/layouts/hand";
+import { style } from "../stylus";
+import { useRefreshOnResize } from "../hooks";
+import { getIntraHandPosition } from "../layouts/hand";
 
 export const applyHandStyles = ($handContainer: HTMLElement) => {
   const { width } = $handContainer.getBoundingClientRect();
