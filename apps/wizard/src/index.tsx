@@ -22,6 +22,8 @@ const { machine, actions, meter } = mount(
   Game
 );
 meter.controls.togglePlay();
+/**
+ * 
 actions.bid(1, 1);
 actions.bid(2, 1);
 actions.bid(3, 1);
@@ -30,3 +32,4 @@ actions.play(1, "6|h");
 actions.play(2, "14|s");
 actions.play(3, "8|h");
 actions.play(0, "11|h");
+ */

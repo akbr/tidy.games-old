@@ -27,6 +27,7 @@ export const Card = memo(({ card }: { card: string }) => {
         {suits[suit] && suits[suit]!()}
       </div>
       <div
+        id="suit"
         class="absolute bottom-[6px] right-[2px] w-[54px]"
         style={{ fill: color }}
       >
