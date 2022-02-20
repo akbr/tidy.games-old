@@ -8,14 +8,14 @@ export const JSONPair = ({
   equal: boolean;
 }) => {
   return (
-    <div>
-      <pre
+    <div class="font-mono">
+      <div
         class={
           (equal ? "" : "bg-yellow-300 text-black p-[2px]") + " inline-block"
         }
       >
         {oKey}: {typeof value === "object" ? JSON.stringify(value) : value}
-      </pre>
+      </div>
     </div>
   );
 };

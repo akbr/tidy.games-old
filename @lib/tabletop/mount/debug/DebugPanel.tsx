@@ -1,29 +1,31 @@
-import { ComponentChildren, FunctionComponent, render } from "preact";
+import { ComponentChildren, FunctionComponent } from "preact";
 import { useRef, useState } from "preact/hooks";
-import { createMeter, MeterUpdate } from "@lib/state/meter2";
+import { MeterStatus } from "@lib/state/meter";
 
-import { createMachine, GameDefinition, getFrames, Spec } from "..";
-import { Frame, ConnectedActions, createActionFns } from "../utils";
-import { MachineOptions } from "../machine";
+import { ViewProps } from "../";
+import { Spec } from "../../";
+import { Frame, ConnectedActions } from "../../utils";
+import { Machine } from "../../machine";
+
+import { JSONDiff } from "./JsonDiff";
 
 const ListView = <S extends Spec>({
-  entries,
+  states,
   idx,
   setIdx,
-}: {
-  entries: Frame<S>[];
-  idx: number;
-  setIdx: (n: number) => void;
-}) => {
+}: DebugProps<S>["meter"]) => {
   return (
     <div>
-      {entries.map((entry, i) => (
+      {states.map((frame, i) => (
         <div
           class="cursor-pointer p-1 rounded"
           style={{ backgroundColor: idx === i ? "orange" : "" }}
           onClick={() => setIdx(i)}
         >
-          {JSON.stringify(entry.gameState[0])}
+          {i +
+            " " +
+            JSON.stringify(frame.gameState[0]) +
+            (frame.action ? `(${frame.action.type})` : "")}
         </div>
       ))}
     </div>
@@ -32,15 +34,14 @@ const ListView = <S extends Spec>({
 
 const Controls = ({
   idx,
-  length,
+  states,
   setIdx,
-}: {
-  idx: number;
-  length: number;
-  setIdx: (n: number) => void;
-}) => {
+  auto,
+  togglePlay,
+}: DebugProps<any>["meter"]) => {
+  const length = states.length;
   const atMin = idx === 0;
-  const atMax = idx === length - 1;
+  const atMax = idx === states.length - 1;
 
   return (
     <div class="flex items-center gap-1 justify-center">
@@ -54,9 +55,9 @@ const Controls = ({
       >
         {"<"}
       </button>
-      <div class="inline-block">
-        {idx}/{length - 1}
-      </div>
+      <button class="cursor-pointer" onClick={togglePlay}>
+        {auto ? "Pause" : "Play"}
+      </button>
       <button
         class="cursor-pointer"
         disabled={atMax}
@@ -133,86 +134,43 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-type DebugProps<S extends Spec> = {
-  meter: MeterUpdate<Frame<S>>;
-  actions: ConnectedActions<S>;
+type DebugProps<S extends Spec> = ViewProps<S> & { machine: Machine<S> } & {
+  children?: ComponentChildren;
 };
 
-export const Nav = <S extends Spec>({ meter, actions }: DebugProps<S>) => {
-  const { states, idx, auto, setIdx, waitFor } = meter;
+export const Nav = <S extends Spec>({
+  meter,
+  actions,
+  machine,
+}: DebugProps<S>) => {
+  const { states, idx, state, auto, setIdx, waitFor } = meter;
 
   return (
     <div class="h-full flex flex-col justify-between overflow-hidden">
       <div class="h-full overflow-hidden flex flex-col gap-1">
-        <Controls idx={idx} length={states.length} setIdx={setIdx} />
+        <Controls {...meter} />
         <div class="overflow-y-auto">
-          <ListView entries={states} idx={idx} setIdx={setIdx} />
+          <ListView {...meter} />
         </div>
       </div>
       <div>
         <ActionPane actions={actions} numPlayers={2} />
+        <div class="mt-4 text-center">
+          <button
+            onClick={() => {
+              alert(JSON.stringify(machine.export()));
+            }}
+          >
+            Export
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export const JSONPair = ({
-  oKey,
-  value,
-  equal,
-}: {
-  oKey: string;
-  value: any;
-  equal: boolean;
-}) => {
-  return (
-    <div>
-      <pre
-        class={
-          (equal ? "" : "bg-yellow-300 text-black p-[2px]") + " inline-block"
-        }
-      >
-        {oKey}: {typeof value === "object" ? JSON.stringify(value) : value}
-      </pre>
-    </div>
-  );
-};
-
-export const alphabetizeKeys = <T extends Record<string, any>>(obj: T): T => {
-  const keys = Object.keys(obj).sort() as (keyof T)[];
-  const next = {} as T;
-  keys.forEach((key) => {
-    next[key] = obj[key];
-  });
-  return next;
-};
-
-export const JSONDiff = ({
-  curr,
-  prev,
-}: {
-  curr: Record<string, any>;
-  prev: Record<string, any>;
-}) => {
-  const aCurr = alphabetizeKeys(curr);
-  return (
-    <>
-      {Object.entries(aCurr).map(([oKey, value]) => (
-        <JSONPair
-          oKey={oKey}
-          value={value}
-          equal={!prev || curr[oKey] === prev[oKey]}
-        />
-      ))}
-    </>
-  );
-};
-
-export const DebugPanel = <S extends Spec>({
-  meter,
-  actions,
-  children,
-}: DebugProps<S> & { children?: ComponentChildren }) => {
+export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
+  const { meter, children } = props;
   const { states, state, idx, auto, setIdx, waitFor } = meter;
   const curr = state.gameState[1];
   const prev = states[idx - 1] ? states[idx - 1].gameState[1] : curr;
@@ -223,7 +181,7 @@ export const DebugPanel = <S extends Spec>({
         id="debug-nav"
         class="h-full bg-gray-400 w-[175px] p-1 font-mono text-sm"
       >
-        <Nav meter={meter} actions={actions} />
+        <Nav {...props} />
       </section>
       <section
         id="debug-json"
@@ -237,39 +195,3 @@ export const DebugPanel = <S extends Spec>({
     </section>
   );
 };
-
-export function createDebugView<S extends Spec>(
-  def: GameDefinition<S>,
-  options: MachineOptions<S>,
-  $el: HTMLElement,
-  Game: FunctionComponent<{ frame: Frame<S> }>
-) {
-  const machine = createMachine(def, options);
-  if (typeof machine === "string") throw new Error(machine);
-
-  const meter = createMeter<Frame<S>>();
-
-  const nextRender = () => {
-    const frames = getFrames(machine.get());
-    meter.push(...frames);
-  };
-
-  const actions = createActionFns(def.actionStubs, (player, action) => {
-    const res = machine.submit(action, player);
-    if (res) return console.warn(res);
-    nextRender();
-  });
-
-  meter.subscribe((update) => {
-    render(
-      <DebugPanel meter={update} actions={actions}>
-        <Game frame={update.state} />
-      </DebugPanel>,
-      $el
-    );
-  });
-
-  nextRender();
-
-  return { machine, actions };
-}

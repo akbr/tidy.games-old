@@ -2,85 +2,127 @@ import type { Task } from "../async";
 import { delay, all } from "../async";
 import { createSubscription, Listener } from "./subscription";
 
-type WaitRequest = Task | number | null | undefined;
-
-export interface Meter<T> {
+export type WaitRequest = Task | number | null | undefined | void;
+export type WaitFor = (req: WaitRequest) => void;
+export type MeterControls = {
+  setIdx: (idx: number) => void;
+  waitFor: WaitFor;
+  togglePlay: () => void;
+};
+export type MeterStatus<T> = {
+  state: T;
+  states: T[];
+  idx: number;
+  auto: boolean;
+} & MeterControls;
+export type Meter<T> = {
   push: (...states: T[]) => void;
-  wait: (...req: WaitRequest[]) => void;
-  skip: () => void;
-  subscribe: (listener: Listener<T>) => () => void;
-  subscribeStatus: (listener: Listener<boolean>) => () => void;
-}
+  subscribe: (listener: Listener<MeterStatus<T>>) => () => void;
+  get: () => MeterStatus<T>;
+} & {
+  controls: MeterControls;
+};
 
 export const createMeter = <T>(): Meter<T> => {
-  const [subscribe, update] = createSubscription<T>();
-  const [subscribeStatus, updateStatus] = createSubscription<boolean>();
+  const [subscribe, updateListeners] = createSubscription<MeterStatus<T>>();
 
-  const queue: T[] = [];
+  let idx = -1;
+  let acceptingRequests = false;
+  let auto = true;
+  let active: Task | null = null;
   let waitRequests: WaitRequest[] = [];
-  let pending: Task | null;
+  let queue: T[] = [];
+  let states: T[] = [];
 
-  function nextState() {
-    waitRequests = [];
-    pending = null;
-    iterate();
+  function resolveAll() {
+    if (active) active.skip();
+    auto = false;
+    active = null;
+    queue = [];
   }
 
-  function iterate() {
-    if (pending) return;
+  function isAtLastState() {
+    return idx >= states.length - 1;
+  }
 
-    if (queue.length === 0) {
-      updateStatus(false);
-      return;
-    }
+  function setIdx(inputIdx: number) {
+    resolveAll();
+    idx = inputIdx;
+    updateListeners(get());
+  }
 
-    updateStatus(true);
+  function waitFor(req: WaitRequest) {
+    if (!acceptingRequests) return;
+    waitRequests.push(req);
+  }
 
-    update(queue.shift()!);
+  function get(): MeterStatus<T> {
+    return {
+      states,
+      idx,
+      state: states[idx],
+      auto,
+      setIdx,
+      waitFor,
+      togglePlay,
+    };
+  }
 
-    // ...
-    // listeners might have updated waitRequests for this frame
-    // ...
-    if (waitRequests.length !== 0) {
-      let timings = waitRequests.filter(
-        (x) => typeof x === "number"
-      ) as number[];
-      let tasks = waitRequests.filter(
-        (x) => typeof x !== "number" && x
-      ) as Task[];
+  function togglePlay() {
+    auto = !auto;
+    if (auto) iterate();
+    if (!auto && active) resolveAll();
+    updateListeners(get());
+  }
 
-      if (timings.length) tasks.push(delay(Math.max(...timings)));
-      if (!tasks.length) {
-        iterate();
-        return;
-      }
-      const thisPending = all(tasks);
-      pending = thisPending;
+  function push(...incoming: T[]) {
+    queue.push(...incoming);
+    states.push(...incoming);
+    if (auto) iterate();
+    updateListeners(get());
+  }
 
-      thisPending.finished.then(() => {
-        if (pending !== thisPending) {
-          return;
-        }
-        nextState();
-      });
-    }
+  function iterate(): void {
+    if (!auto || active) return;
+    if (isAtLastState()) return;
+
+    idx += 1;
+
+    acceptingRequests = true;
+    updateListeners(get());
+    acceptingRequests = false;
+
+    if (waitRequests.length === 0) return iterate();
+
+    const timings = waitRequests.filter(
+      (x) => typeof x === "number"
+    ) as number[];
+    const tasks = waitRequests.filter(
+      (x) => typeof x !== "number" && x
+    ) as Task[];
+    waitRequests = [];
+
+    if (timings.length) tasks.push(delay(Math.max(...timings)));
+    if (!tasks.length) return iterate();
+
+    const thisPending = all(tasks);
+    active = thisPending;
+
+    thisPending.finished.then(() => {
+      if (active !== thisPending) return;
+      active = null;
+      iterate();
+    });
   }
 
   return {
-    push: (...states) => {
-      queue.push(...states);
-      iterate();
-    },
-    wait: (...req) => {
-      const filtered = req.filter((x) => x);
-      if (filtered.length) waitRequests.push(...filtered);
-    },
+    push,
     subscribe,
-    subscribeStatus,
-    skip: () => {
-      if (!pending) return;
-      pending.skip();
-      nextState();
+    get,
+    controls: {
+      setIdx,
+      waitFor,
+      togglePlay,
     },
   };
 };

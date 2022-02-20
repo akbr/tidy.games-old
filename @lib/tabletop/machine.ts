@@ -69,7 +69,6 @@ export const getNextStates = <S extends Spec>(
 ) => {
   const gs: S["gameStates"][] = [];
   const patches: S["patches"][] = [];
-
   let iterarting = true;
   let currentAction = action || null;
   let final = false;
@@ -209,7 +208,6 @@ export const createMachine = <S extends Spec>(
   }
 
   let status = initialStatus;
-
   return {
     get: (player = -1) =>
       createStep(definition, status, {

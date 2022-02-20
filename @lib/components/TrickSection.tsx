@@ -1,5 +1,5 @@
 import { FunctionalComponent, h } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useRef } from "preact/hooks";
 import equal from "fast-deep-equal";
 
 import { useRefreshOnResize, useGameEffect } from "@lib/hooks";
@@ -8,6 +8,7 @@ import { getNearestDimensions } from "@lib/dom";
 import { getHeldPosition, getPlayedPosition } from "@lib/layouts/trick";
 import { getWaggle } from "@lib/layouts/anim";
 
+import { WaitFor } from "@lib/state/meter";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
 import { seq } from "@lib/async";
@@ -16,6 +17,7 @@ export type TrickProps = {
   numPlayers: number;
   leadPlayer: number;
   perspective?: number;
+  waitFor?: WaitFor;
   effect?:
     | { type: "none" }
     | { type: "played"; player: number }
@@ -48,10 +50,12 @@ export const applyTrickStyles = (
   // ------------
   cardElsByPerspective.forEach(($card, idx) => {
     if (!$card) return;
-    style($card, getPlayedPosition(numPlayers, idx, dimensions));
+    style($card, {
+      ...getPlayedPosition(numPlayers, idx, dimensions),
+      rotate: 0,
+    });
   });
 
-  // If just a resize, return
   if (equal(curr, prev)) return;
 
   // Play effect
@@ -82,7 +86,12 @@ export const applyTrickStyles = (
 
   $trickContainer.appendChild($winningCard);
 
-  const { x, y } = $winningCard.getBoundingClientRect();
+  const winningPlayed = getPlayedPosition(
+    numPlayers,
+    cardElsByPerspective.indexOf($winningCard),
+    dimensions
+  );
+
   const winningHold = getHeldPosition(
     numPlayers,
     cardElsByPerspective.indexOf($winningCard),
@@ -99,8 +108,7 @@ export const applyTrickStyles = (
       style(
         losingCards,
         {
-          x,
-          y,
+          ...winningPlayed,
           rotate: () => randomBetween(-30, 30),
         },
         { duration: 300, delay: 350 }
@@ -117,15 +125,19 @@ export const applyTrickStyles = (
   ]);
 };
 
-export const TrickSection: FunctionalComponent<TrickProps> = (props) => {
+export const TrickSection: FunctionalComponent<TrickProps> = ({
+  children,
+  waitFor,
+  ...props
+}) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useRefreshOnResize();
-  useGameEffect(applyTrickStyles, ref, props);
+  useGameEffect(applyTrickStyles, ref, props, waitFor);
 
   return (
-    <section id="trick" ref={ref}>
-      {props.children}
+    <section id="trick" class="relative" ref={ref}>
+      {children}
     </section>
   );
 };

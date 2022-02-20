@@ -1,17 +1,7 @@
-import { styled } from "goober";
-import { ComponentChildren } from "preact";
-
-const Outer = styled("div")`
-  position: absolute;
-  background-color: #ffe5b4;
-  color: black;
-  padding: 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-`;
+import { FunctionComponent } from "preact";
 
 const gap = 12;
-const positions: { [key: string]: any } = {
+const positions: Record<string, any> = {
   left: {
     bottom: "50%",
     left: "0",
@@ -34,14 +24,7 @@ const positions: { [key: string]: any } = {
   },
 };
 
-const Notch = styled("div")`
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background-color: black;
-  background-color: #ffe5b4;
-`;
-const notchPositions: { [key: string]: any } = {
+const notchPositions: Record<string, any> = {
   left: {
     right: "0",
     top: "50%",
@@ -64,17 +47,19 @@ const notchPositions: { [key: string]: any } = {
   },
 };
 
-export const Tooltip = ({
-  dir,
-  children,
-}: {
+export const Tooltip: FunctionComponent<{
   dir: string;
-  children: ComponentChildren;
-}) => {
+}> = ({ dir, children }) => {
   return (
-    <Outer style={positions[dir]}>
+    <div
+      class="absolute bg-yellow-200 text-black p-1 rounded whitespace-nowrap "
+      style={positions[dir]}
+    >
       {children}
-      <Notch style={notchPositions[dir]} />
-    </Outer>
+      <div
+        class="absolute w-[8px] h-[8px] bg-yellow-200"
+        style={notchPositions[dir]}
+      />
+    </div>
   );
 };

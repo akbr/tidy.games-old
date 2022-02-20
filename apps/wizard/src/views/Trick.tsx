@@ -1,19 +1,46 @@
+import { ViewProps } from "./types";
 import { TrickSection, TrickProps } from "@lib/components/TrickSection";
 import { Card } from "@lib/components/cards/";
+import { FunctionComponent } from "preact";
 
-const TrickCard = ({ cardId }: { cardId: string }) => (
+const TrickCard: FunctionComponent<{ cardId: string }> = ({ cardId }) => (
   <div key={cardId} class="absolute">
-    <Card card={cardId} />
+    <Card key={"trick" + cardId} card={cardId} />
   </div>
 );
 
-export const Trick = ({
-  trick,
-  ...trickProps
-}: TrickProps & { trick: string[] }) => (
-  <TrickSection {...trickProps}>
-    {trick.map((cardId) => (
-      <TrickCard key={cardId} cardId={cardId} />
-    ))}
-  </TrickSection>
-);
+export const Trick: FunctionComponent<ViewProps> = ({ frame, meter, room }) => {
+  const { ctx, gameState, action } = frame;
+  const [type, game] = gameState;
+
+  const numPlayers = ctx.numPlayers;
+  const leadPlayer = game.trickLeader;
+  const perspective = room.player;
+  const trick = game.trick;
+
+  const effect: TrickProps["effect"] =
+    action && action.type === "play"
+      ? {
+          type: "played",
+          player: action.player,
+        }
+      : !action && type === "trickWon"
+      ? {
+          type: "won",
+          player: game.trickWinner as number,
+        }
+      : { type: "none" };
+  return (
+    <TrickSection
+      numPlayers={numPlayers}
+      leadPlayer={leadPlayer}
+      perspective={perspective}
+      effect={effect}
+      waitFor={meter.waitFor}
+    >
+      {trick.map((cardId) => (
+        <TrickCard cardId={cardId} />
+      ))}
+    </TrickSection>
+  );
+};

@@ -28,8 +28,13 @@ export const getCurrentGame = <S extends Spec>(step: Step<S>) =>
 export const getFrames = <S extends Spec>(step: Step<S>) => {
   const frames: Frame<S>[] = [];
   const { prev, patches, action, ...rest } = step;
-  frames.push({ gameState: prev, action, idx: frames.length, ...rest });
-  getGames(step).forEach((gameState) => {
+  if (action === null) {
+    frames.push({ gameState: prev, action, idx: frames.length, ...rest });
+  }
+
+  getGames(step).forEach((gameState, idx) => {
+    if (action && idx === 0)
+      frames.push({ gameState, action, idx: frames.length, ...rest });
     frames.push({ gameState, action: null, idx: frames.length, ...rest });
   });
   return frames;

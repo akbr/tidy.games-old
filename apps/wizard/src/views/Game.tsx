@@ -1,37 +1,51 @@
-import { FunctionComponent } from "preact";
-import { Frame } from "@lib/tabletop";
-import { WizardSpec } from "src/game";
+import type { FunctionComponent } from "preact";
+import type { ViewProps } from "./types";
 import { getHandHeight } from "@lib/layouts/hand";
+
+import { Seats } from "./Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
+import { TableContent } from "./TableContent";
 
-export const Container: FunctionComponent = ({ children }) => (
+const Container: FunctionComponent = ({ children }) => (
   <div class="h-full bg-[#006400]">{children}</div>
 );
 
-export const Table: FunctionComponent<{ height: number }> = ({
-  children,
-  height,
-}) => (
-  <section id="table" style={{ height: `calc(100% - ${height}px)` }}>
+const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
+  <section
+    id="table"
+    class="relative"
+    style={{ height: `calc(100% - ${height}px)` }}
+  >
     {children}
   </section>
 );
 
-export const Game = ({ frame }: { frame: Frame<WizardSpec> }) => {
-  const { player } = frame;
-  const [state, game] = frame.gameState;
-  const tableHeight = getHandHeight(3, document.body.getBoundingClientRect());
+const TableCenter: FunctionComponent = ({ children }) => (
+  <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
+    {children}
+  </div>
+);
+
+export const Game = (props: ViewProps) => {
+  const { frame, room } = props;
+  const [, game] = frame.gameState;
+
+  const numCards = game.hands[room.player].length || 1;
+  const tableHeight = getHandHeight(
+    numCards,
+    document.body.getBoundingClientRect()
+  );
+
   return (
     <Container>
       <Table height={tableHeight}>
-        <Trick
-          numPlayers={5}
-          leadPlayer={0}
-          perspective={0}
-          trick={game.trick}
-        />
-        <Hand hand={game.hands[0]} play={() => undefined} />
+        <TableCenter>
+          <TableContent {...props} />
+        </TableCenter>
+        <Trick {...props} />
+        <Hand {...props} />
+        <Seats {...props} />
       </Table>
     </Container>
   );
