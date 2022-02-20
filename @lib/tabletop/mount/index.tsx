@@ -57,5 +57,5 @@ export function mount<S extends Spec>(
 
   nextRender();
 
-  return { machine, actions };
+  return { machine, actions, meter };
 }

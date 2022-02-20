@@ -5,10 +5,10 @@ import { getHandHeight } from "@lib/layouts/hand";
 import { Seats } from "./Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
-import { TableContent } from "./TableContent";
+import { TableCenter } from "./TableCenter";
 
 const Container: FunctionComponent = ({ children }) => (
-  <div class="h-full bg-[#006400]">{children}</div>
+  <div class="h-full bg-[#006400] overflow-hidden">{children}</div>
 );
 
 const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
@@ -19,12 +19,6 @@ const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
   >
     {children}
   </section>
-);
-
-const TableCenter: FunctionComponent = ({ children }) => (
-  <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
-    {children}
-  </div>
 );
 
 export const Game = (props: ViewProps) => {
@@ -40,12 +34,10 @@ export const Game = (props: ViewProps) => {
   return (
     <Container>
       <Table height={tableHeight}>
-        <TableCenter>
-          <TableContent {...props} />
-        </TableCenter>
-        <Trick {...props} />
+        <TableCenter {...props} />
         <Hand {...props} />
         <Seats {...props} />
+        <Trick {...props} />
       </Table>
     </Container>
   );

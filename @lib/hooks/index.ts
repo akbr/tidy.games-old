@@ -1,7 +1,7 @@
 import { RefObject } from "preact";
 import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
 import { debounce, Task } from "@lib/async";
-import { WaitFor } from "@lib/state/meter";
+import { WaitFor, WaitRequest } from "@lib/state/meter";
 
 export function useRefreshOnResize(debounceMs = 300) {
   const [_, set] = useState(Symbol());
@@ -22,7 +22,7 @@ type EffectFn<El extends HTMLElement, Props> = (
   $el: El,
   curr: Props,
   prev?: Props
-) => void | Task;
+) => void | WaitRequest;
 
 export function useGameEffect<El extends HTMLElement, Props>(
   effectFn: EffectFn<El, Props>,
@@ -35,7 +35,7 @@ export function useGameEffect<El extends HTMLElement, Props>(
     const prev = propsRef.current;
     propsRef.current = props;
     if (!ref.current) return;
-    if (waitFor) return waitFor(effectFn(ref.current, props, prev));
-    effectFn(ref.current, props, prev);
+    const waitReq = effectFn(ref.current, props, prev);
+    if (waitFor) return waitFor(waitReq);
   });
 }

@@ -9,7 +9,7 @@ setup({
   preflight: false,
 });
 
-const { machine, actions } = mount(
+const { machine, actions, meter } = mount(
   wizardDefinition,
   {
     ctx: {
@@ -21,7 +21,7 @@ const { machine, actions } = mount(
   document.getElementById("app")!,
   Game
 );
-
+meter.controls.togglePlay();
 actions.bid(1, 1);
 actions.bid(2, 1);
 actions.bid(3, 1);

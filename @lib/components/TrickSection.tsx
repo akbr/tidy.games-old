@@ -66,11 +66,17 @@ export const applyTrickStyles = (
     style(
       $played,
       [
-        getHeldPosition(numPlayers, idx, dimensions),
-        getPlayedPosition(numPlayers, idx, dimensions),
+        {
+          ...getHeldPosition(numPlayers, idx, dimensions),
+          rotate: randomBetween(-40, 40),
+        },
+        {
+          ...getPlayedPosition(numPlayers, idx, dimensions),
+          rotate: 0,
+        },
       ],
       {
-        duration: 300,
+        duration: randomBetween(300, 500),
       }
     );
   }
@@ -100,7 +106,7 @@ export const applyTrickStyles = (
 
   return seq([
     () =>
-      style($winningCard, getWaggle(10, 25), {
+      style($winningCard, getWaggle(10, 20), {
         duration: 750,
         delay: 500,
       }),
@@ -111,7 +117,7 @@ export const applyTrickStyles = (
           ...winningPlayed,
           rotate: () => randomBetween(-30, 30),
         },
-        { duration: 300, delay: 350 }
+        { duration: 300, delay: 375 }
       ),
     () =>
       style(
@@ -136,7 +142,7 @@ export const TrickSection: FunctionalComponent<TrickProps> = ({
   useGameEffect(applyTrickStyles, ref, props, waitFor);
 
   return (
-    <section id="trick" class="relative" ref={ref}>
+    <section id="trick" class="absolute top-0 left-0" ref={ref}>
       {children}
     </section>
   );

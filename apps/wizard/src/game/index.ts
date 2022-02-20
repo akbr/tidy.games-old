@@ -178,7 +178,7 @@ export const chart: Chart<WizardSpec> = {
       ];
     }
 
-    return ["tallyScores", {}];
+    return ["tallyScores", { trick: [], trickWinner: null }];
   },
   tallyScores: (game, ctx) => {
     const { round } = game;

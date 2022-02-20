@@ -27,34 +27,11 @@ export const createMeter = <T>(): Meter<T> => {
   const [subscribe, updateListeners] = createSubscription<MeterStatus<T>>();
 
   let idx = -1;
-  let acceptingRequests = false;
   let auto = true;
   let active: Task | null = null;
   let waitRequests: WaitRequest[] = [];
-  let queue: T[] = [];
+  let autoQueue: T[] = [];
   let states: T[] = [];
-
-  function resolveAll() {
-    if (active) active.skip();
-    auto = false;
-    active = null;
-    queue = [];
-  }
-
-  function isAtLastState() {
-    return idx >= states.length - 1;
-  }
-
-  function setIdx(inputIdx: number) {
-    resolveAll();
-    idx = inputIdx;
-    updateListeners(get());
-  }
-
-  function waitFor(req: WaitRequest) {
-    if (!acceptingRequests) return;
-    waitRequests.push(req);
-  }
 
   function get(): MeterStatus<T> {
     return {
@@ -68,38 +45,18 @@ export const createMeter = <T>(): Meter<T> => {
     };
   }
 
-  function togglePlay() {
-    auto = !auto;
-    if (auto) iterate();
-    if (!auto && active) resolveAll();
+  function update() {
     updateListeners(get());
-  }
 
-  function push(...incoming: T[]) {
-    queue.push(...incoming);
-    states.push(...incoming);
-    if (auto) iterate();
-    updateListeners(get());
-  }
-
-  function iterate(): void {
-    if (!auto || active) return;
-    if (isAtLastState()) return;
-
-    idx += 1;
-
-    acceptingRequests = true;
-    updateListeners(get());
-    acceptingRequests = false;
-
+    // View might submit wait requests!
     if (waitRequests.length === 0) return iterate();
 
     const timings = waitRequests.filter(
-      (x) => typeof x === "number"
-    ) as number[];
+      (x): x is number => typeof x === "number"
+    );
     const tasks = waitRequests.filter(
-      (x) => typeof x !== "number" && x
-    ) as Task[];
+      (x): x is Task => !!(typeof x !== "number" && x)
+    );
     waitRequests = [];
 
     if (timings.length) tasks.push(delay(Math.max(...timings)));
@@ -111,8 +68,49 @@ export const createMeter = <T>(): Meter<T> => {
     thisPending.finished.then(() => {
       if (active !== thisPending) return;
       active = null;
-      iterate();
+      if (auto) iterate();
     });
+  }
+
+  function resolveAll() {
+    if (active) active.skip();
+    auto = false;
+    active = null;
+    autoQueue = [];
+  }
+
+  function isAtLastState() {
+    return idx >= states.length - 1;
+  }
+
+  function setIdx(inputIdx: number) {
+    resolveAll();
+    idx = inputIdx;
+    update();
+  }
+
+  function waitFor(req: WaitRequest) {
+    waitRequests.push(req);
+  }
+
+  function togglePlay() {
+    auto = !auto;
+    if (auto) iterate();
+    if (!auto) resolveAll();
+    update();
+  }
+
+  function push(...incoming: T[]) {
+    autoQueue.push(...incoming);
+    states.push(...incoming);
+    if (auto) iterate();
+    update();
+  }
+
+  function iterate(): void {
+    if (!auto || active || isAtLastState()) return;
+    idx += 1;
+    update();
   }
 
   return {
