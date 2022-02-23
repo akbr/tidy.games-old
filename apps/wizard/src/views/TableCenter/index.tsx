@@ -9,15 +9,15 @@ const Center: FunctionComponent = ({ children }) => (
   </div>
 );
 
-export const TableCenter = ({ frame, meter }: ViewProps) => {
-  const [type, game] = frame.gameState;
+export const TableCenter = ({ state, waitFor }: ViewProps) => {
+  const [type, game] = state;
 
   return (
     <Center>
       {type === "roundStart" ? (
-        <RoundStart num={game.round} waitFor={meter.waitFor} />
+        <RoundStart num={game.round} waitFor={waitFor} />
       ) : type === "deal" && game.trumpCard ? (
-        <TrumpReveal cardId={game.trumpCard} waitFor={meter.waitFor} />
+        <TrumpReveal cardId={game.trumpCard} waitFor={waitFor} />
       ) : null}
     </Center>
   );

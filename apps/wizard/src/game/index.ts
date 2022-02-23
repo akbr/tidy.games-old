@@ -204,9 +204,9 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
   },
   chart,
   actionStubs: {
-    bid: (i) => (typeof i === "string" ? parseInt(i) : i),
-    play: (i) => i,
-    select: (i) => i,
+    bid: null,
+    play: null,
+    select: null,
   },
   stripGame: (patch, player) => {
     const [state, game] = patch;

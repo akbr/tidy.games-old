@@ -1,19 +1,14 @@
-import type { AuthenticatedAction, Ctx, Spec, ActionStubs } from "./types";
+import type {
+  Ctx,
+  Spec,
+  Actions,
+  ActionStubs,
+  AuthenticatedAction,
+} from "./types";
 import type { Step } from "./machine";
-import type { PlayerFn } from "./game";
 import { lastOf } from "@lib/array";
 
-export type Frame<S extends Spec> = {
-  player: number;
-  step: number;
-  idx: number;
-  ctx: Ctx<S>;
-  gameState: S["gameStates"];
-  action: AuthenticatedAction<S> | null;
-  final: boolean;
-};
-
-export const getGames = <S extends Spec>(step: Step<S>) => {
+export const expandStates = <S extends Spec>(step: Step<S>) => {
   const games: S["gameStates"][] = [];
   step.patches.forEach(([state, next]) => {
     const [, prev] = lastOf(games) || step.prev;
@@ -22,52 +17,53 @@ export const getGames = <S extends Spec>(step: Step<S>) => {
   return games;
 };
 
-export const getCurrentGame = <S extends Spec>(step: Step<S>) =>
-  lastOf(getGames(step));
+export type Frame<S extends Spec> = {
+  state: S["gameStates"];
+  action: S["actions"] | null;
+  ctx: Ctx<S>;
+  player: number;
+};
 
-export const getFrames = <S extends Spec>(step: Step<S>) => {
-  const frames: Frame<S>[] = [];
-  const { prev, patches, action, ...rest } = step;
-  if (action === null) {
-    frames.push({ gameState: prev, action, idx: frames.length, ...rest });
-  }
+export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
+  const { prev, action, ctx, player } = step;
 
-  getGames(step).forEach((gameState, idx) => {
-    if (action && idx === 0)
-      frames.push({ gameState, action, idx: frames.length, ...rest });
-    frames.push({ gameState, action: null, idx: frames.length, ...rest });
+  const createFrame = (
+    state: typeof step.prev,
+    action: typeof step.action
+  ) => ({
+    state,
+    action,
+    ctx,
+    player,
   });
-  return frames;
+
+  const nextStates = expandStates(step);
+
+  const firstFrame =
+    action === null
+      ? // This is the first state of the game; include it.
+        createFrame(prev, action)
+      : // This is a state triggered by an action; include an "overlap."
+        createFrame(nextStates[0], action);
+
+  const restFrames = nextStates.map((state) => createFrame(state, null));
+
+  return [firstFrame, ...restFrames];
 };
 
-export type ConnectedActions<S extends Spec> = {
-  [X in S["actions"] as X["type"]]: (
-    player: number,
-    input: string | X["data"]
-  ) => void;
+export type ConnectedActions<A extends Actions> = {
+  [X in A as X["type"]]: (input: X["data"]) => void;
 };
 
-export const createActionFns = <S extends Spec>(
-  stubs: ActionStubs<S>,
-  submit: (player: number, action: S["actions"]) => void
+export const createActions = <A extends Actions>(
+  stubs: ActionStubs<A>,
+  submit: (action: A) => void
 ) => {
-  const fns = {} as ConnectedActions<S>;
-  for (let i in stubs) {
-    const key = i as keyof ConnectedActions<S>;
+  const fns = {} as ConnectedActions<A>;
+  for (let k in stubs) {
+    const key = k as keyof ConnectedActions<A>;
     const fn = stubs[key];
-    fns[key] = (player, str) => submit(player, { type: key, data: fn(str) });
+    fns[key] = (input) => submit({ type: key, data: input } as A);
   }
   return fns;
 };
-
-export const wrapStateBot =
-  <S extends Spec>(
-    botFn: (game: S["gameStates"], player: number) => S["actions"] | void,
-    submit: (player: number, action: S["actions"]) => void
-  ): PlayerFn<S> =>
-  (status) => {
-    if (typeof status === "string") return;
-    const [state, game] = getCurrentGame(status);
-    const action = botFn([state, game], status.player);
-    if (action) submit(status.player, action);
-  };

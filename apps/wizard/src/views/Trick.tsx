@@ -9,9 +9,14 @@ const TrickCard: FunctionComponent<{ cardId: string }> = ({ cardId }) => (
   </div>
 );
 
-export const Trick: FunctionComponent<ViewProps> = ({ frame, meter, room }) => {
-  const { ctx, gameState, action } = frame;
-  const [type, game] = gameState;
+export const Trick: FunctionComponent<ViewProps> = ({
+  state,
+  waitFor,
+  ctx,
+  action,
+  room,
+}) => {
+  const [type, game] = state;
 
   const numPlayers = ctx.numPlayers;
   const leadPlayer = game.trickLeader;
@@ -36,7 +41,7 @@ export const Trick: FunctionComponent<ViewProps> = ({ frame, meter, room }) => {
       leadPlayer={leadPlayer}
       perspective={perspective}
       effect={effect}
-      waitFor={meter.waitFor}
+      waitFor={waitFor}
     >
       {trick.map((cardId) => (
         <TrickCard cardId={cardId} />

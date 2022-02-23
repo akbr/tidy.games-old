@@ -18,14 +18,14 @@ export const useRefresh = () => {
   return () => set(Symbol());
 };
 
-type EffectFn<El extends HTMLElement, Props> = (
+export type GameEffect<Props, El extends HTMLElement = HTMLElement> = (
   $el: El,
   curr: Props,
   prev?: Props
 ) => void | WaitRequest;
 
 export function useGameEffect<El extends HTMLElement, Props>(
-  effectFn: EffectFn<El, Props>,
+  effectFn: GameEffect<Props, El>,
   ref: RefObject<El>,
   props: Props,
   waitFor?: WaitFor

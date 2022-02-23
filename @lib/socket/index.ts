@@ -4,6 +4,7 @@ export interface Socket<Input, Output> {
   onmessage?: (output: Output) => void;
   onopen?: () => void;
   onclose?: () => void;
+  meta?: Record<string, any>;
 }
 
 export interface SocketServer<Input, Output> {
@@ -36,21 +37,19 @@ export function createWebSocket<Input, Output>(
   websocket.onopen = () => {
     if (clientSocket.onopen) clientSocket.onopen();
   };
+
   websocket.onclose = () => {
     if (clientSocket.onclose) clientSocket.onclose();
-    cleanup();
+    websocket.onopen = null;
+    websocket.onmessage = null;
+    websocket.onclose = null;
   };
+
   websocket.onmessage = (x) => {
     if (clientSocket.onmessage) {
       clientSocket.onmessage(JSON.parse(x.data) as Output);
     }
   };
-
-  function cleanup() {
-    websocket.onopen = null;
-    websocket.onmessage = null;
-    websocket.onclose = null;
-  }
 
   return clientSocket;
 }

@@ -18,16 +18,6 @@ export type Room<ET extends EngineTypes> = {
   game: Game<ET> | null;
 };
 
-const listenerFromSocket =
-  <ET extends EngineTypes>(socket: ServerSocket<ET>) =>
-  (segment: Segment<ET> | string) => {
-    if (typeof segment === "string") {
-      socket.send(["engineMsg", segment]);
-      return;
-    }
-    socket.send(["engine", segment]);
-  };
-
 export const createMethods = <ET extends EngineTypes>(
   machineSpec: MachineSpec<ET>
 ) => {
@@ -76,10 +66,7 @@ export const createMethods = <ET extends EngineTypes>(
   function injectSocketToGame(socket: ServerSocket<ET>) {
     const room = getSocketRoom(socket);
     if (!room || !room.game) return;
-    room.game.setPlayerFn(
-      room.seats.indexOf(socket),
-      listenerFromSocket(socket)
-    );
+    room.game.setSocket(room.seats.indexOf(socket), socket);
   }
 
   function broadcastRoomStatus({ id, seats, game }: Room<ET>) {
@@ -121,7 +108,7 @@ export const createMethods = <ET extends EngineTypes>(
     broadcastRoomStatus(room);
 
     room.seats.forEach((socket, idx) => {
-      socket && room.game?.setPlayerFn(idx, listenerFromSocket(socket));
+      socket && room.game?.setSocket(idx, socket);
     });
   }
 
@@ -163,6 +150,18 @@ export const createMethods = <ET extends EngineTypes>(
 };
 
 /**'
+ * 
+const listenerFromSocket =
+  <ET extends EngineTypes>(socket: ServerSocket<ET>) =>
+  (segment: Segment<ET> | string) => {
+    if (typeof segment === "string") {
+      socket.send(["engineMsg", segment]);
+      return;
+    }
+    socket.send(["engine", segment]);
+  };
+
+
   function sendStateUpdate(socket: ServerSocket<ET>) {
     const room = getSocketRoom(socket);
     if (!room || !room.machine) return;

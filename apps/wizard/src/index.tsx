@@ -1,35 +1,38 @@
+import "@shared/base.css";
+import "../styles.css";
+
 import { setup } from "@twind/preact";
 
-import { mount } from "@lib/tabletop/mount";
 import { wizardDefinition } from "./game";
-import { Game } from "./views/Game";
+import { createServer } from "@lib/tabletop/server";
+import { createClient } from "@lib/tabletop/client";
+import { createLocalSocket } from "@lib/socket";
 
 setup({
   props: { className: true },
   preflight: false,
 });
 
-const { machine, actions, meter } = mount(
-  wizardDefinition,
-  {
-    ctx: {
-      numPlayers: 4,
-      options: null,
-      seed: "test",
-    },
-  },
-  document.getElementById("app")!,
-  Game
+const server = createServer(wizardDefinition);
+const { subscribe, meter, actions, serverActions } = createClient(
+  server,
+  wizardDefinition
 );
-meter.controls.togglePlay();
-/**
- * 
-actions.bid(1, 1);
-actions.bid(2, 1);
-actions.bid(3, 1);
-actions.bid(0, 1);
-actions.play(1, "6|h");
-actions.play(2, "14|s");
-actions.play(3, "8|h");
-actions.play(0, "11|h");
- */
+
+subscribe(([type, props]) => {
+  if (type === "title") {
+    console.log("<<< WIZARD >>>");
+  } else if (type === "lobby") {
+    console.log(props.room);
+  } else if (type === "game") {
+    console.log(props.state);
+  }
+});
+
+serverActions.join({ id: "test" });
+
+const p1 = createLocalSocket(server, {});
+p1.send(["server", { type: "join", data: { id: "test" } }]);
+
+serverActions.start(null);
+p1.send(["machine", { type: "bid", data: 1 }]);

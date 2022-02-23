@@ -1,8 +1,8 @@
-type States = string;
-type Edges = Record<States, (States | null | true)[]>;
-type Game = Record<string, any>;
-type Actions = { type: string; data?: any };
-type Options = Record<string, any> | null;
+export type States = string;
+export type Edges = Record<States, (States | null | true)[]>;
+export type Game = Record<string, any>;
+export type Actions = { type: string; data?: any };
+export type Options = Record<string, any> | null;
 
 export type Spec = {
   game: Game;
@@ -25,13 +25,13 @@ export type AuthenticatedAction<S extends Spec> = S["actions"] & {
   player: number;
   time: number;
 };
-export type ActionStubs<S extends Spec> = {
-  [X in S["actions"] as X["type"]]: (input: string | X["data"]) => X["data"];
+export type ActionStubs<A extends Actions> = {
+  [X in A as X["type"]]: null;
 };
 export type GameDefinition<S extends Spec> = {
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
   chart: Chart<S>;
-  actionStubs: ActionStubs<S>;
+  actionStubs: ActionStubs<S["actions"]>;
   stripGame?: (patch: S["patches"], player: number) => S["patches"];
   stripAction?: (
     action: AuthenticatedAction<S>,

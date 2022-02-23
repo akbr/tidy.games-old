@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@lib": path.resolve(__dirname, "../../@lib"),
+      "@shared": path.resolve(__dirname, "../../@shared"),
     },
   },
   plugins: [preact()],

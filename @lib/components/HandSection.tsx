@@ -2,12 +2,12 @@ import { FunctionComponent, h } from "preact";
 import { useRef } from "preact/hooks";
 
 import { style } from "@lib/stylus";
-import { useRefreshOnResize, useGameEffect } from "@lib/hooks";
+import { useRefreshOnResize, useGameEffect, GameEffect } from "@lib/hooks";
 import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
 
-export const applyHandStyles = (
+export const applyHandStyles: GameEffect<boolean> = (
   $handContainer: HTMLElement,
   justDealt: boolean
 ) => {

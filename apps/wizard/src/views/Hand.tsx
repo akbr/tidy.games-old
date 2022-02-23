@@ -56,11 +56,11 @@ export const HandCard = ({ card, play }: HandCardProps) => {
   );
 };
 
-export const Hand = ({ frame, actions, meter }: ViewProps) => {
-  const [type, game] = frame.gameState;
+export const Hand = ({ state, actions, waitFor }: ViewProps) => {
+  const [type, game] = state;
   const hand = game.hands[0];
   return (
-    <HandSection justDealt={type === "deal"} waitFor={meter.waitFor}>
+    <HandSection justDealt={type === "deal"} waitFor={waitFor}>
       {hand.map((id) => (
         <HandCard card={id} play={(s) => actions.play(0, s)} />
       ))}

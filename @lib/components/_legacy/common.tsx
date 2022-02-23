@@ -1,6 +1,4 @@
-import { styled, keyframes } from "goober";
-
-export const Fieldset = styled("fieldset")`
+export const Fieldset = `
   display: flex;
   align-items: center;
   padding: 1.5em;
@@ -9,7 +7,7 @@ export const Fieldset = styled("fieldset")`
   border: 2px solid #999;
 `;
 
-export const EmojiButton = styled("button")`
+export const EmojiButton = `
   font-size: 2em;
   background: none;
   color: inherit;
@@ -19,7 +17,7 @@ export const EmojiButton = styled("button")`
   outline: inherit;
 `;
 
-const ButtonBase = styled("button")`
+const ButtonBase = `
   padding: 0;
   border: none;
   font: inherit;
@@ -28,7 +26,7 @@ const ButtonBase = styled("button")`
   cursor: pointer;
 `;
 
-export const Button = styled(ButtonBase)`
+export const Button = `
   padding: 12px;
   color: white;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
@@ -38,28 +36,4 @@ export const Button = styled(ButtonBase)`
   background-position: right center;
   border-radius: 12px;
   font-size: 1em;
-`;
-
-export const throb = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  100% {
-    transform: scale(1.15);
-  }
-`;
-export const Throb = styled("div")`
-  animation: ${throb} 1s alternate infinite;
-`;
-
-export const fadeIn = keyframes`
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-`;
-export const Appear = styled("div")`
-  animation: ${fadeIn} 750ms;
 `;

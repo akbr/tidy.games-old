@@ -5,10 +5,9 @@ import { Badge } from "@lib/components/Badge";
 import { Twemoji } from "@lib/components/Twemoji";
 import { rotateArray } from "@lib/array";
 
-export const Seats = ({ frame, room }: ViewProps) => {
+export const Seats = ({ state, ctx, room }: ViewProps) => {
   const { player } = room;
-  const { ctx, gameState } = frame;
-  const [type, game] = gameState;
+  const [type, game] = state;
   const { round, bids } = game;
 
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (

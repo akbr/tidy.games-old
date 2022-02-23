@@ -2,12 +2,17 @@ import { ComponentChildren, FunctionComponent } from "preact";
 import { useRef, useState } from "preact/hooks";
 import { MeterStatus } from "@lib/state/meter";
 
-import { ViewProps } from "../";
-import { Spec } from "../../";
-import { Frame, ConnectedActions } from "../../utils";
-import { Machine } from "../../machine";
+import { ViewProps } from "../client";
+import { Spec } from "..";
+import { Frame, ConnectedActions } from "../utils";
 
 import { JSONDiff } from "./JsonDiff";
+
+type DebugProps<S extends Spec> = ViewProps<S> & {
+  meter: MeterStatus<Frame<S>>;
+} & {
+  children?: ComponentChildren;
+};
 
 const ListView = <S extends Spec>({
   states,
@@ -103,7 +108,7 @@ const ActionPane = <S extends Spec>({
   actions,
 }: {
   numPlayers: number;
-  actions: ConnectedActions<S>;
+  actions: ConnectedActions<S["actions"]>;
 }) => {
   const [player, setPlayer] = useState(0);
 
@@ -134,15 +139,7 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-type DebugProps<S extends Spec> = ViewProps<S> & { machine: Machine<S> } & {
-  children?: ComponentChildren;
-};
-
-export const Nav = <S extends Spec>({
-  meter,
-  actions,
-  machine,
-}: DebugProps<S>) => {
+export const Nav = <S extends Spec>({ meter, actions }: DebugProps<S>) => {
   const { states, idx, state, auto, setIdx, waitFor } = meter;
 
   return (
@@ -155,15 +152,6 @@ export const Nav = <S extends Spec>({
       </div>
       <div>
         <ActionPane actions={actions} numPlayers={2} />
-        <div class="mt-4 text-center">
-          <button
-            onClick={() => {
-              alert(JSON.stringify(machine.export()));
-            }}
-          >
-            Export
-          </button>
-        </div>
       </div>
     </div>
   );
@@ -179,13 +167,13 @@ export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
     <section id="debug" class="h-full flex">
       <section
         id="debug-nav"
-        class="h-full bg-gray-400 w-[175px] p-1 font-mono text-sm"
+        class="h-full bg-gray-400 w-[175px] p-1 font-mono text-sm  text-black"
       >
         <Nav {...props} />
       </section>
       <section
         id="debug-json"
-        class="h-full bg-gray-200 w-[175px] p-2 text-xs overflow-hidden"
+        class="h-full bg-gray-200 w-[175px] p-2 text-xs overflow-hidden text-black"
       >
         <JSONDiff curr={curr} prev={prev} />
       </section>
