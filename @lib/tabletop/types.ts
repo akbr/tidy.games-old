@@ -1,3 +1,18 @@
+export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
+
+export type GameDefinition<S extends Spec> = {
+  setup: (ctx: Ctx<S>) => S["gameStates"] | string;
+  chart: Chart<S>;
+  actionStubs: ActionStubs<S["actions"]>;
+  stripGame?: (patch: S["patches"], player: number) => S["patches"];
+  stripAction?: (
+    action: AuthenticatedAction<S>,
+    player: number
+  ) => AuthenticatedAction<S> | null;
+};
+
+// ---
+
 export type States = string;
 export type Edges = Record<States, (States | null | true)[]>;
 export type Game = Record<string, any>;
@@ -21,22 +36,14 @@ export type Ctx<S extends Spec> = {
   options: S["options"];
   seed?: string | null;
 };
+
 export type AuthenticatedAction<S extends Spec> = S["actions"] & {
   player: number;
   time: number;
 };
+
 export type ActionStubs<A extends Actions> = {
   [X in A as X["type"]]: null;
-};
-export type GameDefinition<S extends Spec> = {
-  setup: (ctx: Ctx<S>) => S["gameStates"] | string;
-  chart: Chart<S>;
-  actionStubs: ActionStubs<S["actions"]>;
-  stripGame?: (patch: S["patches"], player: number) => S["patches"];
-  stripAction?: (
-    action: AuthenticatedAction<S>,
-    player: number
-  ) => AuthenticatedAction<S> | null;
 };
 
 // ---
@@ -54,7 +61,6 @@ type SpecOptions = {
   }>;
 };
 
-export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
 type _CreateSpec<
   I extends SpecOptions,
   GameTypes = CreateGameTypes<

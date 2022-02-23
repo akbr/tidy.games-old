@@ -1,11 +1,12 @@
-import { createMeter, WaitFor } from "@lib/state/meter";
-
-import { GameDefinition, Spec } from ".";
-import { createActions, ConnectedActions, Frame, getFrames } from "./utils";
-import { ServerApi } from "./server";
-import { RoomData, ServerActions } from "./server/types";
 import { createSocketManager } from "@lib/socket";
 import { createSubscription } from "@lib/state/subscription";
+import { createMeter, WaitFor } from "@lib/state/meter";
+
+import { GameDefinition, Spec } from "../types";
+import { ServerApi } from "../server";
+import { RoomData, ServerActions } from "../server/types";
+
+import { Frame, getFrames, ConnectedActions, createActions } from "./helpers";
 
 type ServerViewControls<S extends Spec> = {
   serverActions: ConnectedActions<ServerActions<S>>;

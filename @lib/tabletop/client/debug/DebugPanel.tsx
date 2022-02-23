@@ -1,10 +1,12 @@
+//@ts-nocheck
+
 import { ComponentChildren, FunctionComponent } from "preact";
 import { useRef, useState } from "preact/hooks";
 import { MeterStatus } from "@lib/state/meter";
 
-import { ViewProps } from "../client";
-import { Spec } from "..";
-import { Frame, ConnectedActions } from "../utils";
+import { Spec } from "../../types";
+import { Frame, ConnectedActions } from "../helpers";
+import { ViewProps } from "..";
 
 import { JSONDiff } from "./JsonDiff";
 

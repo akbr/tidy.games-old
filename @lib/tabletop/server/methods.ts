@@ -1,7 +1,8 @@
-import { Spec, GameDefinition, Machine, createMachine } from "..";
-import { GameMaster, createGameMaster } from "./gameMaster";
+import { Spec, GameDefinition } from "../types";
+import { Machine, createMachine } from "../machine";
 
-import type { ServerSocket } from "./types";
+import type { ServerSocket } from "./";
+import { GameMaster, createGameMaster } from "./gameMaster";
 import { getRandomRoomID, getSeatNumber } from "./utils";
 
 export type Room<S extends Spec> = {

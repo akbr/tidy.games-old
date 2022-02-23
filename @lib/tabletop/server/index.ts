@@ -1,7 +1,47 @@
-import type { SocketServer, Socket } from "@lib/socket";
-import type { Spec, GameDefinition } from "..";
+import type { Socket, SocketServer } from "@lib/socket";
+import type { Spec, GameDefinition } from "../types";
+import type { Step } from "../machine";
+
 import { createMethods } from "./methods";
-import type { ServerOutputs, ServerInputs } from "./types";
+
+export type ServerActions<S extends Spec> =
+  | {
+      type: "join";
+      data?: { id: string; seatIndex?: number };
+    }
+  | { type: "addBot" }
+  | { type: "start"; data: S["options"] };
+
+export type RoomData = {
+  id: string;
+  seats: {
+    name: string;
+    avatar: string;
+    connected: boolean;
+  }[];
+  player: number;
+  started: boolean;
+} | null;
+
+export type ServerInputs<S extends Spec> =
+  | ["machine", S["actions"]]
+  | ["server", ServerActions<S>];
+
+export type ServerOutputs<S extends Spec> =
+  | ["machine", Step<S>]
+  | ["machineErr", string]
+  | ["server", RoomData]
+  | ["serverErr", string];
+
+export type ServerSocket<S extends Spec> = Socket<
+  ServerOutputs<S>,
+  ServerInputs<S>
+>;
+
+export type ClientSocket<S extends Spec> = Socket<
+  ServerInputs<S>,
+  ServerOutputs<S>
+>;
 
 export type ServerApi<S extends Spec> = SocketServer<
   ServerOutputs<S>,

@@ -1,21 +1,5 @@
-import type {
-  Ctx,
-  Spec,
-  Actions,
-  ActionStubs,
-  AuthenticatedAction,
-} from "./types";
-import type { Step } from "./machine";
-import { lastOf } from "@lib/array";
-
-export const expandStates = <S extends Spec>(step: Step<S>) => {
-  const games: S["gameStates"][] = [];
-  step.patches.forEach(([state, next]) => {
-    const [, prev] = lastOf(games) || step.prev;
-    games.push([state, { ...prev, ...next }]);
-  });
-  return games;
-};
+import { Spec, Ctx, Actions, AuthenticatedAction, ActionStubs } from "../types";
+import { Step, getStates } from "../machine";
 
 export type Frame<S extends Spec> = {
   state: S["gameStates"];
@@ -28,8 +12,8 @@ export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
   const { prev, action, ctx, player } = step;
 
   const createFrame = (
-    state: typeof step.prev,
-    action: typeof step.action
+    state: S["gameStates"],
+    action: AuthenticatedAction<S> | null
   ) => ({
     state,
     action,
@@ -37,7 +21,7 @@ export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
     player,
   });
 
-  const nextStates = expandStates(step);
+  const nextStates = getStates(step);
 
   const firstFrame =
     action === null
@@ -45,7 +29,6 @@ export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
         createFrame(prev, action)
       : // This is a state triggered by an action; include an "overlap."
         createFrame(nextStates[0], action);
-
   const restFrames = nextStates.map((state) => createFrame(state, null));
 
   return [firstFrame, ...restFrames];
