@@ -1,4 +1,4 @@
-import type { CreateSpec, Chart, GameDefinition } from "@lib/tabletop";
+import type { CreateSpec, Chart, GameDefinition } from "@lib/tabletop/types";
 
 import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex } from "./logic";
