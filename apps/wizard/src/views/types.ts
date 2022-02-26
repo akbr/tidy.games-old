@@ -1,4 +1,4 @@
-import { ViewProps as _ViewProps } from "@lib/tabletop/mount";
+import { GameProps as _GP } from "@lib/tabletop/client";
 import { WizardSpec } from "../game";
 
-export type ViewProps = _ViewProps<WizardSpec>;
+export type GameProps = _GP<WizardSpec>;

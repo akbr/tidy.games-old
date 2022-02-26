@@ -1,19 +1,16 @@
 import { createSocketManager } from "@lib/socket";
 import { createSubscription } from "@lib/state/subscription";
-import { createMeter, WaitFor } from "@lib/state/meter";
+import { createMeter, MeterStatus, WaitFor } from "@lib/state/meter";
 
 import { GameDefinition, Spec } from "../types";
 import { ServerApi } from "../server";
-import { RoomData, ServerActions } from "../server/types";
+import { RoomData, ServerActions } from "../server/";
 
 import { Frame, getFrames, ConnectedActions, createActions } from "./helpers";
 
-type ServerViewControls<S extends Spec> = {
-  serverActions: ConnectedActions<ServerActions<S>>;
-};
-
-type GameViewControls<S extends Spec> = {
-  actions: ConnectedActions<S["actions"]>;
+type Controls<S extends Spec> = {
+  game: ConnectedActions<S["actions"]>;
+  server: ConnectedActions<ServerActions<S>>;
   waitFor: WaitFor;
 };
 
@@ -24,24 +21,26 @@ type Err = {
 
 type TitleProps<S extends Spec> = {
   err?: Err;
-} & ServerViewControls<S>;
+  controls: Controls<S>;
+};
 
 type LobbyProps<S extends Spec> = {
   room: RoomData;
-  err?: Err;
-} & ServerViewControls<S>;
+} & TitleProps<S>;
 
 type GameProps<S extends Spec> = {
-  room: RoomData;
-  err?: Err;
-} & ServerViewControls<S> &
-  GameViewControls<S> &
-  Frame<S>;
+  frame: Frame<S>;
+} & LobbyProps<S>;
+
+type GameExProps<S extends Spec> = {
+  meter: MeterStatus<Frame<S>>;
+} & GameProps<S>;
 
 type ViewProps<S extends Spec> =
   | ["title", TitleProps<S>]
   | ["lobby", LobbyProps<S>]
-  | ["game", GameProps<S>];
+  | ["game", GameProps<S>]
+  | ["gameEx", GameExProps<S>];
 
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
@@ -54,42 +53,45 @@ export function createClient<S extends Spec>(
   let frame: Frame<S>;
   let err: Err | undefined;
 
-  const actions = createActions<S["actions"]>(def.actionStubs, (action) => {
-    socket.send(["machine", action]);
-  });
-
-  const serverActions = createActions<ServerActions<S>>(
-    {
-      start: null,
-      addBot: null,
-      join: null,
-    },
-    (action) => {
-      socket.send(["server", action]);
-    }
-  );
-
-  const waitFor = meter.controls.waitFor;
-
-  const update = () => {
-    const frame = meter.get().state;
-    const nextProps: ViewProps<S> = !room
-      ? ["title", { serverActions, err }]
-      : !frame
-      ? ["lobby", { serverActions, room, err }]
-      : ["game", { room, serverActions, actions, waitFor, ...frame, err }];
-    updateListeners(nextProps);
+  const controls = {
+    game: createActions<S["actions"]>(def.actionStubs, (action) => {
+      socket.send(["machine", action]);
+    }),
+    server: createActions<ServerActions<S>>(
+      {
+        start: null,
+        addBot: null,
+        join: null,
+      },
+      (action) => {
+        socket.send(["server", action]);
+      }
+    ),
+    waitFor: meter.controls.waitFor,
   };
 
-  meter.subscribe((status) => {
-    const nextFrame = status.state;
-    if (nextFrame === frame) {
-      console.warn("meter double-emitted");
-      return;
-    }
-    frame = status.state;
-    update();
-  });
+  const update = () => {
+    const currFrame = meter.get().state;
+    const frameUpdate = currFrame !== frame;
+    frame = currFrame;
+
+    const nextProps: ViewProps<S> | null = !room
+      ? ["title", { controls, err }]
+      : !currFrame
+      ? ["lobby", { controls, err, room }]
+      : frameUpdate
+      ? ["game", { controls, err, room, frame }]
+      : null;
+
+    nextProps && updateListeners(nextProps);
+    frame &&
+      updateListeners([
+        "gameEx",
+        { controls, err, room, frame, meter: meter.get() },
+      ]);
+  };
+
+  meter.subscribe(update);
 
   const socket = createSocketManager(server, {
     onmessage: ([type, payload]) => {
@@ -108,5 +110,5 @@ export function createClient<S extends Spec>(
     },
   });
 
-  return { meter, subscribe, actions, serverActions };
+  return { meter, subscribe, controls, update };
 }

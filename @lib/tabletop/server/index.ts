@@ -82,7 +82,6 @@ export function createServer<S extends Spec>(
 
         if (msg.type === "start") {
           let err = startGame(socket, msg.data);
-          console.log(err);
           if (err) socket.send(["serverErr", err]);
           return;
         }

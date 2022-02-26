@@ -14,7 +14,7 @@ setup({
 });
 
 const server = createServer(wizardDefinition);
-const { subscribe, meter, actions, serverActions } = createClient(
+const { subscribe, meter, controls, update } = createClient(
   server,
   wizardDefinition
 );
@@ -23,16 +23,20 @@ subscribe(([type, props]) => {
   if (type === "title") {
     console.log("<<< WIZARD >>>");
   } else if (type === "lobby") {
-    console.log(props.room);
+    console.log("LOBBY", props.room);
   } else if (type === "game") {
-    console.log(props.state);
+    console.log("GAME", props.frame);
+  } else if (type === "gameEx") {
+    console.log("GAME-EX", props.meter);
   }
 });
 
-serverActions.join({ id: "test" });
+update();
+
+controls.server.join({ id: "test" });
 
 const p1 = createLocalSocket(server, {});
 p1.send(["server", { type: "join", data: { id: "test" } }]);
 
-serverActions.start(null);
+controls.server.start(null);
 p1.send(["machine", { type: "bid", data: 1 }]);
