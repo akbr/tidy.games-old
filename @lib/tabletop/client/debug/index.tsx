@@ -1,26 +1,17 @@
-//@ts-nocheck
-
-import { ComponentChildren, FunctionComponent } from "preact";
+import { FunctionComponent } from "preact";
 import { useRef, useState } from "preact/hooks";
-import { MeterStatus } from "@lib/state/meter";
 
 import { Spec } from "../../types";
-import { Frame, ConnectedActions } from "../helpers";
-import { ViewProps } from "..";
+import { ConnectedActions } from "../helpers";
+import { GameExProps } from "..";
 
 import { JSONDiff } from "./JsonDiff";
-
-type DebugProps<S extends Spec> = ViewProps<S> & {
-  meter: MeterStatus<Frame<S>>;
-} & {
-  children?: ComponentChildren;
-};
 
 const ListView = <S extends Spec>({
   states,
   idx,
   setIdx,
-}: DebugProps<S>["meter"]) => {
+}: GameExProps<S>["meter"]) => {
   return (
     <div>
       {states.map((frame, i) => (
@@ -31,7 +22,7 @@ const ListView = <S extends Spec>({
         >
           {i +
             " " +
-            JSON.stringify(frame.gameState[0]) +
+            JSON.stringify(frame.state[0]) +
             (frame.action ? `(${frame.action.type})` : "")}
         </div>
       ))}
@@ -45,7 +36,7 @@ const Controls = ({
   setIdx,
   auto,
   togglePlay,
-}: DebugProps<any>["meter"]) => {
+}: GameExProps<any>["meter"]) => {
   const length = states.length;
   const atMin = idx === 0;
   const atMax = idx === states.length - 1;
@@ -141,7 +132,7 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-export const Nav = <S extends Spec>({ meter, actions }: DebugProps<S>) => {
+export const Nav = <S extends Spec>({ meter }: GameExProps<S>) => {
   const { states, idx, state, auto, setIdx, waitFor } = meter;
 
   return (
@@ -152,18 +143,15 @@ export const Nav = <S extends Spec>({ meter, actions }: DebugProps<S>) => {
           <ListView {...meter} />
         </div>
       </div>
-      <div>
-        <ActionPane actions={actions} numPlayers={2} />
-      </div>
     </div>
   );
 };
 
-export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
-  const { meter, children } = props;
+export const DebugPanel = <S extends Spec>(props: GameExProps<S>) => {
+  const { meter, frame } = props;
   const { states, state, idx, auto, setIdx, waitFor } = meter;
-  const curr = state.gameState[1];
-  const prev = states[idx - 1] ? states[idx - 1].gameState[1] : curr;
+  const curr = frame.state[1];
+  const prev = states[idx - 1] ? states[idx - 1].state[1] : curr;
 
   return (
     <section id="debug" class="h-full flex">
@@ -177,10 +165,15 @@ export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
         id="debug-json"
         class="h-full bg-gray-200 w-[175px] p-2 text-xs overflow-hidden text-black"
       >
+        <div class="font-mono font-bold text-lg">Game</div>
         <JSONDiff curr={curr} prev={prev} />
-      </section>
-      <section id="debug-app" class="h-full flex-grow">
-        {children}
+        {frame.action && (
+          <div>
+            <br />
+            <div class="font-mono font-bold text-lg">Action</div>
+            <JSONDiff curr={frame.action} prev={{}} />
+          </div>
+        )}
       </section>
     </section>
   );

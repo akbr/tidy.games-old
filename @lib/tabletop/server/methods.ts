@@ -1,7 +1,7 @@
 import { Spec, GameDefinition } from "../types";
 import { Machine, createMachine } from "../machine";
 
-import type { ServerSocket } from "./";
+import type { ServerSocket, ServerOptions } from "./";
 import { GameMaster, createGameMaster } from "./gameMaster";
 import { getRandomRoomID, getSeatNumber } from "./utils";
 
@@ -13,7 +13,8 @@ export type Room<S extends Spec> = {
 };
 
 export const createMethods = <S extends Spec>(
-  gameDefinition: GameDefinition<S>
+  gameDefinition: GameDefinition<S>,
+  serverOptions?: ServerOptions
 ) => {
   const rooms: Map<string, Room<S>> = new Map();
   const sockets: Map<ServerSocket<S>, string> = new Map();
@@ -92,7 +93,11 @@ export const createMethods = <S extends Spec>(
       return "You have to be the first player to start the game.";
 
     const machine = createMachine(gameDefinition, {
-      ctx: { numPlayers: room.seats.length, options },
+      ctx: {
+        numPlayers: room.seats.length,
+        options,
+        seed: serverOptions ? serverOptions.seed : undefined,
+      },
     });
 
     if (typeof machine === "string") return machine;
@@ -110,7 +115,8 @@ export const createMethods = <S extends Spec>(
     const room = getSocketRoom(socket);
     if (!room) return "You are not in a room.";
     if (!room.gameMaster) return "This room's game has not started.";
-    room.gameMaster.submit(room.seats.indexOf(socket), action);
+    const err = room.gameMaster.submit(room.seats.indexOf(socket), action);
+    if (err) return err;
   }
 
   function leaveRoom(socket: ServerSocket<S>) {

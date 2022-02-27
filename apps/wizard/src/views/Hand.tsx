@@ -7,7 +7,7 @@ import { getPlayedPosition } from "@lib/layouts/trick";
 import { getNearestDimensions } from "@lib/dom";
 
 import { HandSection } from "@lib/components/HandSection";
-import { ViewProps } from "./types";
+import { GameProps } from "./types";
 
 const initCardEvents = (
   $el: HTMLElement,
@@ -34,19 +34,28 @@ const applyPlayAnimation = ($card: HTMLElement) => {
   return style($card, { x: 0, y: 0, left: x, top: y }, { duration: 200 });
 };
 
-type HandCardProps = { card: string; play: (cardId: string) => void };
-export const HandCard = ({ card, play }: HandCardProps) => {
+type HandCardProps = {
+  card: string;
+  play: (cardId: string) => void;
+  err?: any;
+};
+export const HandCard = ({ card, play, err }: HandCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [playAttempt, setPlayAttempt] = useState<string | null>(null);
 
   useLayoutEffect(() => initCardEvents(ref.current!, setPlayAttempt), [ref]);
 
   useLayoutEffect(() => {
-    playAttempt &&
+    if (playAttempt) {
       applyPlayAnimation(ref.current!)?.finished.then(() => {
         setPlayAttempt(null);
         play(playAttempt);
       });
+    }
+
+    if (err) {
+      style(ref.current!, { x: 0, y: 0 });
+    }
   });
 
   return (
@@ -56,13 +65,20 @@ export const HandCard = ({ card, play }: HandCardProps) => {
   );
 };
 
-export const Hand = ({ state, actions, waitFor }: ViewProps) => {
-  const [type, game] = state;
+export const Hand = ({ frame, controls, err }: GameProps) => {
+  const {
+    state: [type, game],
+  } = frame;
   const hand = game.hands[0];
   return (
-    <HandSection justDealt={type === "deal"} waitFor={waitFor}>
+    <HandSection justDealt={type === "deal"} waitFor={controls.waitFor}>
       {hand.map((id) => (
-        <HandCard card={id} play={(s) => actions.play(0, s)} />
+        <HandCard
+          key={id}
+          err={err}
+          card={id}
+          play={(s) => controls.game.play(s)}
+        />
       ))}
     </HandSection>
   );

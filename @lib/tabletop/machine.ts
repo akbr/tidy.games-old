@@ -146,7 +146,7 @@ export const createMachine = <S extends Spec>(
   return {
     get: (player = -1) => {
       const { prev, patches, action } = step;
-      const isGod = player === -1;
+      const isGod = player === -1 || iCtx.seed;
       return {
         ...step,
         player,

@@ -4,39 +4,56 @@ import "../styles.css";
 import { setup } from "@twind/preact";
 
 import { wizardDefinition } from "./game";
+import { Game } from "./views/Game";
 import { createServer } from "@lib/tabletop/server";
-import { createClient } from "@lib/tabletop/client";
+import { createClient, createControls } from "@lib/tabletop/client";
+import { DebugPanel } from "@lib/tabletop/client/debug";
 import { createLocalSocket } from "@lib/socket";
+import { render } from "preact";
 
 setup({
   props: { className: true },
   preflight: false,
 });
 
-const server = createServer(wizardDefinition);
-const { subscribe, meter, controls, update } = createClient(
-  server,
-  wizardDefinition
-);
+const server = createServer(wizardDefinition, { seed: "test" });
+const {
+  subscribe,
+  controls: p0,
+  meter,
+} = createClient(server, wizardDefinition);
 
 subscribe(([type, props]) => {
-  if (type === "title") {
-    console.log("<<< WIZARD >>>");
-  } else if (type === "lobby") {
-    console.log("LOBBY", props.room);
-  } else if (type === "game") {
-    console.log("GAME", props.frame);
-  } else if (type === "gameEx") {
-    console.log("GAME-EX", props.meter);
+  if (type === "game") {
+    render(<Game {...props} />, document.getElementById("game")!);
+  }
+  if (type === "gameEx") {
+    render(<DebugPanel {...props} />, document.getElementById("debug")!);
+  }
+  if (props.err) {
+    //console.warn(props.err);
   }
 });
 
-update();
+p0.server.join({ id: "test" });
 
-controls.server.join({ id: "test" });
+const p1 = createControls(createLocalSocket(server), wizardDefinition);
+const p2 = createControls(createLocalSocket(server), wizardDefinition);
+const p3 = createControls(createLocalSocket(server), wizardDefinition);
 
-const p1 = createLocalSocket(server, {});
-p1.send(["server", { type: "join", data: { id: "test" } }]);
+p1.server.join({ id: "test" });
+p2.server.join({ id: "test" });
+p3.server.join({ id: "test" });
 
-controls.server.start(null);
-p1.send(["machine", { type: "bid", data: 1 }]);
+p0.server.start(null);
+
+p1.game.bid(1);
+p2.game.bid(1);
+p3.game.bid(1);
+p0.game.bid(0);
+p1.game.play("6|h");
+p2.game.play("14|s");
+p3.game.play("8|h");
+p0.game.play("11|h");
+
+meter.controls.setIdx(23);

@@ -1,8 +1,10 @@
-import { ViewProps } from "./types";
+import { GameProps } from "./types";
 //import { MiniCard } from "@lib/components/cards/MiniCard";
 
-export const Hud = ({ state }: ViewProps) => {
-  const [type, game] = state;
+export const Hud = ({ frame }: GameProps) => {
+  const {
+    state: [, game],
+  } = frame;
 
   return (
     <div class="absolute top-0 right-0 m-3 text-right">

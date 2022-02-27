@@ -7,10 +7,9 @@ import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
 
-export const applyHandStyles: GameEffect<boolean> = (
-  $handContainer: HTMLElement,
-  justDealt: boolean
-) => {
+export const applyHandStyles: GameEffect<{
+  justDealt: boolean;
+}> = ($handContainer: HTMLElement, { justDealt }) => {
   const { width } = $handContainer.getBoundingClientRect();
   const cardEls = Array.from($handContainer.children) as HTMLElement[];
   cardEls.forEach(($card, idx) => {
@@ -43,8 +42,7 @@ export const HandSection: FunctionComponent<{
 }> = ({ justDealt, waitFor, children }) => {
   const ref = useRef<HTMLDivElement>(null);
   useRefreshOnResize();
-  useGameEffect(applyHandStyles, ref, justDealt, waitFor);
-
+  useGameEffect(applyHandStyles, ref, { justDealt }, waitFor);
   return (
     <section id="hand" class="relative" ref={ref}>
       {children}

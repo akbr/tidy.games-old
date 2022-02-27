@@ -33,7 +33,6 @@ export const createMeter = <T>(): Meter<T> => {
   let autoQueue: T[] = [];
   let states: T[] = [];
 
-  let prevStatus: MeterStatus<T>;
   function get(): MeterStatus<T> {
     return {
       states,
@@ -48,11 +47,7 @@ export const createMeter = <T>(): Meter<T> => {
 
   function update() {
     const nextStatus = get();
-    const prev = prevStatus;
-    prevStatus = nextStatus;
-    if (prev && prev.state === nextStatus.state) {
-      return;
-    }
+
     updateListeners(nextStatus);
 
     // View might submit wait requests!

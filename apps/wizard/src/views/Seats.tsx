@@ -1,13 +1,16 @@
-import { ViewProps } from "./types";
+import { GameProps } from "./types";
 
 import { PositionSeats } from "@lib/components/PositionSeats";
 import { Badge } from "@lib/components/Badge";
 import { Twemoji } from "@lib/components/Twemoji";
 import { rotateArray } from "@lib/array";
 
-export const Seats = ({ state, ctx, room }: ViewProps) => {
-  const { player } = room;
-  const [type, game] = state;
+export const Seats = ({ frame }: GameProps) => {
+  const {
+    state: [, game],
+    player,
+    ctx,
+  } = frame;
   const { round, bids } = game;
 
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (

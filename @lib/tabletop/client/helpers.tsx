@@ -3,7 +3,7 @@ import { Step, getStates } from "../machine";
 
 export type Frame<S extends Spec> = {
   state: S["gameStates"];
-  action: S["actions"] | null;
+  action: AuthenticatedAction<S> | null;
   ctx: Ctx<S>;
   player: number;
 };

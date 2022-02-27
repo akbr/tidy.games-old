@@ -1,4 +1,4 @@
-import { ViewProps } from "./types";
+import { GameProps } from "./types";
 import { TrickSection, TrickProps } from "@lib/components/TrickSection";
 import { Card } from "@lib/components/cards/";
 import { FunctionComponent } from "preact";
@@ -9,18 +9,16 @@ const TrickCard: FunctionComponent<{ cardId: string }> = ({ cardId }) => (
   </div>
 );
 
-export const Trick: FunctionComponent<ViewProps> = ({
-  state,
-  waitFor,
-  ctx,
-  action,
-  room,
-}) => {
-  const [type, game] = state;
+export const Trick: FunctionComponent<GameProps> = ({ frame, controls }) => {
+  const {
+    state: [type, game],
+    action,
+    ctx,
+    player,
+  } = frame;
 
   const numPlayers = ctx.numPlayers;
   const leadPlayer = game.trickLeader;
-  const perspective = room.player;
   const trick = game.trick;
 
   const effect: TrickProps["effect"] =
@@ -35,13 +33,14 @@ export const Trick: FunctionComponent<ViewProps> = ({
           player: game.trickWinner as number,
         }
       : { type: "none" };
+
   return (
     <TrickSection
       numPlayers={numPlayers}
       leadPlayer={leadPlayer}
-      perspective={perspective}
+      perspective={player}
       effect={effect}
-      waitFor={waitFor}
+      waitFor={controls.waitFor}
     >
       {trick.map((cardId) => (
         <TrickCard cardId={cardId} />

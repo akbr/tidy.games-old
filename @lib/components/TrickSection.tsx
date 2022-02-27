@@ -63,7 +63,7 @@ export const applyTrickStyles = (
   if (effect.type === "played" && effect.player !== perspective) {
     const $played = cardElsByPlayer[effect.player]!;
     const idx = cardElsByPerspective.indexOf($played);
-    style(
+    return style(
       $played,
       [
         {

@@ -21,7 +21,7 @@ export type RoomData = {
   }[];
   player: number;
   started: boolean;
-} | null;
+};
 
 export type ServerInputs<S extends Spec> =
   | ["machine", S["actions"]]
@@ -30,7 +30,7 @@ export type ServerInputs<S extends Spec> =
 export type ServerOutputs<S extends Spec> =
   | ["machine", Step<S>]
   | ["machineErr", string]
-  | ["server", RoomData]
+  | ["server", RoomData | null]
   | ["serverErr", string];
 
 export type ServerSocket<S extends Spec> = Socket<
@@ -48,11 +48,16 @@ export type ServerApi<S extends Spec> = SocketServer<
   ServerInputs<S>
 >;
 
+export type ServerOptions = { seed: string };
+
 export function createServer<S extends Spec>(
-  gameDefinition: GameDefinition<S>
+  gameDefinition: GameDefinition<S>,
+  serverOptions?: ServerOptions
 ) {
-  const { joinRoom, startGame, submitAction, leaveRoom } =
-    createMethods(gameDefinition);
+  const { joinRoom, startGame, submitAction, leaveRoom } = createMethods(
+    gameDefinition,
+    serverOptions
+  );
 
   const server: ServerApi<S> = {
     onopen: (socket) => {

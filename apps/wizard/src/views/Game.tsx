@@ -1,5 +1,5 @@
 import type { FunctionComponent } from "preact";
-import type { ViewProps } from "./types";
+import type { GameProps } from "./types";
 import { getHandHeight } from "@lib/layouts/hand";
 
 import { Hud } from "./Hud";
@@ -22,11 +22,13 @@ const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
   </section>
 );
 
-export const Game = (props: ViewProps) => {
-  const { state, room } = props;
-  const [, game] = state;
+export const Game = (props: GameProps) => {
+  const {
+    state: [, game],
+    player,
+  } = props.frame;
 
-  const numCards = game.hands[room.player].length || 1;
+  const numCards = game.hands[player].length || 1;
   const tableHeight = getHandHeight(
     numCards,
     document.body.getBoundingClientRect()

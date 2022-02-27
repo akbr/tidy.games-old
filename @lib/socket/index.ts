@@ -20,12 +20,12 @@ export type SocketOptions<Input, Output> = Omit<
 
 export function createWebSocket<Input, Output>(
   url: string,
-  socketOptions: SocketOptions<Input, Output>
+  socketOptions?: SocketOptions<Input, Output>
 ) {
   const websocket = new WebSocket(url);
 
   const clientSocket: Socket<Input, Output> = {
-    ...socketOptions,
+    ...(socketOptions || {}),
     send: (input) => {
       websocket.send(JSON.stringify(input));
     },
@@ -56,10 +56,10 @@ export function createWebSocket<Input, Output>(
 
 export function createLocalSocket<Input, Output>(
   server: SocketServer<Output, Input>,
-  socketOptions: SocketOptions<Input, Output>
+  socketOptions?: SocketOptions<Input, Output>
 ): Socket<Input, Output> {
   const clientSocket: Socket<Input, Output> = {
-    ...socketOptions,
+    ...(socketOptions || {}),
     send: (action) => {
       server.onmessage(serverSocket, action);
     },
@@ -83,11 +83,24 @@ export function createLocalSocket<Input, Output>(
 
 export function createSocketManager<Input, Output>(
   server: string | SocketServer<Output, Input>,
-  socketInterface: SocketOptions<Input, Output>
+  socketInterface = {} as SocketOptions<Input, Output>
 ): Socket<Input, Output> {
   let currentSocket: Socket<Input, Output> | null = null;
   let sendBuffer: Input[] = [];
   let connected = false;
+
+  const socket = {
+    ...socketInterface,
+    send: (action: Input) => {
+      if (!currentSocket) throw new Error("Socket manager has no open socket");
+      if (!connected) {
+        sendBuffer.push(action);
+      } else {
+        currentSocket.send(action);
+      }
+    },
+    close,
+  };
 
   function close() {
     if (currentSocket) {
@@ -101,16 +114,18 @@ export function createSocketManager<Input, Output>(
     const options = {
       onopen: () => {
         connected = true;
-        socketInterface.onopen && socketInterface.onopen();
+        socket.onopen && socket.onopen();
         sendBuffer.forEach((action) => {
           currentSocket && currentSocket.send(action);
         });
       },
       onclose: () => {
         connected = false;
-        socketInterface.onclose && socketInterface.onclose();
+        socket.onclose && socket.onclose();
       },
-      onmessage: socketInterface.onmessage || undefined,
+      onmessage: (x: Output) => {
+        socket.onmessage && socket.onmessage(x);
+      },
     };
 
     currentSocket =
@@ -121,15 +136,5 @@ export function createSocketManager<Input, Output>(
 
   open();
 
-  return {
-    send: (action: Input) => {
-      if (!currentSocket) throw new Error("Socket manager has no open socket");
-      if (!connected) {
-        sendBuffer.push(action);
-      } else {
-        currentSocket.send(action);
-      }
-    },
-    close,
-  };
+  return socket;
 }

@@ -1,5 +1,5 @@
 import { FunctionComponent } from "preact";
-import { ViewProps } from "../types";
+import { GameProps } from "../types";
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
 
@@ -9,16 +9,27 @@ const Center: FunctionComponent = ({ children }) => (
   </div>
 );
 
-export const TableCenter = ({ state, waitFor }: ViewProps) => {
-  const [type, game] = state;
+export const TableCenter = ({ frame, controls }: GameProps) => {
+  const {
+    state: [type, game],
+  } = frame;
 
-  return (
-    <Center>
-      {type === "roundStart" ? (
-        <RoundStart num={game.round} waitFor={waitFor} />
-      ) : type === "deal" && game.trumpCard ? (
-        <TrumpReveal cardId={game.trumpCard} waitFor={waitFor} />
-      ) : null}
-    </Center>
-  );
+  const next =
+    type === "roundStart" ? (
+      <RoundStart num={game.round} waitFor={controls.waitFor} />
+    ) : type === "deal" && game.trumpCard ? (
+      <TrumpReveal cardId={game.trumpCard} waitFor={controls.waitFor} />
+    ) : type === "bid" ? (
+      frame.player !== game.player ? (
+        <div>Waiting for bids...</div>
+      ) : (
+        <div>TK Your turn to bid...</div>
+      )
+    ) : type === "bidsEnd" && !frame.action ? (
+      <div>TK over/underbid</div>
+    ) : type === "tallyScores" ? (
+      <div>TK Tally scores</div>
+    ) : null;
+
+  return <Center>{next}</Center>;
 };
