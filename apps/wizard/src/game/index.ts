@@ -1,7 +1,7 @@
 import type { CreateSpec, Chart, GameDefinition } from "@lib/tabletop/types";
 
 import { rotateIndex } from "@lib/array";
-import { getDeal, getWinningIndex } from "./logic";
+import { getDeal, getWinningIndex, getPlayableCards } from "./logic";
 
 export type WizardSpec = CreateSpec<{
   states:
@@ -219,5 +219,14 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
           },
         ]
       : patch;
+  },
+  botFn: ({ state: [type, game], player, action }, { bid, select, play }) => {
+    if (action || player !== game.player) return;
+    if (type === "select") return select("h");
+    if (type === "bid") return bid(0);
+    if (type === "play") {
+      const [card] = getPlayableCards(game.hands[player], game.trick);
+      return play(card);
+    }
   },
 };

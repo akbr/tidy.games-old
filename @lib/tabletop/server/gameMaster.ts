@@ -1,6 +1,6 @@
-import { Spec } from "../";
+import { Spec } from "../types";
 import { Machine } from "../machine";
-import { ServerSocket } from "./types";
+import { ServerSocket } from "../server";
 
 export interface GameMaster<S extends Spec> {
   submit: (player: number, action: S["actions"]) => string | void;
@@ -23,13 +23,14 @@ export const createGameMaster = <S extends Spec>(
       }
 
       const result = machine.submit(action, player);
-      if (typeof result === "string") return result;
-
       working = true;
-      sockets.forEach(
-        (socket, idx) =>
-          socket && socket.send(["machine", machine.get(idx - 1)])
-      );
+      if (typeof result === "string") {
+        sockets[player]?.send(["machineErr", result]);
+      } else {
+        sockets.forEach(
+          (socket, idx) => socket && socket.send(["machine", machine.get(idx)])
+        );
+      }
       working = false;
 
       if (actionQueue.length) {
@@ -38,11 +39,10 @@ export const createGameMaster = <S extends Spec>(
       }
     },
     setSocket: (player, socket) => {
-      player = player + 1; // allow for a -1 "god socket"
       if (player < 0) return "Invalid player index.";
 
       sockets[player] = socket ? socket : undefined;
-      if (socket) socket.send(["machine", machine.get(player - 1)]);
+      if (socket) socket.send(["machine", machine.get(player)]);
     },
   };
 };

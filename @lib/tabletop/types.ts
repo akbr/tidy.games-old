@@ -9,6 +9,7 @@ export type GameDefinition<S extends Spec> = {
     action: AuthenticatedAction<S>,
     player: number
   ) => AuthenticatedAction<S> | null;
+  botFn?: BotFn<S>;
 };
 
 // ---
@@ -45,6 +46,22 @@ export type AuthenticatedAction<S extends Spec> = S["actions"] & {
 export type ActionStubs<A extends Actions> = {
   [X in A as X["type"]]: null;
 };
+
+export type ConnectedActions<A extends Actions> = {
+  [X in A as X["type"]]: (input: X["data"]) => void;
+};
+
+export type Frame<S extends Spec> = {
+  state: S["gameStates"];
+  action: AuthenticatedAction<S> | null;
+  ctx: Ctx<S>;
+  player: number;
+};
+
+export type BotFn<S extends Spec> = (
+  frame: Frame<S>,
+  actions: ConnectedActions<S["actions"]>
+) => void;
 
 // ---
 

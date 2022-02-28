@@ -77,7 +77,6 @@ export function createLocalSocketPair<Input, Output>(
 
   clientSocket.onopen && clientSocket.onopen();
   server.onopen(serverSocket);
-
   return [clientSocket, serverSocket];
 }
 

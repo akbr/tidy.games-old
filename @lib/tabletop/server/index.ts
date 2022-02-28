@@ -54,10 +54,8 @@ export function createServer<S extends Spec>(
   gameDefinition: GameDefinition<S>,
   serverOptions?: ServerOptions
 ) {
-  const { joinRoom, startGame, submitAction, leaveRoom } = createMethods(
-    gameDefinition,
-    serverOptions
-  );
+  const { joinRoom, addBot, startGame, submitAction, leaveRoom } =
+    createMethods(gameDefinition, serverOptions);
 
   const server: ServerApi<S> = {
     onopen: (socket) => {
@@ -75,15 +73,13 @@ export function createServer<S extends Spec>(
           return;
         }
 
-        /**
-        if (action.type === "addBot") {
-          const res = addBot(socket, action.data, server);
+        if (msg.type === "addBot") {
+          const res = addBot(socket, server);
           if (res) {
-            return socket.send({ type: "serverMsg", data: res });
+            return socket.send(["serverErr", res]);
           }
           return;
         }
-        **/
 
         if (msg.type === "start") {
           let err = startGame(socket, msg.data);

@@ -1,12 +1,15 @@
-import { Spec, Ctx, Actions, AuthenticatedAction, ActionStubs } from "../types";
-import { Step, getStates } from "../machine";
-
-export type Frame<S extends Spec> = {
-  state: S["gameStates"];
-  action: AuthenticatedAction<S> | null;
-  ctx: Ctx<S>;
-  player: number;
-};
+import type {
+  Spec,
+  Frame,
+  Actions,
+  AuthenticatedAction,
+  ActionStubs,
+  ConnectedActions,
+  GameDefinition,
+  BotFn,
+} from "./types";
+import { Step, getStates } from "./machine";
+import { ClientSocket } from "./server";
 
 export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
   const { prev, action, ctx, player } = step;
@@ -34,10 +37,6 @@ export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
   return [firstFrame, ...restFrames];
 };
 
-export type ConnectedActions<A extends Actions> = {
-  [X in A as X["type"]]: (input: X["data"]) => void;
-};
-
 export const createActions = <A extends Actions>(
   stubs: ActionStubs<A>,
   submit: (action: A) => void
@@ -49,4 +48,19 @@ export const createActions = <A extends Actions>(
     fns[key] = (input) => submit({ type: key, data: input } as A);
   }
   return fns;
+};
+
+export const createBotSocket = <S extends Spec>(
+  socket: ClientSocket<S>,
+  def: GameDefinition<S>,
+  botFn: BotFn<S>
+) => {
+  const actions = createActions(def.actionStubs, (a) => {
+    socket.send(["machine", a]);
+  });
+  socket.onmessage = ([type, payload]) => {
+    if (type !== "machine") return;
+    // TK: Don't love that the bot gets the extra ".action" methods. This seems good for UI, but bad for bot logic?
+    getFrames(payload).forEach((frame) => botFn(frame, actions));
+  };
 };
