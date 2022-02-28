@@ -1,9 +1,10 @@
 import { Spec, GameDefinition } from "../types";
 import { Machine, createMachine } from "../machine";
 
-import type { ServerSocket, ServerOptions } from "./";
+import type { ServerSocket, ServerOptions, ServerApi } from "./";
 import { GameMaster, createGameMaster } from "./gameMaster";
 import { getRandomRoomID, getSeatNumber } from "./utils";
+import { createLocalSocketPair } from "@lib/socket";
 
 export type Room<S extends Spec> = {
   id: string;
@@ -109,6 +110,16 @@ export const createMethods = <S extends Spec>(
     room.seats.forEach((socket, idx) => {
       socket && room.gameMaster?.setSocket(idx, socket);
     });
+  }
+
+  function addBot(socket: ServerSocket<S>, server: ServerApi<S>) {
+    const room = getSocketRoom(socket);
+    if (!room) return "Socket not in a room";
+    const [clientSocket, serverSocket] = createLocalSocketPair(server);
+    serverSocket.meta = { bot: true };
+    // TK wire up client socket
+    const res = joinRoom(serverSocket, room.id);
+    if (res) return res;
   }
 
   function submitAction(socket: ServerSocket<S>, action: S["actions"]) {

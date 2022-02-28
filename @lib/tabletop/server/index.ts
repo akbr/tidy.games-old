@@ -77,7 +77,7 @@ export function createServer<S extends Spec>(
 
         /**
         if (action.type === "addBot") {
-          const res = addBot(socket, action.data);
+          const res = addBot(socket, action.data, server);
           if (res) {
             return socket.send({ type: "serverMsg", data: res });
           }

@@ -54,10 +54,10 @@ export function createWebSocket<Input, Output>(
   return clientSocket;
 }
 
-export function createLocalSocket<Input, Output>(
+export function createLocalSocketPair<Input, Output>(
   server: SocketServer<Output, Input>,
   socketOptions?: SocketOptions<Input, Output>
-): Socket<Input, Output> {
+): [Socket<Input, Output>, Socket<Output, Input>] {
   const clientSocket: Socket<Input, Output> = {
     ...(socketOptions || {}),
     send: (action) => {
@@ -78,7 +78,14 @@ export function createLocalSocket<Input, Output>(
   clientSocket.onopen && clientSocket.onopen();
   server.onopen(serverSocket);
 
-  return clientSocket;
+  return [clientSocket, serverSocket];
+}
+
+export function createLocalSocket<Input, Output>(
+  server: SocketServer<Output, Input>,
+  socketOptions?: SocketOptions<Input, Output>
+): Socket<Input, Output> {
+  return createLocalSocketPair(server, socketOptions)[0];
 }
 
 export function createSocketManager<Input, Output>(

@@ -23,7 +23,7 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
       frame.player !== game.player ? (
         <div>Waiting for bids...</div>
       ) : (
-        <div>TK Your turn to bid...</div>
+        <div>TK Your turn to bid!!!</div>
       )
     ) : type === "bidsEnd" && !frame.action ? (
       <div>TK over/underbid</div>
