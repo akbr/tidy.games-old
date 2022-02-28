@@ -1,10 +1,10 @@
+import { createLocalSocketPair } from "@lib/socket";
 import { Spec, GameDefinition } from "../types";
 import { Machine, createMachine } from "../machine";
 
 import type { ServerSocket, ServerOptions, ServerApi } from "./";
 import { GameMaster, createGameMaster } from "./gameMaster";
 import { getRandomRoomID, getSeatNumber } from "./utils";
-import { createLocalSocketPair } from "@lib/socket";
 
 export type Room<S extends Spec> = {
   id: string;
@@ -56,13 +56,7 @@ export const createMethods = <S extends Spec>(
     sockets.set(socket, room.id);
 
     broadcastRoomStatus(room);
-    injectSocketToGame(socket);
-  }
-
-  function injectSocketToGame(socket: ServerSocket<S>) {
-    const room = getSocketRoom(socket);
-    if (!room || !room.gameMaster) return;
-    room.gameMaster.setSocket(room.seats.indexOf(socket), socket);
+    room.gameMaster?.setSocket(seatIndex, socket);
   }
 
   function broadcastRoomStatus({ id, seats, gameMaster }: Room<S>) {
