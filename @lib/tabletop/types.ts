@@ -59,7 +59,7 @@ export type Frame<S extends Spec> = {
 };
 
 export type BotFn<S extends Spec> = (
-  frame: Frame<S>,
+  lastFrame: Frame<S>,
   actions: ConnectedActions<S["actions"]>
 ) => void;
 

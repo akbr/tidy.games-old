@@ -2,11 +2,15 @@ import { createSocketManager, Socket } from "@lib/socket";
 import { createSubscription } from "@lib/state/subscription";
 import { createMeter, MeterStatus, WaitFor } from "@lib/state/meter";
 
-import { GameDefinition, Frame, Spec } from "../types";
-import { ServerApi, ServerInputs, ServerOutputs } from "../server";
-import { RoomData, ServerActions } from "../server/";
-
-import { getFrames, ConnectedActions, createActions } from "../helpers";
+import { GameDefinition, Frame, Spec, ConnectedActions } from "../types";
+import {
+  ServerApi,
+  ServerInputs,
+  ServerOutputs,
+  RoomData,
+  ServerActions,
+} from "../server";
+import { getFrames, createActions } from "../helpers";
 
 type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;

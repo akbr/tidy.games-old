@@ -10,6 +10,7 @@ import type {
 } from "./types";
 import { Step, getStates } from "./machine";
 import { ClientSocket } from "./server";
+import { lastOf } from "@lib/array";
 
 export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
   const { prev, action, ctx, player } = step;
@@ -60,7 +61,7 @@ export const createBotSocket = <S extends Spec>(
   });
   socket.onmessage = ([type, payload]) => {
     if (type !== "machine") return;
-    // TK: Don't love that the bot gets the extra ".action" methods. This seems good for UI, but bad for bot logic?
-    getFrames(payload).forEach((frame) => botFn(frame, actions));
+    const lastFrame = lastOf(getFrames(payload));
+    botFn(lastFrame, actions);
   };
 };
