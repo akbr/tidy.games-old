@@ -23,7 +23,7 @@ export type MeterStatus<T> = {
 };
 
 export const createMeter = <T>(): Meter<T> => {
-  const [subscribe, updateListeners] = createSubscription<MeterStatus<T>>();
+  const { subscribe, push } = createSubscription<MeterStatus<T>>();
 
   let states: T[] = [];
   let idx = -1;
@@ -37,11 +37,11 @@ export const createMeter = <T>(): Meter<T> => {
   }
 
   function update() {
-    updateListeners(getStatus());
+    push(getStatus());
   }
 
   function isAtLastState() {
-    return idx >= states.length - 1;
+    return idx === states.length - 1;
   }
 
   function clearWaiting() {
@@ -54,9 +54,10 @@ export const createMeter = <T>(): Meter<T> => {
 
     idx = idx + 1;
 
+    clearWaiting();
     update();
 
-    // View might submit wait requests!
+    // Views might submit wait requests!
 
     if (waitRequests.length === 0) return iterate();
 
@@ -66,18 +67,18 @@ export const createMeter = <T>(): Meter<T> => {
     const tasks = waitRequests.filter(
       (x): x is Task => !!(typeof x !== "number" && x)
     );
-    waitRequests = [];
 
     if (timings.length) tasks.push(delay(Math.max(...timings)));
     if (!tasks.length) return iterate();
 
-    const thisPending = all(tasks);
-    waiting = thisPending;
+    const task = all(tasks);
+    waiting = task;
 
-    thisPending.finished.then(() => {
-      if (waiting !== thisPending) return;
-      waiting = null;
-      iterate();
+    task.finished.then(() => {
+      if (waiting === task) {
+        waiting = null;
+        iterate();
+      }
     });
   }
 
@@ -97,21 +98,25 @@ export const createMeter = <T>(): Meter<T> => {
       waiting = null;
     },
     play: (toggle) => {
-      const nextAuto = toggle === undefined ? !auto : toggle;
-      if (nextAuto === auto) return;
-      if (auto === false) return;
-      if (iterate() === false) update();
+      const nextValue = toggle === undefined ? !auto : toggle;
+      if (nextValue === auto) return;
+      auto = nextValue;
+      if (auto === false) {
+        update();
+        return;
+      } else if (iterate() === false) {
+        update();
+      }
     },
-    setIdx: (x) => {
-      const nextIdx = typeof x === "function" ? x(idx, states.length) : x;
-      if (!(nextIdx <= states.length - 1)) return;
+    setIdx: (input) => {
+      const nextIdx =
+        typeof input === "function" ? input(idx, states.length) : input;
+      if (nextIdx > states.length - 1) return;
       auto = false;
       clearWaiting();
       idx = nextIdx;
       update();
     },
-    get: () => {
-      return states.length ? getStatus() : undefined;
-    },
+    get: () => (states.length ? getStatus() : undefined),
   };
 };
