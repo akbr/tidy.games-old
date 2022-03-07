@@ -1,8 +1,8 @@
 export type Listener<T> = (curr: T, prev: T) => void;
 
-export function createSubscription<T>() {
-  let currentState: T;
-  let previousState: T;
+export function createSubscription<T>(initialState: T) {
+  let currentState = initialState;
+  let previousState = initialState;
   let listeners: Listener<T>[] = [];
 
   function subscribe(listener: Listener<T>): () => void;
@@ -41,6 +41,6 @@ export function createSubscription<T>() {
       currentState = nextState;
       listeners.forEach((listener) => listener(currentState, previousState));
     },
-    get: () => currentState || undefined,
+    get: () => currentState,
   };
 }

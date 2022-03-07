@@ -9,7 +9,7 @@ import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
 const Container: FunctionComponent = ({ children }) => (
-  <div class="h-full bg-[#006400] overflow-hidden">{children}</div>
+  <div class="h-full bg-[#006400] text-white overflow-hidden">{children}</div>
 );
 
 const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
@@ -38,10 +38,10 @@ export const Game = (props: GameProps) => {
     <Container>
       <Table height={tableHeight}>
         <Hud {...props} />
-        <TableCenter {...props} />
         <Hand {...props} />
         <Seats {...props} />
         <Trick {...props} />
+        <TableCenter {...props} />
       </Table>
     </Container>
   );

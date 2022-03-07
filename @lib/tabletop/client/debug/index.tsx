@@ -1,17 +1,15 @@
-import { FunctionComponent } from "preact";
+import { FunctionComponent, h } from "preact";
 import { useRef, useState } from "preact/hooks";
 
-import { Spec } from "../../types";
-import { ConnectedActions } from "../helpers";
-import { GameExProps } from "..";
+import { Spec, ConnectedActions } from "../../types";
+import { GameProps } from "..";
 
 import { JSONDiff } from "./JsonDiff";
 
-const ListView = <S extends Spec>({
-  states,
-  idx,
-  setIdx,
-}: GameExProps<S>["meter"]) => {
+const ListView = <S extends Spec>({ meter, controls }: GameProps<S>) => {
+  const { states, idx } = meter;
+  const { setIdx } = controls.meter;
+
   return (
     <div>
       {states.map((frame, i) => (
@@ -30,14 +28,10 @@ const ListView = <S extends Spec>({
   );
 };
 
-const Controls = ({
-  idx,
-  states,
-  setIdx,
-  auto,
-  togglePlay,
-}: GameExProps<any>["meter"]) => {
-  const length = states.length;
+const Controls = ({ meter, controls }: GameProps<any>) => {
+  const { states, idx, auto } = meter;
+  const { setIdx, play } = controls.meter;
+
   const atMin = idx === 0;
   const atMax = idx === states.length - 1;
 
@@ -49,24 +43,24 @@ const Controls = ({
       <button
         class="cursor-pointer"
         disabled={atMin}
-        onClick={() => setIdx(idx - 1)}
+        onClick={() => setIdx((idx) => idx + 1)}
       >
         {"<"}
       </button>
-      <button class="cursor-pointer" onClick={togglePlay}>
+      <button class="cursor-pointer" onClick={() => play()}>
         {auto ? "Pause" : "Play"}
       </button>
       <button
         class="cursor-pointer"
         disabled={atMax}
-        onClick={() => setIdx(idx + 1)}
+        onClick={() => setIdx((idx) => idx + 1)}
       >
         {">"}
       </button>
       <button
         class="cursor-pointer"
         disabled={atMax}
-        onClick={() => setIdx(length - 1)}
+        onClick={() => setIdx((_, length) => length - 1)}
       >
         {">>"}
       </button>
@@ -132,24 +126,25 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-export const Nav = <S extends Spec>({ meter }: GameExProps<S>) => {
-  const { states, idx, state, auto, setIdx, waitFor } = meter;
-
+export const Nav = <S extends Spec>(props: GameProps<S>) => {
   return (
     <div class="h-full flex flex-col justify-between overflow-hidden">
       <div class="h-full overflow-hidden flex flex-col gap-1">
-        <Controls {...meter} />
+        <Controls {...props} />
         <div class="overflow-y-auto">
-          <ListView {...meter} />
+          <ListView {...props} />
         </div>
       </div>
     </div>
   );
 };
 
-export const DebugPanel = <S extends Spec>(props: GameExProps<S>) => {
+export const DebugPanel = <S extends Spec>(props: GameProps<S>) => {
   const { meter, frame } = props;
-  const { states, state, idx, auto, setIdx, waitFor } = meter;
+  const { states, idx, auto } = meter;
+  const state = states[idx];
+  if (!state) return null;
+
   const curr = frame.state[1];
   const prev = states[idx - 1] ? states[idx - 1].state[1] : curr;
 

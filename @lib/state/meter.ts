@@ -11,7 +11,7 @@ export type Meter<T> = {
   reset: () => void;
   play: (toggle?: boolean) => void;
   setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
-  get: () => MeterStatus<T> | void;
+  get: () => MeterStatus<T>;
   waitFor: WaitFor;
 };
 
@@ -23,12 +23,12 @@ export type MeterStatus<T> = {
 };
 
 export const createMeter = <T>(): Meter<T> => {
-  const { subscribe, push } = createSubscription<MeterStatus<T>>();
-
   let states: T[] = [];
   let idx = -1;
   let auto = true;
   let waiting: Task | null = null;
+
+  const { subscribe, push } = createSubscription<MeterStatus<T>>(getStatus());
 
   let waitRequests: WaitRequest[] = [];
 
@@ -117,6 +117,6 @@ export const createMeter = <T>(): Meter<T> => {
       idx = nextIdx;
       update();
     },
-    get: () => (states.length ? getStatus() : undefined),
+    get: () => getStatus(),
   };
 };

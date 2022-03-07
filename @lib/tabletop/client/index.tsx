@@ -1,6 +1,6 @@
 import { createSocketManager, Socket } from "@lib/socket";
 import { createSubscription } from "@lib/state/subscription";
-import { createMeter, MeterStatus, WaitFor } from "@lib/state/meter";
+import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
 
 import { GameDefinition, Frame, Spec, ConnectedActions } from "../types";
 import {
@@ -12,39 +12,39 @@ import {
 } from "../server";
 import { getFrames, createActions } from "../helpers";
 
-type Controls<S extends Spec> = {
+export type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;
   server: ConnectedActions<ServerActions<S>>;
-  waitFor: WaitFor;
+  meter: Meter<Frame<S>>;
 };
 
-type Err = {
+export type Err = {
   type: "serverErr" | "machineErr";
   data: string;
 };
 
-type TitleProps<S extends Spec> = {
+export type TitleProps<S extends Spec> = {
   err?: Err;
   controls: Controls<S>;
 };
 
-type LobbyProps<S extends Spec> = {
+export type LobbyProps<S extends Spec> = {
   room: RoomData;
 } & TitleProps<S>;
 
 export type GameProps<S extends Spec> = {
   frame: Frame<S>;
+  meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
-export type GameExProps<S extends Spec> = {
-  meter: MeterStatus<Frame<S>>;
-} & GameProps<S>;
+export type GamePropsLight<S extends Spec> = {
+  frame: Frame<S>;
+} & LobbyProps<S>;
 
-type ViewProps<S extends Spec> =
+export type ViewProps<S extends Spec> =
   | ["title", TitleProps<S>]
   | ["lobby", LobbyProps<S>]
-  | ["game", GameProps<S>]
-  | ["gameEx", GameExProps<S>];
+  | ["game", GameProps<S>];
 
 export function createControls<S extends Spec>(
   socket: Socket<ServerInputs<S>, ServerOutputs<S>>,
@@ -71,40 +71,32 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   def: GameDefinition<S>
 ) {
-  const [subscribe, updateListeners] = createSubscription<ViewProps<S>>();
-  const meter = createMeter<Frame<S>>();
-
   let room: RoomData | null = null;
-  let frame: Frame<S>;
+  let meterStatus: MeterStatus<Frame<S>>;
+  let frame: Frame<S> | null;
   let err: Err | undefined;
 
   const socket = createSocketManager(server);
+  const meter = createMeter<Frame<S>>();
 
   const controls = {
     ...createControls(socket, def),
-    waitFor: meter.controls.waitFor,
+    meter,
   };
 
-  function update(forceUpdate = false) {
-    const currFrame = meter.get().state;
-    const gameUpdated = forceUpdate || currFrame !== frame;
-    frame = currFrame;
+  const sub = createSubscription<ViewProps<S>>(["title", { controls }]);
 
-    const nextProps: ViewProps<S> | null = !room
+  function update() {
+    meterStatus = meter.get();
+    frame = meterStatus.states[meterStatus.idx];
+
+    const nextProps: ViewProps<S> = !room
       ? ["title", { controls, err }]
-      : !currFrame
+      : !frame
       ? ["lobby", { controls, err, room }]
-      : gameUpdated
-      ? ["game", { controls, err, room, frame }]
-      : null;
+      : ["game", { controls, err, room, frame, meter: meterStatus }];
 
-    nextProps && updateListeners(nextProps);
-    room &&
-      frame &&
-      updateListeners([
-        "gameEx",
-        { controls, err, room, frame, meter: meter.get() },
-      ]);
+    nextProps && sub.push(nextProps);
   }
 
   socket.onmessage = ([type, payload]) => {
@@ -117,13 +109,13 @@ export function createClient<S extends Spec>(
     }
     if (type === "serverErr" || type === "machineErr") {
       err = { type, data: payload };
-      update(true);
+      update();
       err = undefined;
-      update(true);
+      update();
     }
   };
 
-  meter.subscribe(() => update());
+  meter.subscribe(update);
 
-  return { meter, subscribe, controls, update };
+  return { meter, subscribe: sub.subscribe, controls, update };
 }

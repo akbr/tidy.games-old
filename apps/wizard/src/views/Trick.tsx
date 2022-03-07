@@ -40,7 +40,7 @@ export const Trick: FunctionComponent<GameProps> = ({ frame, controls }) => {
       leadPlayer={leadPlayer}
       perspective={player}
       effect={effect}
-      waitFor={controls.waitFor}
+      waitFor={controls.meter.waitFor}
     >
       {trick.map((cardId) => (
         <TrickCard cardId={cardId} />
