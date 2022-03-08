@@ -47,6 +47,7 @@ export const createMeter = <T>(): Meter<T> => {
   function clearWaiting() {
     if (waiting) waiting.skip();
     waiting = null;
+    waitRequests = [];
   }
 
   function iterate(): false | void {

@@ -1,4 +1,4 @@
-export function rotateIndex(length: number, index: number, steps = 1) {
+export function rotateIndex(length: number, index: number, steps: number) {
   if (index < 0) return index;
   const modSteps = Math.abs(steps) > length - 1 ? steps % length : steps;
   const nextIndex = index + modSteps;

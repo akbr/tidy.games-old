@@ -61,7 +61,7 @@ const getNextRound = (
   game = {} as WizardSpec["game"]
 ): RoundStart => {
   const dealer =
-    game.dealer !== undefined ? rotateIndex(numPlayers, game.dealer) : 0;
+    game.dealer !== undefined ? rotateIndex(numPlayers, game.dealer, 1) : 0;
   const scores = game.scores
     ? ([...game.scores, game.bids, game.actuals] as number[][])
     : [];
@@ -76,7 +76,7 @@ const getNextRound = (
       trumpCard: null,
       trumpSuit: null,
       trick: [],
-      trickLeader: rotateIndex(numPlayers, dealer),
+      trickLeader: rotateIndex(numPlayers, dealer, 1),
       trickWinner: null,
       bids: Array.from({ length: numPlayers }, () => null),
       actuals: Array.from({ length: numPlayers }, () => 0),
@@ -91,7 +91,7 @@ export const chart: Chart<WizardSpec> = {
   deal: ({ trumpSuit, dealer }, { numPlayers }) =>
     trumpSuit === "w"
       ? ["select", { player: dealer }]
-      : ["bid", { player: rotateIndex(numPlayers, dealer) }],
+      : ["bid", { player: rotateIndex(numPlayers, dealer, 1) }],
   select: ({ player, dealer }, { numPlayers }, action) => {
     if (!action) return null;
     if (action.type !== "select" || action.player !== player)
@@ -99,7 +99,7 @@ export const chart: Chart<WizardSpec> = {
     if (!["c", "d", "h", "s"].includes(action.data)) return "Invalid suit.";
     return [
       "bid",
-      { trumpSuit: action.data, player: rotateIndex(numPlayers, dealer) },
+      { trumpSuit: action.data, player: rotateIndex(numPlayers, dealer, 1) },
     ];
   },
   bid: (game, { numPlayers }, action) => {
@@ -113,12 +113,12 @@ export const chart: Chart<WizardSpec> = {
     );
 
     return bids.includes(null)
-      ? ["bid", { bids, player: rotateIndex(numPlayers, game.player) }]
+      ? ["bid", { bids, player: rotateIndex(numPlayers, game.player, 1) }]
       : ["bidsEnd", { bids, player: null }];
   },
   bidsEnd: ({ dealer }, { numPlayers }) => [
     "play",
-    { player: rotateIndex(numPlayers, dealer) },
+    { player: rotateIndex(numPlayers, dealer, 1) },
   ],
   play: (
     { player, hands, trick, trumpSuit, trickLeader },
@@ -135,14 +135,13 @@ export const chart: Chart<WizardSpec> = {
       i === action.player! ? hand.filter((card) => card !== action.data) : hand
     );
     const nextTrick = [...trick, action.data];
-
     return nextTrick.length < numPlayers
       ? [
           "play",
           {
             hands: nextHands,
             trick: nextTrick,
-            player: rotateIndex(numPlayers, player),
+            player: rotateIndex(numPlayers, player, 1),
           },
         ]
       : [
@@ -152,6 +151,7 @@ export const chart: Chart<WizardSpec> = {
             trick: nextTrick,
             player: null,
             trickWinner: rotateIndex(
+              numPlayers,
               getWinningIndex(trick, trumpSuit),
               trickLeader
             ),
@@ -172,6 +172,7 @@ export const chart: Chart<WizardSpec> = {
       return [
         "play",
         {
+          trick: [],
           trickLeader: nextTrickLeader,
           player: nextTrickLeader,
         },
