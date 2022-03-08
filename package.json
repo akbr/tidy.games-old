@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite apps/$npm_config_app_id",
-    "build": "tsc -p ./apps/$npm_config_app_id && vite build apps/$npm_config_app_id",
+    "build": "tsc -p ./apps/$npm_config_app_id && vite build apps/$npm_config_app_id && mv apps/$npm_config_app_id/dist ./poop",
     "preview": "vite preview apps/$npm_config_app_id",
     "build-node": "tsc --project apps/$npm_config_app_id/tsconfig-node.json && tsc-alias -p apps/$npm_config_app_id/tsconfig-node.json",
     "heroku-postbuild": "npm run build-client --app_name=$APP_NAME && npm run build-servers"

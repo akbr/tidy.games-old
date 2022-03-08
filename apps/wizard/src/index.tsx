@@ -27,3 +27,6 @@ client.update();
 
 const { controls } = client;
 controls.server.join({ id: "TEST" });
+controls.server.addBot(null);
+controls.server.start(null);
+controls.meter.setIdx(2);

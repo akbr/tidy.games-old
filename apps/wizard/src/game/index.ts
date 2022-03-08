@@ -135,6 +135,7 @@ export const chart: Chart<WizardSpec> = {
       i === action.player! ? hand.filter((card) => card !== action.data) : hand
     );
     const nextTrick = [...trick, action.data];
+
     return nextTrick.length < numPlayers
       ? [
           "play",
@@ -152,17 +153,20 @@ export const chart: Chart<WizardSpec> = {
             player: null,
             trickWinner: rotateIndex(
               numPlayers,
-              getWinningIndex(trick, trumpSuit),
+              getWinningIndex(nextTrick, trumpSuit),
               trickLeader
             ),
           },
         ];
   },
   trickWon: (state, ctx) => {
-    const { hands, trickWinner, trickLeader } = state;
+    const { hands, trickWinner, trickLeader, actuals } = state;
     const { numPlayers } = ctx;
 
     const roundContinues = hands[0].length > 0;
+    const nextActuals = actuals.map((n, idx) =>
+      idx === trickWinner ? n + 1 : n
+    );
     if (roundContinues) {
       const nextTrickLeader = rotateIndex(
         numPlayers,
@@ -172,14 +176,19 @@ export const chart: Chart<WizardSpec> = {
       return [
         "play",
         {
+          actuals: nextActuals,
           trick: [],
           trickLeader: nextTrickLeader,
+          trickWinner: null,
           player: nextTrickLeader,
         },
       ];
     }
 
-    return ["tallyScores", { trick: [], trickWinner: null }];
+    return [
+      "tallyScores",
+      { actuals: nextActuals, trick: [], trickWinner: null },
+    ];
   },
   tallyScores: (game, ctx) => {
     const { round } = game;

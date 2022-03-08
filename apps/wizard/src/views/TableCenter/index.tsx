@@ -3,6 +3,7 @@ import { GameProps } from "../types";
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
 import { BidInput } from "./BidInput";
+import { SelectInput } from "./SelectInput";
 
 const Center: FunctionComponent = ({ children }) => (
   <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
@@ -21,9 +22,15 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
       <RoundStart num={game.round} waitFor={controls.meter.waitFor} />
     ) : type === "deal" && game.trumpCard ? (
       <TrumpReveal cardId={game.trumpCard} waitFor={controls.meter.waitFor} />
+    ) : type === "select" ? (
+      frame.player !== game.player ? (
+        <div>Waiting for dealer to select trump...</div>
+      ) : (
+        <SelectInput select={controls.game.select} />
+      )
     ) : type === "bid" ? (
       frame.player !== game.player || frame.action ? (
-        <div>Waiting for bids...</div>
+        <h3 class="animate-bounce">Waiting for bids...</h3>
       ) : (
         <BidInput
           turn={game.round}

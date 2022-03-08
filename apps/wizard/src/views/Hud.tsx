@@ -7,7 +7,7 @@ export const Hud = ({ frame }: GameProps) => {
   } = frame;
 
   return (
-    <div class="absolute top-0 right-0 m-3 text-right">
+    <div class="absolute top-0 right-0 m-2 text-right">
       <div>Round: {game.round}</div>
       {game.trumpCard && <div>Trump: {game.trumpCard}</div>}
     </div>

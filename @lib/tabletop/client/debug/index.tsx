@@ -43,7 +43,7 @@ const Controls = ({ meter, controls }: GameProps<any>) => {
       <button
         class="cursor-pointer"
         disabled={atMin}
-        onClick={() => setIdx((idx) => idx + 1)}
+        onClick={() => setIdx((idx) => idx - 1)}
       >
         {"<"}
       </button>

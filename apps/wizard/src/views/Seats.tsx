@@ -11,7 +11,7 @@ export const Seats = ({ frame }: GameProps) => {
     player,
     ctx,
   } = frame;
-  const { round, bids } = game;
+  const { round, bids, actuals } = game;
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (
     <div style={{ padding: "24px 12px 24px 12px" }}>
       <Badge
@@ -19,7 +19,7 @@ export const Seats = ({ frame }: GameProps) => {
         name={`PL${idx}`}
         info={
           bids[idx] !== null ? (
-            <div class="text-white">{`${bids[idx]}/${round}`}</div>
+            <div class="text-white">{`${actuals[idx]}/${bids[idx]}`}</div>
           ) : null
         }
         tl={idx === game.trickLeader ? <Twemoji char={"1️⃣"} size={18} /> : null}
