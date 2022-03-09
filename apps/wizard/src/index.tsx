@@ -12,11 +12,11 @@ import { wizardDefinition } from "./game";
 import { Game } from "./views/Game";
 
 setup({
-  props: { className: true },
   preflight: false,
+  props: { className: true },
 });
 
-const server = createServer(wizardDefinition, { seed: "test1133" });
+const server = createServer(wizardDefinition, { seed: "test113" });
 const client = createClient(server, wizardDefinition);
 const View = createClientView({ Game, debug: true });
 
