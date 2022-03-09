@@ -1,26 +1,12 @@
-import type { FunctionComponent } from "preact";
 import type { GameProps } from "./types";
 import { getHandHeight } from "@lib/layouts/hand";
 
+import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
 import { Seats } from "./Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
-
-const Container: FunctionComponent = ({ children }) => (
-  <div class="h-full bg-[#006400] text-white overflow-hidden">{children}</div>
-);
-
-const Table: FunctionComponent<{ height: number }> = ({ children, height }) => (
-  <section
-    id="table"
-    class="relative"
-    style={{ height: `calc(100% - ${height}px)` }}
-  >
-    {children}
-  </section>
-);
 
 export const Game = (props: GameProps) => {
   const {
@@ -35,14 +21,19 @@ export const Game = (props: GameProps) => {
   );
 
   return (
-    <Container>
-      <Table height={tableHeight}>
-        <Hud {...props} />
+    <div class="h-full bg-[#006400] text-white overflow-hidden">
+      <section
+        id="table"
+        class="relative"
+        style={{ height: `calc(100% - ${tableHeight}px)` }}
+      >
         <Hand {...props} />
         <Seats {...props} />
         <Trick {...props} />
         <TableCenter {...props} />
-      </Table>
-    </Container>
+      </section>
+      <Hud {...props} />
+      <UiButtons {...props} />
+    </div>
   );
 };

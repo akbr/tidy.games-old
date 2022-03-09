@@ -16,7 +16,7 @@ setup({
   preflight: false,
 });
 
-const server = createServer(wizardDefinition, { seed: "test113" });
+const server = createServer(wizardDefinition, { seed: "test1133" });
 const client = createClient(server, wizardDefinition);
 const View = createClientView({ Game, debug: true });
 

@@ -7,18 +7,22 @@ import { rotateArray } from "@lib/array";
 
 export const Seats = ({ frame }: GameProps) => {
   const {
-    state: [, game],
+    state: [type, game],
     player,
     ctx,
   } = frame;
   const { round, bids, actuals } = game;
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (
-    <div style={{ padding: "24px 12px 24px 12px" }}>
+    <div style={{ padding: "26px 12px 26px 12px" }}>
       <Badge
         avatar="🐯"
         name={`PL${idx}`}
         info={
-          bids[idx] !== null ? (
+          type === "bid" || type === "bidsEnd" ? (
+            bids[idx] !== null ? (
+              <div class="text-white">{`Bid: ${bids[idx]}`}</div>
+            ) : null
+          ) : bids[idx] !== null ? (
             <div class="text-white">{`${actuals[idx]}/${bids[idx]}`}</div>
           ) : null
         }

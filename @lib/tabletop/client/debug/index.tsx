@@ -2,11 +2,11 @@ import { FunctionComponent, h } from "preact";
 import { useRef, useState } from "preact/hooks";
 
 import { Spec, ConnectedActions } from "../../types";
-import { GameProps } from "..";
+import { DebugProps } from "..";
 
 import { JSONDiff } from "./JsonDiff";
 
-const ListView = <S extends Spec>({ meter, controls }: GameProps<S>) => {
+const ListView = <S extends Spec>({ meter, controls }: DebugProps<S>) => {
   const { states, idx } = meter;
   const { setIdx } = controls.meter;
 
@@ -28,7 +28,7 @@ const ListView = <S extends Spec>({ meter, controls }: GameProps<S>) => {
   );
 };
 
-const Controls = ({ meter, controls }: GameProps<any>) => {
+const Controls = ({ meter, controls }: DebugProps<any>) => {
   const { states, idx, auto } = meter;
   const { setIdx, play } = controls.meter;
 
@@ -126,7 +126,7 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-export const Nav = <S extends Spec>(props: GameProps<S>) => {
+export const Nav = <S extends Spec>(props: DebugProps<S>) => {
   return (
     <div class="h-full flex flex-col justify-between overflow-hidden">
       <div class="h-full overflow-hidden flex flex-col gap-1">
@@ -139,7 +139,7 @@ export const Nav = <S extends Spec>(props: GameProps<S>) => {
   );
 };
 
-export const DebugPanel = <S extends Spec>(props: GameProps<S>) => {
+export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
   const { meter, frame } = props;
   const { states, idx, auto } = meter;
   const state = states[idx];

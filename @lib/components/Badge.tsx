@@ -47,7 +47,7 @@ export const Badge = ({
         <div
           class="absolute whitespace-nowrap"
           style={{
-            top: "calc(100%)",
+            top: "calc(103%)",
             left: "50%",
             transform: "translateX(-50%)",
           }}

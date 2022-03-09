@@ -34,17 +34,16 @@ export type LobbyProps<S extends Spec> = {
 
 export type GameProps<S extends Spec> = {
   frame: Frame<S>;
-  meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
-export type GamePropsLight<S extends Spec> = {
-  frame: Frame<S>;
-} & LobbyProps<S>;
+export type DebugProps<S extends Spec> = {
+  meter: MeterStatus<Frame<S>>;
+} & GameProps<S>;
 
 export type ViewProps<S extends Spec> =
   | ["title", TitleProps<S>]
   | ["lobby", LobbyProps<S>]
-  | ["game", GameProps<S>];
+  | ["game", DebugProps<S>];
 
 export function createControls<S extends Spec>(
   socket: Socket<ServerInputs<S>, ServerOutputs<S>>,

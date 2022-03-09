@@ -1,15 +1,21 @@
 import { GameProps } from "./types";
-//import { MiniCard } from "@lib/components/cards/MiniCard";
+import { MiniCard } from "@lib/components/cards/MiniCard";
 
 export const Hud = ({ frame }: GameProps) => {
   const {
-    state: [, game],
+    state: [type, game],
   } = frame;
 
   return (
     <div class="absolute top-0 right-0 m-2 text-right">
-      <div>Round: {game.round}</div>
-      {game.trumpCard && <div>Trump: {game.trumpCard}</div>}
+      <div class="flex flex-col gap-1">
+        <div>Round: {game.round}</div>
+        {game.trumpCard && type !== "deal" && (
+          <div class="align-middle">
+            Trump: <MiniCard card={game.trumpCard} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
