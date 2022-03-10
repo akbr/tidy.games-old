@@ -1,5 +1,33 @@
 import { GameProps } from "./types";
+import { Twemoji } from "@lib/components/Twemoji";
 import { MiniCard } from "@lib/components/cards/MiniCard";
+import { splitCard } from "@lib/components/cards";
+
+const TrumpCard = ({
+  trumpCard,
+  trumpSuit,
+}: {
+  trumpCard: string;
+  trumpSuit: string | null;
+}) => {
+  if (!trumpSuit)
+    return (
+      <div class="inline align-middle">
+        <Twemoji char="❌" size={16} />
+      </div>
+    );
+
+  const [value, suit] = splitCard(trumpCard);
+  const isWild = suit === "w" || suit === "j";
+
+  return (
+    <MiniCard
+      suit={trumpSuit}
+      value={isWild ? null : value}
+      color={isWild ? "blue" : undefined}
+    />
+  );
+};
 
 export const Hud = ({ frame }: GameProps) => {
   const {
@@ -12,7 +40,17 @@ export const Hud = ({ frame }: GameProps) => {
         <div>Round: {game.round}</div>
         {game.trumpCard && type !== "deal" && (
           <div class="align-middle">
-            Trump: <MiniCard card={game.trumpCard} />
+            Trump:{" "}
+            {type === "select" ? (
+              <div class="inline align-middle">
+                <Twemoji char="⌛" size={16} />
+              </div>
+            ) : (
+              <TrumpCard
+                trumpCard={game.trumpCard}
+                trumpSuit={game.trumpSuit}
+              />
+            )}
           </div>
         )}
       </div>
