@@ -26,16 +26,10 @@ export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
   });
 
   const nextStates = getStates(step);
-
-  const firstFrame =
-    action === null
-      ? // This is the first state of the game; include it.
-        createFrame(prev, action)
-      : // This is a state triggered by an action; include an "overlap."
-        createFrame(nextStates[0], action);
   const restFrames = nextStates.map((state) => createFrame(state, null));
+  if (action) restFrames[0].action = action;
 
-  return [firstFrame, ...restFrames];
+  return restFrames;
 };
 
 export const createActions = <A extends Actions>(

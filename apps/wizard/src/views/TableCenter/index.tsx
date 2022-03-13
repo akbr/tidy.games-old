@@ -1,35 +1,39 @@
-import { FunctionComponent } from "preact";
 import { GameProps } from "../types";
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
 import { BidInput } from "./BidInput";
+import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
-
-const Center: FunctionComponent = ({ children }) => (
-  <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
-    {children}
-  </div>
-);
 
 export const TableCenter = ({ frame, controls }: GameProps) => {
   const {
     state: [type, game],
     ctx,
   } = frame;
+  const { waitFor } = controls.meter;
 
-  const next =
-    type === "roundStart" ? (
-      <RoundStart num={game.round} waitFor={controls.meter.waitFor} />
-    ) : type === "deal" && game.trumpCard ? (
-      <TrumpReveal cardId={game.trumpCard} waitFor={controls.meter.waitFor} />
-    ) : type === "select" ? (
-      frame.player !== game.player ? (
+  const vnode = (() => {
+    if (type === "roundStart") {
+      return <RoundStart num={game.round} waitFor={waitFor} />;
+    }
+
+    if (type === "trumpReveal") {
+      return game.trumpCard ? (
+        <TrumpReveal cardId={game.trumpCard} waitFor={waitFor} />
+      ) : null;
+    }
+
+    if (type === "select") {
+      return frame.player !== game.player ? (
         <div>Waiting for dealer to select trump...</div>
       ) : (
         <SelectInput select={controls.game.select} />
-      )
-    ) : type === "bid" ? (
-      frame.player !== game.player || frame.action ? (
+      );
+    }
+
+    if (type === "bid") {
+      waitFor(500);
+      return frame.player !== game.player ? (
         <h3 class="animate-bounce">Waiting for bids...</h3>
       ) : (
         <BidInput
@@ -38,12 +42,23 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
           submit={controls.game.bid}
           numPlayers={ctx.numPlayers}
         />
-      )
-    ) : type === "bidsEnd" && !frame.action ? (
-      <div>TK over/underbid</div>
-    ) : type === "tallyScores" ? (
-      <div>TK Tally scores</div>
-    ) : null;
+      );
+    }
 
-  return <Center>{next}</Center>;
+    if (type === "bidsEnd") {
+      return <BidsEnd frame={frame} />;
+    }
+
+    if (type === "roundEnd") {
+      return <div>TK Tally scores</div>;
+    }
+
+    return null;
+  })();
+
+  return (
+    <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
+      {vnode}
+    </div>
+  );
 };

@@ -94,3 +94,8 @@ export const getPlayableCards = (hand: string[], trick: string[]) => {
   const playableSuits = new Set([leadSuit, "w", "j"]);
   return hand.filter((_, i) => playableSuits.has(handSuits[i]));
 };
+
+type Bid = number | null;
+const toNum = (n: Bid) => (n === null ? 0 : n);
+export const totalBids = (bids: Bid[]) =>
+  bids.reduce((a, b) => toNum(a) + toNum(b), 0) as number;

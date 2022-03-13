@@ -11,13 +11,13 @@ export const Seats = ({ frame, controls }: GameProps) => {
     state: [type, game],
     player,
     ctx,
-    action,
   } = frame;
-  const { round, bids, actuals } = game;
+  const { bids, actuals } = game;
 
-  const bidsVisible = type === "bid" || type === "bidsEnd";
-  if (bidsVisible && action) controls.meter.waitFor(500);
-  if (type == "bidsEnd" && !action) controls.meter.waitFor(2000);
+  const biddingActive = type === "bid" || type === "bidded";
+
+  if (type === "bidded") controls.meter.waitFor(500);
+  if (type == "bidsEnd") controls.meter.waitFor(2000);
 
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (
     <div style={{ padding: "26px 12px 26px 12px" }}>
@@ -25,12 +25,12 @@ export const Seats = ({ frame, controls }: GameProps) => {
         avatar="🐯"
         name={`PL${idx}`}
         info={
-          !bidsVisible && bids[idx] !== null ? (
+          !biddingActive && bids[idx] !== null ? (
             <div class="text-white">{`${actuals[idx]}/${bids[idx]}`}</div>
           ) : null
         }
         say={
-          bidsVisible && bids[idx] !== null
+          biddingActive && bids[idx] !== null
             ? {
                 dir: getSeatCSSDirection(ctx.numPlayers, idx),
                 content: (
