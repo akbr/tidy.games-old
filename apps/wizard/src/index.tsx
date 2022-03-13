@@ -17,7 +17,10 @@ setup({
 });
 
 const server = createServer(wizardDefinition, { seed: "test113" });
-const client = createClient(server, wizardDefinition);
+const client = createClient(
+  server /**"ws://localhost:5000" */,
+  wizardDefinition
+);
 const View = createClientView({ Game, debug: true });
 
 client.subscribe((x) =>

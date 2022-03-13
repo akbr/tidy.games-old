@@ -7,7 +7,7 @@ import { createServer } from "@lib/tabletop/server";
 import { mountWSServer } from "@lib/socket/ws-server";
 
 const PORT = process.env.PORT || 5000;
-const distPath = path.resolve("dist/");
+const distPath = path.resolve("dist/") + "/client";
 
 //@ts-ignore
 function requireHTTPS(req, res, next) {

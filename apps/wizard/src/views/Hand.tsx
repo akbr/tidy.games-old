@@ -68,8 +68,9 @@ export const HandCard = ({ card, play, err }: HandCardProps) => {
 export const Hand = ({ frame, controls, err }: GameProps) => {
   const {
     state: [type, game],
+    player,
   } = frame;
-  const hand = game.hands[0];
+  const hand = game.hands[player];
   return (
     <HandSection justDealt={type === "deal"} waitFor={controls.meter.waitFor}>
       {hand.map((id) => (

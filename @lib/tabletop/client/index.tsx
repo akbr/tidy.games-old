@@ -104,7 +104,9 @@ export function createClient<S extends Spec>(
       update();
     }
     if (type === "machine") {
-      meter.push(...getFrames(payload));
+      // patch payload.prev
+      const frames = getFrames(payload);
+      meter.push(...frames);
     }
     if (type === "serverErr" || type === "machineErr") {
       err = { type, data: payload };
