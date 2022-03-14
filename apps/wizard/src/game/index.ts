@@ -208,6 +208,7 @@ export const chart: Chart<WizardSpec> = {
 };
 
 export const wizardDefinition: GameDefinition<WizardSpec> = {
+  name: "Wizard",
   setup: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";

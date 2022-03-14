@@ -1,6 +1,7 @@
 export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
 
 export type GameDefinition<S extends Spec> = {
+  name: string;
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
   chart: Chart<S>;
   actionStubs: ActionStubs<S["actions"]>;

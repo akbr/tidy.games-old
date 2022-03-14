@@ -1,16 +1,19 @@
-import { GameProps } from "./types";
+import { FunctionalComponent } from "preact";
+import { useState } from "preact/hooks";
+
 import { Twemoji } from "@lib/components/Twemoji";
 import { DialogOf } from "@lib/components/DialogOf";
+
+import { GameProps } from "./types";
 import { ScoreTable } from "./ScoreTable";
-import { useState } from "preact/hooks";
-import { FunctionalComponent } from "preact";
 
 const Options = (props: GameProps) => {
-  return <div>Hello from options!</div>;
-};
-
-const CheapScores = (props: GameProps) => {
-  return <div>{JSON.stringify(props.frame.state[1].hands)}</div>;
+  return (
+    <div>
+      <div>Maybe more here?</div>
+      <button onClick={() => props.controls.server.leave(null)}>Exit</button>
+    </div>
+  );
 };
 
 export const UiButtons = (props: GameProps) => {

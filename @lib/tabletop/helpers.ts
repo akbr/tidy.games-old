@@ -2,34 +2,24 @@ import type {
   Spec,
   Frame,
   Actions,
-  AuthenticatedAction,
   ActionStubs,
   ConnectedActions,
   GameDefinition,
   BotFn,
 } from "./types";
+
 import { Step, getStates } from "./machine";
 import { ClientSocket } from "./server";
 import { lastOf } from "@lib/array";
 
 export const getFrames = <S extends Spec>(step: Step<S>): Frame<S>[] => {
-  const { prev, action, ctx, player } = step;
-
-  const createFrame = (
-    state: S["gameStates"],
-    action: AuthenticatedAction<S> | null
-  ) => ({
+  const { action, ctx, player } = step;
+  return getStates(step).map((state, idx) => ({
     state,
-    action,
+    action: idx === 0 ? action : null,
     ctx,
     player,
-  });
-
-  const nextStates = getStates(step);
-  const restFrames = nextStates.map((state) => createFrame(state, null));
-  if (action) restFrames[0].action = action;
-
-  return restFrames;
+  }));
 };
 
 export const createActions = <A extends Actions>(
@@ -39,7 +29,6 @@ export const createActions = <A extends Actions>(
   const fns = {} as ConnectedActions<A>;
   for (let k in stubs) {
     const key = k as keyof ConnectedActions<A>;
-    const fn = stubs[key];
     fns[key] = (input) => submit({ type: key, data: input } as A);
   }
   return fns;
