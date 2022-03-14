@@ -3,8 +3,11 @@ import { memo } from "preact/compat";
 import { ErrorReciever } from "@lib/components/ErrorReceiver";
 import { Spec } from "../types";
 
-import { TitleProps, LobbyProps, GameProps, ViewProps } from "./";
-import { DebugPanel } from "./debug";
+import { TitleProps, LobbyProps, GameProps, ViewProps } from "../client";
+
+import { Title as DefaultTitle } from "./Title";
+import { Lobby as DefaultLobby } from "./Lobby";
+import { DebugPanel } from "./DebugPanel";
 
 export type ClientViewProps<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
@@ -14,13 +17,8 @@ export type ClientViewProps<S extends Spec> = {
 };
 
 export const createClientView = <S extends Spec>({
-  Title = () => <div>Title</div>,
-  Lobby = ({ room }) => (
-    <div>
-      <h1>Lobby</h1>
-      <div>{JSON.stringify(room)}</div>
-    </div>
-  ),
+  Title = DefaultTitle,
+  Lobby = DefaultLobby,
   Game,
   debug = false,
 }: ClientViewProps<S>) => {

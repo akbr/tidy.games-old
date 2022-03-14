@@ -9,6 +9,7 @@ export type ServerActions<S extends Spec> =
       type: "join";
       data?: { id: string; seatIndex?: number };
     }
+  | { type: "leave" }
   | { type: "addBot" }
   | { type: "start"; data: S["options"] };
 
@@ -50,6 +51,13 @@ export type ServerApi<S extends Spec> = SocketServer<
 
 export type ServerOptions = { seed: string };
 
+export const actionStubs = {
+  start: null,
+  addBot: null,
+  join: null,
+  leave: null,
+};
+
 export function createServer<S extends Spec>(
   gameDefinition: GameDefinition<S>,
   serverOptions?: ServerOptions
@@ -70,6 +78,11 @@ export function createServer<S extends Spec>(
           leaveRoom(socket);
           const err = joinRoom(socket, msg.data?.id, msg.data?.seatIndex);
           if (err) socket.send(["serverErr", err]);
+          return;
+        }
+
+        if (msg.type === "leave") {
+          leaveRoom(socket);
           return;
         }
 

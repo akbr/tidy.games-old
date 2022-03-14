@@ -6,7 +6,7 @@ import { setup } from "@twind/preact";
 
 import { createServer } from "@lib/tabletop/server";
 import { createClient } from "@lib/tabletop/client";
-import { createClientView } from "@lib/tabletop/client/View";
+import { createClientView } from "@lib/tabletop/views";
 
 import { wizardDefinition } from "./game";
 import { Game } from "./views/Game";
@@ -16,11 +16,14 @@ setup({
   props: { className: true },
 });
 
-const server = createServer(wizardDefinition, { seed: "test113" });
-const client = createClient(
-  server /**"ws://localhost:5000" */,
-  wizardDefinition
-);
+window.location.hash = "";
+
+const isDev = location.port === "3000";
+const server = isDev
+  ? createServer(wizardDefinition, { seed: "test113" })
+  : location.origin.replace(/^http/, "ws");
+
+const client = createClient(server, wizardDefinition);
 const View = createClientView({ Game, debug: true });
 
 client.subscribe((x) =>

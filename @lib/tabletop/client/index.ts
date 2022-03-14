@@ -3,7 +3,9 @@ import { createSubscription } from "@lib/state/subscription";
 import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
 
 import { GameDefinition, Frame, Spec, ConnectedActions } from "../types";
+import { Step } from "../machine";
 import {
+  actionStubs,
   ServerApi,
   ServerInputs,
   ServerOutputs,
@@ -11,6 +13,8 @@ import {
   ServerActions,
 } from "../server";
 import { getFrames, createActions } from "../helpers";
+import { getHash, replaceHash, HashStatus } from "./hash";
+import { deep } from "@lib/compare/deep";
 
 export type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;
@@ -53,16 +57,9 @@ export function createControls<S extends Spec>(
     game: createActions<S["actions"]>(def.actionStubs, (action) => {
       socket.send(["machine", action]);
     }),
-    server: createActions<ServerActions<S>>(
-      {
-        start: null,
-        addBot: null,
-        join: null,
-      },
-      (action) => {
-        socket.send(["server", action]);
-      }
-    ),
+    server: createActions<ServerActions<S>>(actionStubs, (action) => {
+      socket.send(["server", action]);
+    }),
   };
 }
 
@@ -70,6 +67,7 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   def: GameDefinition<S>
 ) {
+  let step: Step<S> | null;
   let room: RoomData | null = null;
   let meterStatus: MeterStatus<Frame<S>>;
   let frame: Frame<S> | null;
@@ -98,17 +96,30 @@ export function createClient<S extends Spec>(
     nextProps && sub.push(nextProps);
   }
 
+  function reset() {
+    frame = null;
+    step = null;
+    meter.reset();
+    controls.server.leave(null);
+  }
+
   socket.onmessage = ([type, payload]) => {
     if (type === "server") {
       room = payload;
+      if (room) {
+        replaceHash({ id: room.id, player: room.player });
+      } else {
+        reset();
+      }
       update();
-    }
-    if (type === "machine") {
-      // patch payload.prev
-      const frames = getFrames(payload);
-      meter.push(...frames);
-    }
-    if (type === "serverErr" || type === "machineErr") {
+    } else if (type === "machine") {
+      const nextStep = payload;
+      if (step) {
+        payload.prev[1] = patch(step.prev[1], nextStep.prev[1]);
+      }
+      step = nextStep;
+      meter.push(...getFrames(payload));
+    } else if (type === "serverErr" || type === "machineErr") {
       err = { type, data: payload };
       update();
       err = undefined;
@@ -116,7 +127,35 @@ export function createClient<S extends Spec>(
     }
   };
 
+  function reactToHash(hasRun = false) {
+    let { id, player } = getHash();
+    if (room && room.id === id && room.player === player) return;
+    if (id) {
+      controls.server.join({ id, seatIndex: player });
+    } else if (hasRun) {
+      room = null;
+      reset();
+      update();
+    }
+  }
+
+  reactToHash();
+  window.onhashchange = () => reactToHash(true);
+
   meter.subscribe(update);
 
   return { meter, subscribe: sub.subscribe, controls, update };
+}
+
+function patch<T extends Object>(prev: Record<string, any>, next: T): T {
+  const merged = {} as T;
+  for (const k in prev) {
+    const key = k as keyof T;
+    if (deep(prev[k], next[key])) {
+      merged[key] = prev[k];
+    } else {
+      merged[key] = next[key];
+    }
+  }
+  return merged;
 }

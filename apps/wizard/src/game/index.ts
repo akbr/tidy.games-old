@@ -55,7 +55,7 @@ export type WizardSpec = CreateSpec<{
     bidded: { player: number };
     play: { player: number };
     played: { player: number };
-    trickWon: { player: null };
+    trickWon: { player: null; trickWinner: number };
     roundEnd: { player: null };
     end: { player: null };
   };
@@ -170,29 +170,32 @@ export const chart: Chart<WizardSpec> = {
         ],
   trickWon: (state, ctx) => {
     const { hands, trickWinner, trickLeader, actuals } = state;
-    const { numPlayers } = ctx;
 
     const roundContinues = hands[0].length > 0;
     const nextActuals = actuals.map((n, idx) =>
       idx === trickWinner ? n + 1 : n
     );
     if (roundContinues) {
-      const nextTrickLeader = rotateIndex(
-        numPlayers,
-        trickWinner!,
-        trickLeader
-      );
       return [
         "play",
         {
           actuals: nextActuals,
           trick: [],
-          trickLeader: nextTrickLeader,
+          trickLeader: trickWinner,
           trickWinner: null,
-          player: nextTrickLeader,
+          player: trickWinner,
         },
       ];
     }
+
+    /**
+     * 
+      const nextTrickLeader = rotateIndex(
+        numPlayers,
+        trickWinner!,
+        trickLeader
+      );
+     */
 
     return ["roundEnd", { actuals: nextActuals, trick: [], trickWinner: null }];
   },

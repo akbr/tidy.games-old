@@ -6,7 +6,7 @@ import { getSeatCSSDirection } from "@lib/layouts/seats";
 import { Twemoji } from "@lib/components/Twemoji";
 import { rotateArray } from "@lib/array";
 
-export const Seats = ({ frame, controls }: GameProps) => {
+export const Seats = ({ frame, room, controls }: GameProps) => {
   const {
     state: [type, game],
     player,
@@ -22,7 +22,7 @@ export const Seats = ({ frame, controls }: GameProps) => {
   const seats = Array.from({ length: ctx.numPlayers }).map((_, idx) => (
     <div style={{ padding: "26px 12px 26px 12px" }}>
       <Badge
-        avatar="🐯"
+        avatar={room.seats[idx].avatar}
         name={`PL${idx}`}
         info={
           !biddingActive && bids[idx] !== null ? (

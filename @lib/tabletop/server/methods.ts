@@ -62,7 +62,8 @@ export const createMethods = <S extends Spec>(
 
   function broadcastRoomStatus({ id, seats, gameMaster }: Room<S>) {
     const modSeats = seats.map((socket, idx) => ({
-      avatar: avatars[idx],
+      avatar:
+        socket && socket.meta && socket.meta.bot ? botAvatar : avatars[idx],
       name: `P${idx + 1}`,
       connected: socket ? true : false,
     }));
@@ -128,7 +129,7 @@ export const createMethods = <S extends Spec>(
 
   function leaveRoom(socket: ServerSocket<S>) {
     const room = getSocketRoom(socket);
-    if (!room) return "Socket is not connected to a room.";
+    if (!room) return;
 
     const seatIndex = room.seats.indexOf(socket);
     if (seatIndex !== -1) {
@@ -141,8 +142,11 @@ export const createMethods = <S extends Spec>(
     sockets.delete(socket);
     socket.send(["server", null]);
 
-    // TK Check for bot status
-    // if empty : rooms.delete(room.id);
+    const noHumans =
+      room.seats.filter((s) => s && !(s.meta && s.meta.bot)).length === 0;
+    if (noHumans) {
+      rooms.delete(room.id);
+    }
   }
 
   return {

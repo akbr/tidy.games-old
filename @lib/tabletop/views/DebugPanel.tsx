@@ -1,10 +1,10 @@
 import { FunctionComponent, h } from "preact";
 import { useRef, useState } from "preact/hooks";
 
-import { Spec, ConnectedActions } from "../../types";
-import { DebugProps } from "..";
+import { Spec, ConnectedActions } from "../types";
+import { DebugProps } from "../client";
 
-import { JSONDiff } from "./JsonDiff";
+import { JSONDiff } from "@lib/components/JsonDiff";
 
 const ListView = <S extends Spec>({ meter, controls }: DebugProps<S>) => {
   const { states, idx } = meter;

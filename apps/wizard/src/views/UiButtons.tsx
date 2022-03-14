@@ -1,6 +1,7 @@
 import { GameProps } from "./types";
 import { Twemoji } from "@lib/components/Twemoji";
 import { DialogOf } from "@lib/components/DialogOf";
+import { ScoreTable } from "./ScoreTable";
 import { useState } from "preact/hooks";
 import { FunctionalComponent } from "preact";
 
@@ -26,7 +27,7 @@ export const UiButtons = (props: GameProps) => {
           </div>
           <div
             class="cursor-pointer"
-            onClick={() => setDialog(() => CheapScores)}
+            onClick={() => setDialog(() => ScoreTable)}
           >
             <Twemoji char={"🗒️"} size={36} />
           </div>
