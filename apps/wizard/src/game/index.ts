@@ -188,15 +188,6 @@ export const chart: Chart<WizardSpec> = {
       ];
     }
 
-    /**
-     * 
-      const nextTrickLeader = rotateIndex(
-        numPlayers,
-        trickWinner!,
-        trickLeader
-      );
-     */
-
     return ["roundEnd", { actuals: nextActuals, trick: [], trickWinner: null }];
   },
   roundEnd: (game, ctx) => {

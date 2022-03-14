@@ -76,7 +76,7 @@ export const applyTrickStyles = (
         },
       ],
       {
-        duration: randomBetween(300, 500),
+        duration: randomBetween(400, 600),
       }
     );
   }

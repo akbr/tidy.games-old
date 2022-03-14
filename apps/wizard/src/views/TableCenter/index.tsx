@@ -31,7 +31,7 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
       );
     }
 
-    if (type === "bid") {
+    if (type === "bid" || type === "bidded") {
       waitFor(500);
       return frame.player !== game.player ? (
         <h3 class="animate-bounce">Waiting for bids...</h3>

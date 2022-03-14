@@ -22,19 +22,17 @@ export const Trick: FunctionComponent<GameProps> = ({ frame, controls }) => {
   const trick = game.trick;
 
   const effect: TrickProps["effect"] = (() => {
-    //These two effects overlap without separate action framtes!
-
-    if (action && action.type === "play") {
+    if (type === "played") {
       return {
         type: "played",
-        player: action.player,
+        player: action!.player,
       };
     }
 
     if (type === "trickWon") {
       return {
         type: "won",
-        player: game.trickWinner as number,
+        player: game.trickWinner!,
       };
     }
   })();

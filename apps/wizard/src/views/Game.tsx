@@ -21,7 +21,12 @@ export const Game = (props: GameProps) => {
   );
 
   return (
-    <div class="h-full bg-[#006400] text-white overflow-hidden">
+    <div
+      class="h-full bg-[#006400] text-white overflow-hidden"
+      style={{
+        background: "radial-gradient(circle ,#007B0C 50%, #005c09 100%)",
+      }}
+    >
       <section
         id="table"
         class="relative"

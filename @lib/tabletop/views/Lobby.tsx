@@ -28,20 +28,22 @@ export const Lobby = <S extends Spec>({ room, controls }: LobbyProps<S>) => {
       </fieldset>
       <fieldset>
         <legend>Players in room:</legend>
-        {room.seats.map((player, idx) => {
-          let isPlayer = idx === room.player;
-          let style = {
-            backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
-            padding: "8px",
-            borderRadius: "4px",
-          };
-          return (
-            <div style={style}>
-              <Badge {...player}></Badge>
-              {isPlayer && <div class="text-center text-base">YOU</div>}
-            </div>
-          );
-        })}
+        <div class="flex">
+          {room.seats.map((player, idx) => {
+            let isPlayer = idx === room.player;
+            let style = {
+              backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
+              padding: "8px",
+              borderRadius: "4px",
+            };
+            return (
+              <div style={style}>
+                <Badge {...player}></Badge>
+                {isPlayer && <div class="text-center text-base">YOU</div>}
+              </div>
+            );
+          })}
+        </div>
       </fieldset>
       {isAdmin ? (
         <>

@@ -16,8 +16,6 @@ setup({
   props: { className: true },
 });
 
-window.location.hash = "";
-
 const isDev = location.port === "3000";
 const server = isDev
   ? createServer(wizardDefinition, { seed: "test113" })
@@ -31,8 +29,11 @@ client.subscribe((x) =>
 );
 client.update();
 
-const { controls } = client;
-controls.server.join({ id: "TEST" });
-controls.server.addBot(null);
-controls.server.start(null);
-controls.meter.setIdx(2);
+function devSetup() {
+  window.location.hash = "";
+  const { controls } = client;
+  controls.server.join({ id: "TEST" });
+  controls.server.addBot(null);
+  controls.server.start(null);
+  controls.meter.setIdx(2);
+}
