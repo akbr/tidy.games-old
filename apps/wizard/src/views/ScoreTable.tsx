@@ -1,11 +1,7 @@
 import { GameProps } from "./types";
 import { ComponentChildren } from "preact";
 import { rotateArray } from "@lib/array";
-
-const getScore = (bid: number, actual: number) => {
-  const diff = Math.abs(bid - actual);
-  return diff === 0 ? 20 : diff * -10;
-};
+import { getScore } from "../game/logic";
 
 const convert = (scores: number[][]) => {
   let rows: number[][][] = [];

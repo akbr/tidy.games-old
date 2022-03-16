@@ -1,6 +1,6 @@
-import { RefObject } from "preact";
+import { h, Fragment, ComponentChildren, RefObject } from "preact";
 import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
-import { debounce, Task } from "@lib/async";
+import { debounce } from "@lib/async";
 import { WaitFor, WaitRequest } from "@lib/state/meter";
 
 export function useRefreshOnResize(debounceMs = 300) {
@@ -18,14 +18,14 @@ export const useRefresh = () => {
   return () => set(Symbol());
 };
 
-export type GameEffect<Props, El extends HTMLElement = HTMLElement> = (
+export type DOMEffect<Props, El extends HTMLElement = HTMLElement> = (
   $el: El,
   curr: Props,
   prev?: Props
 ) => void | WaitRequest;
 
-export function useGameEffect<El extends HTMLElement, Props>(
-  effectFn: GameEffect<Props, El>,
+export function useDOMEffect<El extends HTMLElement, Props>(
+  effectFn: DOMEffect<Props, El>,
   ref: RefObject<El>,
   props: Props,
   waitFor?: WaitFor
@@ -39,3 +39,28 @@ export function useGameEffect<El extends HTMLElement, Props>(
     if (waitFor) return waitFor(waitReq);
   });
 }
+
+export const RunDOMEffect = <T>({
+  props,
+  fn,
+  children,
+  waitFor,
+}: {
+  props: T;
+  fn: DOMEffect<T>;
+  children?: ComponentChildren;
+  waitFor?: WaitFor;
+}) => {
+  const elRef: RefObject<HTMLElement> = useRef(null);
+
+  if (Array.isArray(children)) {
+    throw new Error("WithUpdate only works on single children.");
+  }
+
+  //@ts-ignore
+  children.ref = elRef;
+
+  useDOMEffect(fn, elRef, props, waitFor);
+
+  return h(Fragment, null, children);
+};

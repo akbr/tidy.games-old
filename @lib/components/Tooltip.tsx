@@ -1,12 +1,7 @@
 import { FunctionComponent } from "preact";
 
 import { tw } from "twind";
-import { animation } from "twind/css";
-
-const fadeIn = animation("500ms", {
-  "0%": { opacity: 0 },
-  "100%": { opacity: 1 },
-});
+import { fadeIn } from "@shared/twindCss";
 
 const gap = 12;
 const positions: Record<string, any> = {

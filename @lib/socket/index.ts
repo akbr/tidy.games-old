@@ -7,6 +7,10 @@ export interface Socket<Input, Output> {
   meta?: Record<string, any>;
 }
 
+export interface SocketManager<Input, Output> extends Socket<Input, Output> {
+  open: () => void;
+}
+
 export interface SocketServer<Input, Output> {
   onmessage: (socket: Socket<Input, Output>, output: Output) => void;
   onopen: (socket: Socket<Input, Output>) => void;
@@ -90,7 +94,7 @@ export function createLocalSocket<Input, Output>(
 export function createSocketManager<Input, Output>(
   server: string | SocketServer<Output, Input>,
   socketInterface = {} as SocketOptions<Input, Output>
-): Socket<Input, Output> {
+): SocketManager<Input, Output> {
   let currentSocket: Socket<Input, Output> | null = null;
   let sendBuffer: Input[] = [];
   let connected = false;
@@ -98,7 +102,7 @@ export function createSocketManager<Input, Output>(
   const socket = {
     ...socketInterface,
     send: (action: Input) => {
-      if (!currentSocket) throw new Error("Socket manager has no open socket");
+      if (!currentSocket) return;
       if (!connected) {
         sendBuffer.push(action);
       } else {
@@ -106,6 +110,7 @@ export function createSocketManager<Input, Output>(
       }
     },
     close,
+    open,
   };
 
   function close() {
@@ -139,8 +144,6 @@ export function createSocketManager<Input, Output>(
         ? createWebSocket<Input, Output>(server, options)
         : createLocalSocket(server, options);
   }
-
-  open();
 
   return socket;
 }

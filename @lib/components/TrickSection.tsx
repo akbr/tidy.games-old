@@ -1,8 +1,8 @@
 import { FunctionalComponent, h } from "preact";
 import { useRef } from "preact/hooks";
-import equal from "fast-deep-equal";
+import { deep } from "@lib/compare/deep";
 
-import { useRefreshOnResize, useGameEffect } from "@lib/hooks";
+import { useRefreshOnResize, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
 import { getHeldPosition, getPlayedPosition } from "@lib/layouts/trick";
@@ -11,7 +11,7 @@ import { getWaggle } from "@lib/layouts/anim";
 import { WaitFor } from "@lib/state/meter";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
-import { seq } from "@lib/async";
+import { seq, delay } from "@lib/async";
 
 export type TrickProps = {
   numPlayers: number;
@@ -56,7 +56,7 @@ export const applyTrickStyles = (
     });
   });
 
-  if (equal(curr, prev)) return;
+  if (deep(curr, prev)) return;
 
   // Play effect
   // -----------
@@ -128,6 +128,7 @@ export const applyTrickStyles = (
         },
         { duration: 275, delay: 325 }
       ),
+    () => delay(500),
   ]);
 };
 
@@ -136,14 +137,13 @@ export const TrickSection: FunctionalComponent<TrickProps> = ({
   waitFor,
   ...props
 }) => {
-  const ref = useRef<HTMLDivElement>(null);
-
   useRefreshOnResize();
-  useGameEffect(applyTrickStyles, ref, props, waitFor);
 
   return (
-    <section id="trick" class="absolute top-0 left-0" ref={ref}>
-      {children}
-    </section>
+    <RunDOMEffect fn={applyTrickStyles} props={props} waitFor={waitFor}>
+      <section id="trick" class="absolute top-0 left-0">
+        {children}
+      </section>
+    </RunDOMEffect>
   );
 };

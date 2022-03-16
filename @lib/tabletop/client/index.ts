@@ -28,6 +28,7 @@ export type Err = {
 };
 
 export type TitleProps<S extends Spec> = {
+  connected: boolean;
   err?: Err;
   controls: Controls<S>;
 };
@@ -65,33 +66,48 @@ export function createControls<S extends Spec>(
 
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
-  def: GameDefinition<S>
+  def: GameDefinition<S>,
+  history = false
 ) {
+  let connected = false;
   let step: Step<S> | null;
   let room: RoomData | null = null;
   let meterStatus: MeterStatus<Frame<S>>;
   let frame: Frame<S> | null;
   let err: Err | undefined;
 
-  const socket = createSocketManager(server);
-  const meter = createMeter<Frame<S>>();
+  const socket = createSocketManager(server, {
+    onopen: () => {
+      connected = true;
+      update();
+    },
+    onclose: () => {
+      connected = true;
+      update();
+    },
+  });
+
+  const meter = createMeter<Frame<S>>({ history });
 
   const controls = {
     ...createControls(socket, def),
     meter,
   };
 
-  const sub = createSubscription<ViewProps<S>>(["title", { controls }]);
+  const sub = createSubscription<ViewProps<S>>([
+    "title",
+    { connected, controls },
+  ]);
 
   function update() {
     meterStatus = meter.get();
-    frame = meterStatus.states[meterStatus.idx];
+    frame = meterStatus.state || null;
 
     const nextProps: ViewProps<S> = !room
-      ? ["title", { controls, err }]
+      ? ["title", { connected, controls, err }]
       : !frame
-      ? ["lobby", { controls, err, room }]
-      : ["game", { controls, err, room, frame, meter: meterStatus }];
+      ? ["lobby", { connected, controls, err, room }]
+      : ["game", { connected, controls, err, room, frame, meter: meterStatus }];
 
     nextProps && sub.push(nextProps);
   }
@@ -109,6 +125,7 @@ export function createClient<S extends Spec>(
       if (room) {
         replaceHash({ id: room.id, player: room.player });
       } else {
+        replaceHash({});
         reset();
       }
       update();
@@ -138,6 +155,8 @@ export function createClient<S extends Spec>(
       update();
     }
   }
+
+  socket.open();
 
   reactToHash();
   window.onhashchange = () => reactToHash(true);

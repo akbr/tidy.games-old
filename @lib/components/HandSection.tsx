@@ -1,13 +1,11 @@
 import { FunctionComponent, h } from "preact";
-import { useRef } from "preact/hooks";
-
 import { style } from "@lib/stylus";
-import { useRefreshOnResize, useGameEffect, GameEffect } from "@lib/hooks";
+import { useRefreshOnResize, RunDOMEffect, DOMEffect } from "@lib/hooks";
 import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
 
-export const applyHandStyles: GameEffect<{
+export const applyHandStyles: DOMEffect<{
   justDealt: boolean;
 }> = ($handContainer: HTMLElement, { justDealt }) => {
   const { width } = $handContainer.getBoundingClientRect();
@@ -40,12 +38,13 @@ export const HandSection: FunctionComponent<{
   justDealt: boolean;
   waitFor?: WaitFor;
 }> = ({ justDealt, waitFor, children }) => {
-  const ref = useRef<HTMLDivElement>(null);
   useRefreshOnResize();
-  useGameEffect(applyHandStyles, ref, { justDealt }, waitFor);
+
   return (
-    <section id="hand" class="relative" ref={ref}>
-      {children}
-    </section>
+    <RunDOMEffect fn={applyHandStyles} props={{ justDealt }} waitFor={waitFor}>
+      <section id="hand" class="relative">
+        {children}
+      </section>
+    </RunDOMEffect>
   );
 };

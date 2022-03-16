@@ -1,4 +1,4 @@
 import { startServer } from "@shared/express";
-import { wizardDefinition } from "./game";
+import { wizardDefinition } from "./src/game";
 
 startServer(wizardDefinition);

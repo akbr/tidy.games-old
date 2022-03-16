@@ -95,7 +95,11 @@ export const getPlayableCards = (hand: string[], trick: string[]) => {
   return hand.filter((_, i) => playableSuits.has(handSuits[i]));
 };
 
-type Bid = number | null;
-const toNum = (n: Bid) => (n === null ? 0 : n);
-export const totalBids = (bids: Bid[]) =>
+export const getScore = (bid: number, actual: number) => {
+  const diff = Math.abs(bid - actual);
+  return diff === 0 ? 20 + bid * 10 : diff * -10;
+};
+
+const toNum = (n: number | null) => (n === null ? 0 : n);
+export const totalBids = (bids: (number | null)[]) =>
   bids.reduce((a, b) => toNum(a) + toNum(b), 0) as number;

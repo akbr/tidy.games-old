@@ -61,30 +61,23 @@ export const createClientView = <S extends Spec>({
 
     if (type === "game") {
       const { meter, ...gameProps } = props;
+      const gameVnode = (
+        <Interface props={props}>
+          <GameMemo {...gameProps} />
+        </Interface>
+      );
 
       if (debug) {
         return (
-          <section id="root" style="height: 100%; width: 100%; display: flex">
-            <section style="height: 100%" id="debug">
-              <DebugPanel {...props} />
-            </section>
-            <section
-              class="relative"
-              style="height: 100%; flex-grow: 1"
-              id="game"
-            >
-              <Interface props={props}>
-                <GameMemo {...gameProps} />
-              </Interface>
+          <section id="root" class="h-full flex">
+            <DebugPanel {...props} />
+            <section id="game" class="relative h-full flex-grow">
+              {gameVnode}
             </section>
           </section>
         );
       } else {
-        return (
-          <Interface props={props}>
-            <GameMemo {...gameProps} />
-          </Interface>
-        );
+        return gameVnode;
       }
     }
 

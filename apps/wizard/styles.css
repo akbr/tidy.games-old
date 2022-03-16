@@ -12,5 +12,21 @@
 
 html,
 body {
+  height: 100%;
   font-family: "Roboto";
+  color: white;
+  background-color: #2a1b0e;
+}
+
+button {
+  padding: 0.2em;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: auto;
+}
+
+#app {
+  height: 100%;
 }

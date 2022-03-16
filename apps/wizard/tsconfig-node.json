@@ -6,11 +6,11 @@
     "lib": ["es2020", "dom"],
     "moduleResolution": "node",
     "outDir": "dist",
-    "baseUrl": ".",
+    "baseUrl": "../../",
     "paths": {
-      "@lib/*": ["../../@lib/*"],
-      "@shared/*": ["../../@shared/*"]
+      "@lib/*": ["@lib/*"],
+      "@shared/*": ["@shared/*"]
     }
   },
-  "include": ["./src/express.ts"]
+  "include": ["./index-express.ts"]
 }

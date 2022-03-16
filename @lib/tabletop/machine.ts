@@ -40,8 +40,14 @@ export const applyPatch = <S extends Spec>(
   [nextState, patch]: S["patches"]
 ): S["gameStates"] => [nextState, { ...game, ...patch }];
 
-export const getStates = <S extends Spec>({ prev, patches }: Step<S>) => {
+export const getStates = <S extends Spec>({
+  prev,
+  patches,
+  action,
+}: Step<S>) => {
   const states: S["gameStates"][] = [];
+  const isInitialStep = !action;
+  if (isInitialStep) states.push(prev);
   patches.forEach((patch) => {
     const nextState = applyPatch(lastOf(states) || prev, patch);
     states.push(nextState);

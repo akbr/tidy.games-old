@@ -1,3 +1,6 @@
+import { tw } from "twind";
+import { fadeIn } from "@shared/twindCss";
+
 import { GameProps } from "../types";
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
@@ -11,6 +14,7 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
     ctx,
   } = frame;
   const { waitFor } = controls.meter;
+  const isMyTurn = frame.player === game.player;
 
   const vnode = (() => {
     if (type === "roundStart") {
@@ -24,33 +28,38 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
     }
 
     if (type === "select") {
-      return frame.player !== game.player ? (
-        <div>Waiting for dealer to select trump...</div>
+      return !isMyTurn ? (
+        <h3 class={`${tw(fadeIn)}`}>Waiting for dealer to select trump...</h3>
       ) : (
-        <SelectInput select={controls.game.select} />
+        <SelectInput
+          select={controls.game.select}
+          waitFor={controls.meter.waitFor}
+        />
       );
     }
 
     if (type === "bid" || type === "bidded") {
-      waitFor(500);
-      return frame.player !== game.player ? (
-        <h3 class="animate-bounce">Waiting for bids...</h3>
-      ) : (
+      return !isMyTurn ? (
+        <div class="animate-bounce">
+          <h3 class={`${tw(fadeIn)}`}>Waiting for bids...</h3>
+        </div>
+      ) : type !== "bidded" ? (
         <BidInput
           turn={game.round}
           bids={game.bids}
           submit={controls.game.bid}
           numPlayers={ctx.numPlayers}
+          waitFor={controls.meter.waitFor}
         />
-      );
+      ) : null;
     }
 
     if (type === "bidsEnd") {
+      waitFor(1500);
       return <BidsEnd frame={frame} />;
     }
 
     if (type === "roundEnd") {
-      return <div>TK Tally scores</div>;
     }
 
     return null;

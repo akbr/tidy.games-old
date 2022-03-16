@@ -7,15 +7,17 @@
     "build": "tsc -p ./apps/$npm_config_app_id && vite build apps/$npm_config_app_id && mv apps/$npm_config_app_id/dist ./dist/client",
     "preview": "vite preview apps/$npm_config_app_id",
     "build-node": "tsc --project apps/$npm_config_app_id/tsconfig-node.json && tsc-alias -p apps/$npm_config_app_id/tsconfig-node.json && mv apps/$npm_config_app_id/dist ./dist",
-    "build-all": "npm run build-node --app_id=$npm_config_app_id && npm run build --app_id=$npm_config_app_id",
-    "run-server": "node ./dist/apps/$npm_config_app_id/src/express.js",
-    "heroku-postbuild": "npm run build-all --app_name=$APP_NAME && npm run run-server --app_name=$APP_NAME"
+    "build-all": "npm run build-node --app-id=$npm_config_app_id && npm run build --app-id=$npm_config_app_id",
+    "run-server": "node ./dist/apps/$npm_config_app_id/index-express.js",
+    "deploy": "npm run build-all --app-id=$npm_config_app_id && npm run run-server --app-id=$npm_config_app_id",
+    "heroku-postbuild": "npm run build-all --app_name=$APP_NAME && npm run run-server --app-id=$APP_NAME"
   },
   "dependencies": {
-    "@twind/preact": "^1.0.5",
-    "preact": "latest",
-    "twind": "^0.16.17",
+    "@twind/preact": "1.0.5",
     "express": "^4.17.3",
+    "preact": "latest",
+    "preact-transitioning": "^1.3.1",
+    "twind": "^0.16.16",
     "ws": "^8.5.0"
   },
   "devDependencies": {
@@ -24,7 +26,7 @@
     "@types/node": "^17.0.18",
     "@types/ws": "^8.5.2",
     "tsc-alias": "^1.6.4",
-    "typescript": "4.6.1",
+    "typescript": "4.6.2",
     "vite": "^2.8.0"
   }
 }

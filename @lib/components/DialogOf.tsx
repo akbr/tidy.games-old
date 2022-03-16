@@ -13,13 +13,14 @@ export const DialogOf: FunctionalComponent<{ close: () => void }> = ({
       />
       <div
         style={{ zIndex: 9999 }}
-        class="relative max-w-[calc(90%)] max-h-[calc(90%)] bg-blue-300 rounded pointer-events-auto"
+        class="relative max-w-[calc(90%)] max-h-[calc(90%)] bg-blue-200 rounded pointer-events-auto p-1 text-black"
       >
         <div
-          class="absolute rounded top-[-12px] right-[-12px] bg-red-700 cursor-pointer"
+          class="absolute rounded top-[-12px] right-[-12px] bg-red-700 cursor-pointer p-0.5"
           onClick={() => close()}
         >
           <svg
+            display="block"
             stroke="white"
             fill="white"
             stroke-width="0"

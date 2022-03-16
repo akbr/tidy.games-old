@@ -6,7 +6,7 @@ export type HashStatus = {
 export function getHashString(status?: HashStatus) {
   if (!status) return "#";
   let { id, player } = status;
-  return `#${id}${player !== undefined ? `/${player}` : ""}`;
+  return `#${id || ""}${player !== undefined ? `/${player}` : ""}`;
 }
 
 export function setHash(status?: HashStatus) {

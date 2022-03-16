@@ -142,7 +142,7 @@ export const Nav = <S extends Spec>(props: DebugProps<S>) => {
 export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
   const { meter, frame } = props;
   const { states, idx, auto } = meter;
-  const state = states[idx];
+  const state = meter.state;
   if (!state) return null;
 
   const curr = frame.state[1];

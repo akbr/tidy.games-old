@@ -16,13 +16,19 @@ export type Meter<T> = {
 };
 
 export type MeterStatus<T> = {
+  state?: T;
   states: T[];
   idx: number;
   waiting: boolean;
   auto: boolean;
 };
 
-export const createMeter = <T>(): Meter<T> => {
+type MeterOptions = {
+  history?: boolean;
+};
+
+export const createMeter = <T>({ history = false }: MeterOptions): Meter<T> => {
+  let state: T | undefined;
   let states: T[] = [];
   let idx = -1;
   let auto = true;
@@ -33,34 +39,19 @@ export const createMeter = <T>(): Meter<T> => {
   let waitRequests: WaitRequest[] = [];
 
   function getStatus() {
-    return { states, idx, waiting: !!waiting, auto };
+    return { state, states, idx, waiting: !!waiting, auto };
   }
 
   function update() {
     push(getStatus());
   }
 
-  function isAtLastState() {
-    return idx === states.length - 1;
+  function isExhausted() {
+    return history ? idx === states.length - 1 : states.length === 0;
   }
 
-  function clearWaiting() {
-    if (waiting) waiting.skip();
-    waiting = null;
-    waitRequests = [];
-  }
-
-  function iterate(): false | void {
-    if (waiting || !auto || isAtLastState()) return false;
-
-    idx = idx + 1;
-
-    clearWaiting();
-    update();
-
-    // Views might submit wait requests!
-
-    if (waitRequests.length === 0) return iterate();
+  function compileWaiting() {
+    if (waiting) return;
 
     const timings = waitRequests.filter(
       (x): x is number => typeof x === "number"
@@ -69,13 +60,15 @@ export const createMeter = <T>(): Meter<T> => {
       (x): x is Task => !!(typeof x !== "number" && x)
     );
 
+    waitRequests = [];
+
     if (timings.length) tasks.push(delay(Math.max(...timings)));
-    if (!tasks.length) return iterate();
+    if (!tasks.length) return;
 
     const task = all(tasks);
     waiting = task;
 
-    task.finished.then(() => {
+    waiting.finished.then(() => {
       if (waiting === task) {
         waiting = null;
         iterate();
@@ -83,16 +76,36 @@ export const createMeter = <T>(): Meter<T> => {
     });
   }
 
+  function iterate(): false | void {
+    compileWaiting();
+
+    if (waiting || !auto || isExhausted()) {
+      return false;
+    }
+    if (history) {
+      idx = idx + 1;
+      state = states[idx];
+    } else {
+      state = states.shift();
+    }
+
+    update();
+    compileWaiting();
+
+    return iterate();
+  }
+
   return {
     subscribe,
     push: (...incoming) => {
       states.push(...incoming);
-      if (iterate() === false) update();
+      if (iterate() === false && history) update();
     },
     waitFor: (req) => {
       waitRequests.push(req);
     },
     reset: () => {
+      state = undefined;
       states = [];
       idx = -1;
       auto = true;
@@ -110,12 +123,21 @@ export const createMeter = <T>(): Meter<T> => {
       }
     },
     setIdx: (input) => {
+      if (!history) {
+        console.warn("meter.setIdx requires history");
+        return;
+      }
+
       const nextIdx =
         typeof input === "function" ? input(idx, states.length) : input;
       if (nextIdx > states.length - 1) return;
+
       auto = false;
-      clearWaiting();
+      waiting && waiting.skip();
+      waiting = null;
+      waitRequests = [];
       idx = nextIdx;
+      state = states[nextIdx];
       update();
     },
     get: () => getStatus(),

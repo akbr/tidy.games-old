@@ -1,6 +1,7 @@
 import { ComponentChildren } from "preact";
 import { Twemoji } from "./Twemoji";
 import { Tooltip } from "./Tooltip";
+import { Fade } from "@lib/components/Fade";
 
 type BadgeProps = {
   avatar: string;
@@ -30,7 +31,7 @@ export const Badge = ({
       {tl && (
         <div
           class="absolute top-0 left-0"
-          style={{ transform: "translate(-2px, calc(-60% - 3px))" }}
+          style={{ transform: "translate(-4px, calc(-40%))" }}
         >
           {tl}
         </div>
@@ -38,7 +39,7 @@ export const Badge = ({
       {tr && (
         <div
           class="absolute top-0 right-0"
-          style={{ transform: "translate(2px, calc(-60% - 3px))" }}
+          style={{ transform: "translate(4px, calc(-40%))" }}
         >
           {tr}
         </div>

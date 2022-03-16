@@ -2,6 +2,8 @@ import { Twemoji } from "@lib/components/Twemoji";
 import { MiniCard } from "@lib/components/cards/MiniCard";
 import { splitCard } from "@lib/components/cards";
 import { GameProps } from "../types";
+import { tw } from "twind";
+import { fadeIn } from "@shared/twindCss";
 
 const TrumpCard = ({
   trumpCard,
@@ -38,7 +40,7 @@ export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
   const trumpKnown = trumpSuit !== "w";
 
   return shouldDisplay ? (
-    <div class="align-middle">
+    <div class={`${tw(fadeIn)}`}>
       Trump:{" "}
       <div class="inline align-middle">
         {trumpKnown ? (
