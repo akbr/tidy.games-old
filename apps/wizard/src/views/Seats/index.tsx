@@ -1,6 +1,6 @@
 import { GameProps } from "../types";
 
-import { rotateArray } from "@lib/array";
+import { rotateArray, rotateIndex } from "@lib/array";
 
 import { getSeatCSSDirection } from "@lib/layouts/seats";
 import { PositionSeats } from "@lib/components/PositionSeats";
@@ -23,8 +23,9 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
 
   if (type === "bidded") controls.meter.waitFor(1000);
 
-  const seats = rotateArray(room.seats, -player).map(
-    ({ name, avatar }, idx) => (
+  const seats = room.seats.map(({ avatar }, idx) => {
+    const vIdx = rotateIndex(room.seats.length, idx, -player);
+    return (
       <div style={{ padding: "26px 16px 26px 16px" }}>
         <Badge
           avatar={avatar}
@@ -43,7 +44,7 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
           say={
             biddingActive && bids[idx] !== null
               ? {
-                  dir: getSeatCSSDirection(ctx.numPlayers, idx),
+                  dir: getSeatCSSDirection(ctx.numPlayers, vIdx),
                   content: <div>Bid: {bids[idx]}</div>,
                 }
               : undefined
@@ -54,12 +55,12 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
           tr={idx === game.player ? <Twemoji char={"⏳"} size={18} /> : null}
         />
       </div>
-    )
-  );
+    );
+  });
 
   return (
     <section id="seats" class="relative h-full">
-      <PositionSeats>{seats}</PositionSeats>
+      <PositionSeats>{rotateArray(seats, -player)}</PositionSeats>
     </section>
   );
 };

@@ -9,7 +9,7 @@
     "build-node": "tsc --project apps/$npm_config_app_id/tsconfig-node.json && tsc-alias -p apps/$npm_config_app_id/tsconfig-node.json && mv apps/$npm_config_app_id/dist ./dist",
     "build-all": "npm run build-node --app-id=$npm_config_app_id && npm run build --app-id=$npm_config_app_id",
     "run-server": "node ./dist/apps/$npm_config_app_id/index-express.js",
-    "deploy": "npm run build-all --app-id=$npm_config_app_id && npm run run-server --app-id=$npm_config_app_id",
+    "deploy": "rm -rf dist/ && npm run build-all --app-id=$npm_config_app_id && npm run run-server --app-id=$npm_config_app_id",
     "heroku-postbuild": "npm run build-all --app_name=$APP_NAME && npm run run-server --app-id=$APP_NAME"
   },
   "dependencies": {

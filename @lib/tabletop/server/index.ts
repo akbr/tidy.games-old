@@ -67,7 +67,8 @@ export function createServer<S extends Spec>(
 
   const server: ServerApi<S> = {
     onopen: (socket) => {
-      socket.send(["server", null]);
+      // This broken initial hash connect
+      //socket.send(["server", null]);
     },
     onclose: (socket) => {
       leaveRoom(socket);

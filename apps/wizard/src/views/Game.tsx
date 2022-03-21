@@ -9,6 +9,7 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 import { ScoreTable } from "./ScoreTable";
+import { Disconnected } from "@lib/tabletop/views/Disconnected";
 
 export const GameView = (props: GameProps) => {
   const {
@@ -47,6 +48,15 @@ export const GameView = (props: GameProps) => {
 
 export const Game = (props: GameProps) => {
   useRefreshOnResize();
+
+  if (!props.connected) {
+    return (
+      <div>
+        <div class="bg-red-500">Whoops, you got disconnected...</div>
+        <Disconnected />
+      </div>
+    );
+  }
 
   const { width } = document.body.getBoundingClientRect();
 

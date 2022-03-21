@@ -84,7 +84,7 @@ export function createClient<S extends Spec>(
       update();
     },
     onclose: () => {
-      connected = true;
+      connected = false;
       update();
     },
   });

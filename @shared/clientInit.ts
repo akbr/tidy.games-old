@@ -23,11 +23,13 @@ export function init<S extends Spec>(
     ? createServer(def, options)
     : location.origin.replace(/^http/, "ws");
 
+  const debug = isDev;
   const history = clientProps.debug;
   const client = createClient(server, def, history);
-  const View = createClientView(clientProps);
+  const View = createClientView({ ...clientProps, debug });
 
   client.subscribe((x) => render(h(View, { viewProps: x }, null), $el));
+  client.update();
 
   return client;
 }

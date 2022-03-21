@@ -6,7 +6,7 @@ import { Game } from "./views/Game";
 const client = init(
   wizardDefinition,
   document.getElementById("app")!,
-  { Game, debug: true },
+  { Game },
   { seed: "test113" }
 );
 
@@ -25,5 +25,4 @@ function dev() {
    */
 }
 
-client.update();
-dev();
+//dev();
