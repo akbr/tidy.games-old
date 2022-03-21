@@ -17,9 +17,17 @@ const Options = (props: GameProps) => {
 };
 
 export const UiButtons = (props: GameProps) => {
+  const {
+    frame: {
+      state: [, game],
+    },
+  } = props;
+
   const [Dialog, setDialog] = useState<FunctionalComponent<GameProps> | null>(
     null
   );
+
+  const { width } = document.body.getBoundingClientRect();
 
   return (
     <>
@@ -28,12 +36,14 @@ export const UiButtons = (props: GameProps) => {
           <div class="cursor-pointer" onClick={() => setDialog(() => Options)}>
             <Twemoji char={"⚙️"} size={36} />
           </div>
-          <div
-            class="cursor-pointer"
-            onClick={() => setDialog(() => ScoreTable)}
-          >
-            <Twemoji char={"🗒️"} size={36} />
-          </div>
+          {width < 1000 && game.scores.length > 0 && (
+            <div
+              class="cursor-pointer"
+              onClick={() => setDialog(() => ScoreTable)}
+            >
+              <Twemoji char={"🗒️"} size={36} />
+            </div>
+          )}
         </div>
       </div>
       {Dialog && (

@@ -25,7 +25,7 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
 
   const seats = rotateArray(room.seats, -player).map(
     ({ name, avatar }, idx) => (
-      <div style={{ padding: "26px 12px 26px 12px" }}>
+      <div style={{ padding: "26px 16px 26px 16px" }}>
         <Badge
           avatar={avatar}
           name={`PL${idx}`}

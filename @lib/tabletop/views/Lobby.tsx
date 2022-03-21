@@ -2,20 +2,26 @@ import { Badge } from "@lib/components/Badge";
 import { Spec } from "@lib/tabletop/types";
 import { LobbyProps } from "../client";
 
-export const Lobby = <S extends Spec>({ room, controls }: LobbyProps<S>) => {
+export const Lobby = <S extends Spec>({
+  meta,
+  room,
+  controls,
+}: LobbyProps<S>) => {
   const url = window.location.host + "/#" + room.id;
   const isAdmin = room.player === 0;
 
   return (
-    <div class="flex flex-col items-center gap-4 mt-6">
-      <h1>Lobby</h1>
+    <div class="flex flex-col items-center gap-4">
+      <div class="text-center mt-6 font-bold text-[64px]">{meta.name}</div>
+      <h1>Lobby ({room.id})</h1>
 
       <div class="animate-bounce">Waiting for players...</div>
 
-      <fieldset>
+      <fieldset class="p-2">
         <legend>⚡ Direct link:</legend>
         <div class="text-center">
           <input
+            class="cursor-pointer"
             readonly
             size={url.length - 2}
             type={"text"}
@@ -26,9 +32,9 @@ export const Lobby = <S extends Spec>({ room, controls }: LobbyProps<S>) => {
           />
         </div>
       </fieldset>
-      <fieldset>
-        <legend>Players in room:</legend>
-        <div class="flex">
+      <fieldset class="p-2">
+        <legend>Players in room (up to {meta.players[1]}):</legend>
+        <div class="flex justify-center">
           {room.seats.map((player, idx) => {
             let isPlayer = idx === room.player;
             let style = {
@@ -52,13 +58,19 @@ export const Lobby = <S extends Spec>({ room, controls }: LobbyProps<S>) => {
               Add bot
             </button>
           }
-          {room.seats.length > 1 && (
-            <button onClick={() => controls.server.start(null)}>Start</button>
-          )}
+
+          <button
+            disabled={room.seats.length < meta.players[0]}
+            onClick={() => controls.server.start(null)}
+          >
+            Start
+          </button>
         </>
       ) : (
         <div>The game creator will start the game. Hang tight!</div>
       )}
+
+      <button onClick={() => controls.server.leave(null)}>Leave</button>
     </div>
   );
 };

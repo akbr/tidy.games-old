@@ -47,7 +47,11 @@ export const createMethods = <S extends Spec>(
     requestedSeat?: number
   ) {
     const room = id ? rooms.get(id) || createRoom(id) : createRoom();
-    const seatIndex = getSeatNumber(room.seats, requestedSeat);
+    const seatIndex = getSeatNumber(
+      room.seats,
+      gameDefinition.meta.players,
+      requestedSeat
+    );
 
     if (typeof seatIndex === "string") {
       return seatIndex;
@@ -88,6 +92,11 @@ export const createMethods = <S extends Spec>(
     if (!room) return "You're not even in a room!";
     if (room.seats.indexOf(socket) !== 0)
       return "You have to be the first player to start the game.";
+
+    const minPlayers = gameDefinition.meta.players[0];
+    if (room.seats.length < minPlayers) {
+      return `Not enough players. (Need at least ${minPlayers}.)`;
+    }
 
     const machine = createMachine(gameDefinition, {
       ctx: {

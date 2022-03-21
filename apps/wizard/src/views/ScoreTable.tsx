@@ -1,7 +1,8 @@
 import { GameProps } from "./types";
-import { ComponentChildren } from "preact";
+import { ComponentChildren, FunctionComponent } from "preact";
 import { rotateArray } from "@lib/array";
 import { getScore } from "../game/logic";
+import { Twemoji } from "@lib/components/Twemoji";
 
 const convert = (scores: number[][]) => {
   let rows: number[][][] = [];
@@ -32,7 +33,7 @@ const convert = (scores: number[][]) => {
 };
 
 const PlayerHead = ({ children }: { children: ComponentChildren }) => (
-  <th scope={"col"} colSpan={3}>
+  <th class="p-1 align-middle" scope={"col"} colSpan={3}>
     {children}
   </th>
 );
@@ -59,21 +60,22 @@ export const ScoreTable = ({
   },
   room,
 }: GameProps) => {
-  if (scores.length === 0) return <div>No scores yet</div>; // this is because inital scores is [] rather than [[]]. fix in reducer.
+  if (scores.length === 0) return null;
 
-  let avatars = room.seats.map(({ avatar }) => avatar);
+  let modSeats = rotateArray(room.seats, -player);
 
-  avatars = rotateArray(avatars, -player);
   let table = convert(scores.map((row) => rotateArray(row, -player)));
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h2 style={{ marginBottom: "8px" }}>Scores</h2>
+    <div class="text-center">
+      <h2 class="mb-2">Scores</h2>
       {/** @ts-ignore  */}
-      <table border={"1"} style={{ backgroundColor: "#fff", color: "black" }}>
+      <table border={"1"} class="bg-white text-black rounded pb-0.5">
         <tr>
-          {avatars.map((icon) => (
-            <PlayerHead>{icon}</PlayerHead>
+          {modSeats.map(({ avatar }) => (
+            <PlayerHead>
+              <Twemoji char={avatar} size={24} />
+            </PlayerHead>
           ))}
         </tr>
         {table.map((columns) => (

@@ -1,15 +1,21 @@
 export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
 
 export type GameDefinition<S extends Spec> = {
-  name: string;
+  // metadaa
+  meta: {
+    name: string;
+    players: [number, number];
+  };
+  // "server side" stuff
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
   chart: Chart<S>;
-  actionStubs: ActionStubs<S["actions"]>;
   stripGame?: (patch: S["patches"], player: number) => S["patches"];
   stripAction?: (
     action: AuthenticatedAction<S>,
     player: number
   ) => AuthenticatedAction<S> | null;
+  // "client side" stuff
+  actionStubs: ActionStubs<S["actions"]>;
   botFn?: BotFn<S>;
 };
 

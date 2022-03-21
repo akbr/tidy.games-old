@@ -1,7 +1,6 @@
 import { ComponentChildren } from "preact";
 import { Twemoji } from "./Twemoji";
 import { Tooltip } from "./Tooltip";
-import { Fade } from "@lib/components/Fade";
 
 type BadgeProps = {
   avatar: string;
@@ -26,7 +25,12 @@ export const Badge = ({
   say,
 }: BadgeProps) => {
   return (
-    <div class="relative inline-flex flex-col items-center">
+    <div
+      class="relative inline-flex flex-col items-center"
+      style={{
+        filter: "drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.3))",
+      }}
+    >
       {say && <Tooltip dir={say.dir}>{say.content}</Tooltip>}
       {tl && (
         <div

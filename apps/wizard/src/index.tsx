@@ -12,10 +12,17 @@ const client = init(
 
 function dev() {
   window.location.hash = "";
+  /**
+   * 
   const { controls } = client;
   controls.server.join({ id: "TEST" });
   controls.server.addBot(null);
+  controls.server.addBot(null);
+  controls.server.addBot(null);
+  controls.server.addBot(null);
+  controls.server.addBot(null);
   controls.server.start(null);
+   */
 }
 
 client.update();

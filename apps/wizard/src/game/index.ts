@@ -208,7 +208,10 @@ export const chart: Chart<WizardSpec> = {
 };
 
 export const wizardDefinition: GameDefinition<WizardSpec> = {
-  name: "Wizard",
+  meta: {
+    name: "Wizard",
+    players: [2, 6],
+  },
   setup: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
@@ -231,13 +234,13 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
         ]
       : patch;
   },
-  botFn: ({ state: [type, game], player, action }, { bid, select, play }) => {
+  botFn: ({ state: [type, game], player }, { bid, select, play }) => {
     if (player !== game.player) return;
-    if (type === "select") return select("h");
-    if (type === "bid") return bid(0);
+    if (type === "select") select("h");
+    if (type === "bid") bid(0);
     if (type === "play") {
       const [card] = getPlayableCards(game.hands[player], game.trick);
-      return play(card);
+      play(card);
     }
   },
 };

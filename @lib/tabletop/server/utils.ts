@@ -5,8 +5,15 @@ export const getRandomRoomID = (length = 4) =>
     ...Array.from({ length }).map(() => randomBetween(65, 90))
   );
 
-export function getSeatNumber(seats: any[], requestedSeat?: number) {
+export function getSeatNumber(
+  seats: any[],
+  players: [number, number],
+  requestedSeat?: number
+) {
   const numSeats = seats.length;
+  const numOccupied = seats.filter((x) => x).length;
+
+  if (numOccupied === players[1]) return "Room is full.";
 
   // If no seat requested, give first open seat.
   if (requestedSeat === undefined) {

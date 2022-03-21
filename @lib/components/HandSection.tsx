@@ -42,7 +42,7 @@ export const HandSection: FunctionComponent<{
 
   return (
     <RunDOMEffect fn={applyHandStyles} props={{ justDealt }} waitFor={waitFor}>
-      <section id="hand" class="relative">
+      <section id="hand" class="relative cursor-pointer">
         {children}
       </section>
     </RunDOMEffect>

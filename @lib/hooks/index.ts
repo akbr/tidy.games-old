@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
 import { debounce } from "@lib/async";
 import { WaitFor, WaitRequest } from "@lib/state/meter";
 
-export function useRefreshOnResize(debounceMs = 300) {
+export function useRefreshOnResize(debounceMs = 150) {
   const [_, set] = useState(Symbol());
   useEffect(() => {
     const update = debounce(() => set(Symbol()), debounceMs, false);

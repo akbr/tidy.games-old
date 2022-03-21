@@ -6,7 +6,8 @@ export const splitCard = (cardId: string): [number, string] => {
   return [parseInt(split[0], 10), split[1]];
 };
 
-const shadow = { boxShadow: "0 4px 12px rgba(0,0,0,0.4)" };
+const shadow = { filter: "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.5))" };
+const shadow2 = { boxShadow: "0 4px 12px rgba(0,0,0,0.4)" };
 
 export const Card = memo(({ card }: { card: string }) => {
   const [value, suit] = splitCard(card);

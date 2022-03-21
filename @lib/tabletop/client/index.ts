@@ -29,6 +29,7 @@ export type Err = {
 
 export type TitleProps<S extends Spec> = {
   connected: boolean;
+  meta: GameDefinition<S>["meta"];
   err?: Err;
   controls: Controls<S>;
 };
@@ -69,6 +70,7 @@ export function createClient<S extends Spec>(
   def: GameDefinition<S>,
   history = false
 ) {
+  const { meta } = def;
   let connected = false;
   let step: Step<S> | null;
   let room: RoomData | null = null;
@@ -96,7 +98,7 @@ export function createClient<S extends Spec>(
 
   const sub = createSubscription<ViewProps<S>>([
     "title",
-    { connected, controls },
+    { connected, meta, controls },
   ]);
 
   function update() {
@@ -104,10 +106,13 @@ export function createClient<S extends Spec>(
     frame = meterStatus.state || null;
 
     const nextProps: ViewProps<S> = !room
-      ? ["title", { connected, controls, err }]
+      ? ["title", { connected, meta, controls, err }]
       : !frame
-      ? ["lobby", { connected, controls, err, room }]
-      : ["game", { connected, controls, err, room, frame, meter: meterStatus }];
+      ? ["lobby", { connected, meta, controls, err, room }]
+      : [
+          "game",
+          { connected, meta, controls, err, room, frame, meter: meterStatus },
+        ];
 
     nextProps && sub.push(nextProps);
   }
