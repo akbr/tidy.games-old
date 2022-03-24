@@ -55,7 +55,7 @@ export const Tooltip: FunctionComponent<{
 }> = ({ dir, children }) => {
   return (
     <div
-      class={`absolute bg-yellow-200 text-black p-1 rounded whitespace-nowrap ${tw(
+      class={`absolute bg-yellow-200 text-black p-1.5 rounded whitespace-nowrap ${tw(
         fadeIn
       )}`}
       style={positions[dir]}

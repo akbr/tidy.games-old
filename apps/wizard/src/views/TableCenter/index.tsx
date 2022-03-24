@@ -40,8 +40,11 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
 
     if (type === "bid" || type === "bidded") {
       return !isMyTurn ? (
-        <div class="animate-bounce">
-          <h3 class={`${tw(fadeIn)}`}>Waiting for bids...</h3>
+        <div class="animate-bounce text-center">
+          <h3 class={`${tw(fadeIn)}`}>
+            Waiting for
+            <br /> bids...
+          </h3>
         </div>
       ) : type !== "bidded" ? (
         <BidInput

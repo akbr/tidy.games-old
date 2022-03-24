@@ -1,13 +1,12 @@
 import { GameProps } from "../types";
-import { totalBids } from "../../game/logic";
+import { getTotalBids } from "../../game/logic";
 
 export function BidsEnd({ frame }: { frame: GameProps["frame"] }) {
   const {
     state: [, { bids, round }],
   } = frame;
 
-  const total = totalBids(bids);
-  const diff = round - total;
+  const diff = round - getTotalBids(bids);
 
   return (
     <h3>
@@ -15,7 +14,7 @@ export function BidsEnd({ frame }: { frame: GameProps["frame"] }) {
         ? `Underbid by ${diff}`
         : diff < 0
         ? `Overbid by ${diff}`
-        : "Even bids!"}
+        : "Even bids"}
     </h3>
   );
 }

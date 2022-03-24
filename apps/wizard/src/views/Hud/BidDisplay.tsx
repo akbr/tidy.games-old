@@ -1,5 +1,5 @@
 import { GameProps } from "../types";
-import { totalBids } from "../../game/logic";
+import { getTotalBids } from "../../game/logic";
 import { Twemoji } from "@lib/components/Twemoji";
 import { tw } from "twind";
 import { fadeIn } from "@shared/twindCss";
@@ -14,7 +14,7 @@ export const BidDisplay = ({
   const numBids = game.bids.filter((x) => x !== null).length;
   if (numBids === 0 && type !== "bid") return null;
 
-  const total = totalBids(game.bids);
+  const total = getTotalBids(game.bids);
   const diff = game.round - total;
   const sign = diff > 0 ? "-" : "+";
   const str = diff !== 0 ? `${sign + Math.abs(diff)}` : "=";

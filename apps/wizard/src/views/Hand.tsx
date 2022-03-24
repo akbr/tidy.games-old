@@ -56,7 +56,7 @@ export const HandCard = ({ card, play, err }: HandCardProps) => {
     if (err) {
       style(ref.current!, { x: 0, y: 0 });
     }
-  });
+  }, [err, playAttempt]);
 
   return (
     <div ref={ref} data-card={card} class="absolute">

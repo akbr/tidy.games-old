@@ -55,6 +55,12 @@ export const Lobby = <S extends Spec>({
             </div>
           </fieldset>
           {isAdmin ? (
+            <fieldset class="p-2">
+              <legend>Options:</legend>
+              <div class="flex justify-center">TK by user</div>
+            </fieldset>
+          ) : null}
+          {isAdmin ? (
             <>
               {
                 <button onClick={() => controls.server.addBot(null)}>

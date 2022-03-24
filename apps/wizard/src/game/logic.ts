@@ -1,4 +1,5 @@
-import { shuffle, deal, indexOfMax } from "@lib/array";
+import type { WizardSpec } from "./";
+import { shuffle, deal, indexOfMax, rotateIndex } from "@lib/array";
 import { createPRNG } from "@lib/random/prng";
 
 const SEPERATOR = "|";
@@ -101,5 +102,25 @@ export const getScore = (bid: number, actual: number) => {
 };
 
 const toNum = (n: number | null) => (n === null ? 0 : n);
-export const totalBids = (bids: (number | null)[]) =>
+export const getTotalBids = (bids: (number | null)[]) =>
   bids.reduce((a, b) => toNum(a) + toNum(b), 0) as number;
+
+export const isValidBid = (
+  bid: number,
+  { bids, round, dealer, player }: WizardSpec["game"],
+  { canadian }: WizardSpec["options"]
+) => {
+  if (bid < 0 || bid > round) {
+    return "Invalid bid amount.";
+  }
+
+  if (canadian) {
+    const isLastBidder = player === dealer;
+    if (!isLastBidder) return;
+
+    const remainingBids = getTotalBids(bids) - round;
+    if (bid === remainingBids) {
+      return "Bids cannot be even";
+    }
+  }
+};

@@ -86,7 +86,7 @@ export const createMethods = <S extends Spec>(
     });
   }
 
-  function startGame(socket: ServerSocket<S>, options: S["options"] = null) {
+  function startGame(socket: ServerSocket<S>, options?: S["options"]) {
     const room = getSocketRoom(socket);
 
     if (!room) return "You're not even in a room!";

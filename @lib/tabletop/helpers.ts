@@ -29,7 +29,7 @@ export const createActions = <A extends Actions>(
   const fns = {} as ConnectedActions<A>;
   for (let k in stubs) {
     const key = k as keyof ConnectedActions<A>;
-    fns[key] = (input) => submit({ type: key, data: input } as A);
+    fns[key] = (input: any) => submit({ type: key, data: input } as A);
   }
   return fns;
 };

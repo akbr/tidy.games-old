@@ -9,6 +9,7 @@ export type GameDefinition<S extends Spec> = {
   // "server side" stuff
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
   chart: Chart<S>;
+  getDefaultOptions: (numPlayers: number) => S["options"];
   stripGame?: (patch: S["patches"], player: number) => S["patches"];
   stripAction?: (
     action: AuthenticatedAction<S>,
@@ -55,7 +56,9 @@ export type ActionStubs<A extends Actions> = {
 };
 
 export type ConnectedActions<A extends Actions> = {
-  [X in A as X["type"]]: (input: X["data"]) => void;
+  [X in A as X["type"]]: undefined extends X["data"]
+    ? (input?: X["data"]) => void
+    : (input: X["data"]) => void;
 };
 
 export type Frame<S extends Spec> = {

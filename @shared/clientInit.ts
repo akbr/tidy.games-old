@@ -25,7 +25,7 @@ export function init<S extends Spec>(
 
   const debug = isDev;
   const history = clientProps.debug;
-  const client = createClient(server, def, history);
+  const client = createClient(server, def, debug);
   const View = createClientView({ ...clientProps, debug });
 
   client.subscribe((x) => render(h(View, { viewProps: x }, null), $el));

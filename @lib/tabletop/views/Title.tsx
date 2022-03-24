@@ -16,7 +16,7 @@ export const Title = <S extends Spec>({
       <div class="text-center m-6 font-bold text-[64px]">{meta.name}</div>
       {connected ? (
         <div class="flex flex-col items-center gap-4">
-          <button onClick={() => join({ id: "TEST" })} disabled={!connected}>
+          <button onClick={() => join()} disabled={!connected}>
             New Game
           </button>
           <h2> OR </h2>

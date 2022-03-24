@@ -11,7 +11,7 @@ export type ServerActions<S extends Spec> =
     }
   | { type: "leave" }
   | { type: "addBot" }
-  | { type: "start"; data: S["options"] };
+  | { type: "start"; data?: S["options"] };
 
 export type RoomData = {
   id: string;

@@ -10,6 +10,8 @@ import type {
 import { is } from "@lib/compare/is";
 import { lastOf } from "@lib/array";
 
+type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+
 export type Machine<S extends Spec> = {
   get: (player?: number) => Step<S>;
   submit: (action: S["actions"], player: number) => string | void;
@@ -21,7 +23,7 @@ export type Machine<S extends Spec> = {
 };
 
 export type MachineOptions<S extends Spec> = {
-  ctx: Ctx<S>;
+  ctx: Optional<Ctx<S>, "options">;
   initial?: S["gameStates"];
   actions?: AuthenticatedAction<S>[];
 };
@@ -131,11 +133,14 @@ export const createMachine = <S extends Spec>(
     chart,
     stripAction = (x) => x,
     stripGame = (x) => x,
+    getDefaultOptions,
   } = definition;
-  const iCtx = options.ctx || {};
+  const ctxOptions =
+    options.ctx.options || getDefaultOptions(options.ctx.numPlayers);
   const ctx = {
-    ...iCtx,
-    seed: iCtx.seed || String(Date.now()),
+    ...options.ctx,
+    seed: options.ctx.seed || String(Date.now()),
+    options: ctxOptions,
   };
 
   const initialState = options.initial || setup(ctx);
@@ -152,7 +157,7 @@ export const createMachine = <S extends Spec>(
   return {
     get: (player = -1) => {
       const { prev, patches, action } = step;
-      const isGod = player === -1 || iCtx.seed;
+      const isGod = player === -1 || ctx.seed;
       return {
         ...step,
         player,

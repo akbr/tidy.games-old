@@ -10,6 +10,7 @@ import { splitCard } from "@lib/components/cards";
 const revealEffect: DOMEffect<string> = ($card, suit) => {
   const { width, height } = getNearestDimensions($card.parentElement!);
   const $suit = $card.querySelector("#suit")!;
+  const isWild = ["w", "j"].includes(suit);
 
   return seq([
     () =>
@@ -27,7 +28,7 @@ const revealEffect: DOMEffect<string> = ($card, suit) => {
         { duration: 500, delay: 500 }
       ),
     () =>
-      suit !== "w"
+      !isWild
         ? style(
             $suit,
             { scale: 1.5, rotate: randomBetween(-24, 24) },
@@ -38,7 +39,7 @@ const revealEffect: DOMEffect<string> = ($card, suit) => {
           )
         : undefined,
     () =>
-      suit !== "w"
+      !isWild
         ? style(
             $suit,
             { scale: 1, rotate: 0 },

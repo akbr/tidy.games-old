@@ -20,12 +20,12 @@ export const applyHandStyles: DOMEffect<{
         zIndex,
         left: x,
         top: y + 150,
-        rotate: () => randomBetween(-20, 20),
+        rotate: randomBetween(-20, 20),
       });
       return style(
         $card,
         { zIndex, left: x, top: y, rotate: 0 },
-        { duration: () => randomBetween(300, 500) }
+        { duration: 400, delay: idx * 100 }
       );
     }
     style($card, { zIndex, left: x, top: y });

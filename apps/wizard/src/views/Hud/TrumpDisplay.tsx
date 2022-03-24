@@ -2,8 +2,22 @@ import { Twemoji } from "@lib/components/Twemoji";
 import { MiniCard } from "@lib/components/cards/MiniCard";
 import { splitCard } from "@lib/components/cards";
 import { GameProps } from "../types";
-import { tw } from "twind";
-import { fadeIn } from "@shared/twindCss";
+import { DOMEffect, RunDOMEffect } from "@lib/hooks";
+import { style } from "@lib/stylus";
+import { delay, seq } from "@lib/async";
+
+const delayedFade: DOMEffect<"in" | null> = ($el, prop) => {
+  if (prop !== "in") return;
+
+  style($el, { display: "none", opacity: 0 });
+  return seq([
+    () => delay(500),
+    () => {
+      style($el, { display: "" });
+      return style($el, { opacity: 1 }, { duration: 300 });
+    },
+  ]);
+};
 
 const TrumpCard = ({
   trumpCard,
@@ -40,15 +54,17 @@ export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
   const trumpKnown = trumpSuit !== "w";
 
   return shouldDisplay ? (
-    <div class={`${tw(fadeIn)}`}>
-      Trump:{" "}
-      <div class="inline align-middle">
-        {trumpKnown ? (
-          <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
-        ) : (
-          <Twemoji char="⌛" size={16} />
-        )}
+    <RunDOMEffect fn={delayedFade} props={type === "trumpReveal" ? "in" : null}>
+      <div>
+        Trump:{" "}
+        <div class="inline align-middle">
+          {trumpKnown ? (
+            <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
+          ) : (
+            <Twemoji char="⌛" size={16} />
+          )}
+        </div>
       </div>
-    </div>
+    </RunDOMEffect>
   ) : null;
 };

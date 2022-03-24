@@ -13,7 +13,7 @@ import {
   ServerActions,
 } from "../server";
 import { getFrames, createActions } from "../helpers";
-import { getHash, replaceHash, HashStatus } from "./hash";
+import { getHash, replaceHash } from "./hash";
 import { deep } from "@lib/compare/deep";
 
 export type Controls<S extends Spec> = {

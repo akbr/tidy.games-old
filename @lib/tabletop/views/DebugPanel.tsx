@@ -1,7 +1,4 @@
-import { FunctionComponent, h } from "preact";
-import { useRef, useState } from "preact/hooks";
-
-import { Spec, ConnectedActions } from "../types";
+import { Spec } from "../types";
 import { DebugProps } from "../client";
 
 import { JSONDiff } from "@lib/components/JsonDiff";
@@ -68,6 +65,66 @@ const Controls = ({ meter, controls }: DebugProps<any>) => {
   );
 };
 
+export const Nav = <S extends Spec>(props: DebugProps<S>) => {
+  return (
+    <section
+      id="debug-nav"
+      class="h-full overflow-hidden bg-gray-400 w-[175px] p-1 text-sm"
+    >
+      <div class="h-full overflow-hidden flex flex-col gap-1">
+        <Controls {...props} />
+        <div class="overflow-y-auto">
+          <ListView {...props} />
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export const FrameDisplay = <S extends Spec>(props: DebugProps<S>) => {
+  const { meter, frame } = props;
+  const { states, idx } = meter;
+  const state = meter.state;
+  if (!state) return null;
+
+  const curr = frame.state[1];
+  const prev = states[idx - 1] ? states[idx - 1].state[1] : {};
+
+  return (
+    <section
+      id="debug-json"
+      class="flex flex-col gap-4 bg-gray-200 w-[175px] p-2 text-xs overflow-hidden"
+    >
+      <div>
+        <div class="font-bold text-lg">Game</div>
+        <div class="font-bold">type: {frame.state[0]}</div>
+        <JSONDiff curr={curr} prev={prev} />
+      </div>
+      <div>
+        <div class="font-bold text-lg">Ctx</div>
+        <JSONDiff curr={frame.ctx} prev={frame.ctx} />
+      </div>
+      {frame.action && (
+        <div>
+          <div class="font-bold text-lg">Action</div>
+          <JSONDiff curr={frame.action} prev={{}} />
+        </div>
+      )}
+    </section>
+  );
+};
+
+export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
+  return (
+    <section id="debug" class="h-full flex font-mono text-black">
+      <Nav {...props} />
+      <FrameDisplay {...props} />
+    </section>
+  );
+};
+
+/**
+ * 
 const ActionEntry: FunctionComponent<{
   type: string;
   fn: Function;
@@ -89,7 +146,6 @@ const ActionEntry: FunctionComponent<{
     </div>
   );
 };
-
 const ActionPane = <S extends Spec>({
   numPlayers,
   actions,
@@ -126,50 +182,4 @@ const ActionPane = <S extends Spec>({
   );
 };
 
-export const Nav = <S extends Spec>(props: DebugProps<S>) => {
-  return (
-    <div class="h-full flex flex-col justify-between overflow-hidden">
-      <div class="h-full overflow-hidden flex flex-col gap-1">
-        <Controls {...props} />
-        <div class="overflow-y-auto">
-          <ListView {...props} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
-  const { meter, frame } = props;
-  const { states, idx, auto } = meter;
-  const state = meter.state;
-  if (!state) return null;
-
-  const curr = frame.state[1];
-  const prev = states[idx - 1] ? states[idx - 1].state[1] : curr;
-
-  return (
-    <section id="debug" class="h-full flex">
-      <section
-        id="debug-nav"
-        class="h-full bg-gray-400 w-[175px] p-1 font-mono text-sm  text-black"
-      >
-        <Nav {...props} />
-      </section>
-      <section
-        id="debug-json"
-        class="h-full bg-gray-200 w-[175px] p-2 text-xs overflow-hidden text-black"
-      >
-        <div class="font-mono font-bold text-lg">Game</div>
-        <JSONDiff curr={curr} prev={prev} />
-        {frame.action && (
-          <div>
-            <br />
-            <div class="font-mono font-bold text-lg">Action</div>
-            <JSONDiff curr={frame.action} prev={{}} />
-          </div>
-        )}
-      </section>
-    </section>
-  );
-};
+ */

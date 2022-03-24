@@ -18,11 +18,10 @@ export const useRefresh = () => {
   return () => set(Symbol());
 };
 
-export type DOMEffect<Props, El extends HTMLElement = HTMLElement> = (
-  $el: El,
-  curr: Props,
-  prev?: Props
-) => void | WaitRequest;
+export type DOMEffect<
+  Props = undefined,
+  El extends HTMLElement = HTMLElement
+> = ($el: El, curr: Props, prev?: Props) => void | WaitRequest;
 
 export function useDOMEffect<El extends HTMLElement, Props>(
   effectFn: DOMEffect<Props, El>,

@@ -63,7 +63,7 @@ export type WizardSpec = CreateSpec<{
     | { type: "select"; data: string }
     | { type: "bid"; data: number }
     | { type: "play"; data: string };
-  options: null;
+  options: { canadian: boolean };
 }>;
 
 type RoundStart = Extract<WizardSpec["gameStates"], { 0: "roundStart" }>;
@@ -139,8 +139,10 @@ export const chart: Chart<WizardSpec> = {
     if (!action) return null;
     if (action.type !== "play" || action.player !== player)
       return "Action mismatch.";
-    if (!hands[action.player].includes(action.data))
-      return "You don't have that card.";
+    const hand = hands[action.player];
+    if (!hand.includes(action.data)) return "You don't have that card.";
+    if (!getPlayableCards(hand, trick).includes(action.data))
+      return "Illegal play.";
 
     const nextHands = hands.map((hand, i) =>
       i === action.player! ? hand.filter((card) => card !== action.data) : hand
@@ -168,13 +170,12 @@ export const chart: Chart<WizardSpec> = {
             ),
           },
         ],
-  trickWon: (state, ctx) => {
-    const { hands, trickWinner, trickLeader, actuals } = state;
-
+  trickWon: ({ hands, trickWinner, actuals }) => {
     const roundContinues = hands[0].length > 0;
     const nextActuals = actuals.map((n, idx) =>
       idx === trickWinner ? n + 1 : n
     );
+
     if (roundContinues) {
       return [
         "play",
@@ -212,6 +213,7 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
     name: "Wizard",
     players: [2, 6],
   },
+  getDefaultOptions: () => ({ canadian: false }),
   setup: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
