@@ -1,6 +1,7 @@
 import { Badge } from "@lib/components/Badge";
 import { Spec } from "@lib/tabletop/types";
 import { LobbyProps } from "../client";
+import { OptionsView } from "./";
 import { Disconnected } from "./Disconnected";
 
 export const Lobby = <S extends Spec>({
@@ -8,13 +9,14 @@ export const Lobby = <S extends Spec>({
   room,
   controls,
   connected,
-}: LobbyProps<S>) => {
+  Options,
+}: LobbyProps<S> & { Options?: OptionsView<S> }) => {
   const url = window.location.host + "/#" + room.id;
   const isAdmin = room.player === 0;
 
   return (
-    <div class="flex flex-col items-center gap-4">
-      <div class="text-center mt-6 font-bold text-[64px]">{meta.name}</div>
+    <div class="flex flex-col h-full justify-center items-center gap-4">
+      <div class="text-center font-bold text-[64px]">{meta.name}</div>
       <h1>Lobby ({room.id})</h1>
       {connected ? (
         <>
@@ -54,10 +56,10 @@ export const Lobby = <S extends Spec>({
               })}
             </div>
           </fieldset>
-          {isAdmin ? (
-            <fieldset class="p-2">
+          {Options ? (
+            <fieldset class="p-2 max-w-[300px]">
               <legend>Options:</legend>
-              <div class="flex justify-center">TK by user</div>
+              <Options />
             </fieldset>
           ) : null}
           {isAdmin ? (

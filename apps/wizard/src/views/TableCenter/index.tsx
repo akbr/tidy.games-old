@@ -29,7 +29,9 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
 
     if (type === "select") {
       return !isMyTurn ? (
-        <h3 class={`${tw(fadeIn)}`}>Waiting for dealer to select trump...</h3>
+        <h3 class={`animate-bounce text-center max-w-[150px]`}>
+          Waiting for dealer to select trump...
+        </h3>
       ) : (
         <SelectInput
           select={controls.game.select}

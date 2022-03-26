@@ -1,7 +1,7 @@
 import { FunctionalComponent, h } from "preact";
 import { memo } from "preact/compat";
 import { ErrorReciever } from "@lib/components/ErrorReceiver";
-import { Spec } from "../types";
+import { Ctx, Spec } from "../types";
 
 import { TitleProps, LobbyProps, GameProps, ViewProps } from "../client";
 
@@ -9,9 +9,14 @@ import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
 
+export type OptionsView<S extends Spec> = (props: {
+  set?: () => void;
+}) => JSX.Element;
+
 export type ClientViewProps<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
-  Lobby?: (props: LobbyProps<S>) => JSX.Element;
+  Lobby?: (props: LobbyProps<S> & { Options?: OptionsView<S> }) => JSX.Element;
+  Options?: OptionsView<S>;
   Game: (props: GameProps<S>) => JSX.Element;
   debug?: boolean;
 };
@@ -20,6 +25,7 @@ export const createClientView = <S extends Spec>({
   Title = DefaultTitle,
   Lobby = DefaultLobby,
   Game,
+  Options,
   debug = false,
 }: ClientViewProps<S>) => {
   const Interface: FunctionalComponent<{ props: ViewProps<S>[1] }> = ({
@@ -54,7 +60,7 @@ export const createClientView = <S extends Spec>({
     if (type === "lobby") {
       return (
         <Interface props={props}>
-          <Lobby {...props} />
+          <Lobby {...{ ...props, Options }} />
         </Interface>
       );
     }
