@@ -1,5 +1,3 @@
-export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
-
 export type GameDefinition<S extends Spec> = {
   // metadaa
   meta: {
@@ -88,6 +86,7 @@ type SpecOptions = {
   }>;
 };
 
+export type CreateSpec<Options extends SpecOptions> = _CreateSpec<Options>;
 type _CreateSpec<
   I extends SpecOptions,
   GameTypes = CreateGameTypes<
@@ -178,3 +177,15 @@ type CreateStateReturns<GameTypes extends Record<string, any>> = {
     ];
   }[keyof GameTypes];
 };
+
+export type Edgez = States | null | true;
+
+type WEdges = {
+  roundStart: null | "deal";
+  trumpReveal: "select" | "bid" | true;
+};
+
+type Actualize<E extends string> =   [B in E]: B
+
+type T = Actualize<"b" | "c">;
+

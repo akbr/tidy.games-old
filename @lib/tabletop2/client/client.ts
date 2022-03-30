@@ -1,20 +1,27 @@
-import { createSocketManager, Socket } from "@lib/socket";
+import type { Spec } from "../spec";
+import type { Cart, AuthenticatedAction, Ctx } from "../cart";
+import { Step } from "../machine";
+import { RoomData, ServerActions, ServerApi } from "../server";
+
+import { getHash, replaceHash } from "./hashUtils";
+
+import { createSocketManager } from "@lib/socket";
 import { createSubscription } from "@lib/state/subscription";
 import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
+import { createControls, getFrames, patch } from "./utils";
 
-import { GameDefinition, Frame, Spec, ConnectedActions } from "../types";
-import { Step } from "../machine";
-import {
-  actionStubs,
-  ServerApi,
-  ServerInputs,
-  ServerOutputs,
-  RoomData,
-  ServerActions,
-} from "../server";
-import { getFrames, createActions } from "../helpers";
-import { getHash, replaceHash } from "./hash";
-import { deep } from "@lib/compare/deep";
+export type Frame<S extends Spec> = {
+  state: S["gameStates"];
+  action: AuthenticatedAction<S> | null;
+  ctx: Ctx<S>;
+  player: number;
+};
+
+export type ConnectedActions<Actions extends Spec["actions"]> = {
+  [Action in Actions as Action["type"]]: undefined extends Action["data"]
+    ? (input?: Action["data"]) => void
+    : (input: Action["data"]) => void;
+};
 
 export type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;
@@ -29,7 +36,7 @@ export type Err = {
 
 export type TitleProps<S extends Spec> = {
   connected: boolean;
-  meta: GameDefinition<S>["meta"];
+  meta: Cart<S>["meta"];
   err?: Err;
   controls: Controls<S>;
 };
@@ -51,26 +58,11 @@ export type ViewProps<S extends Spec> =
   | ["lobby", LobbyProps<S>]
   | ["game", DebugProps<S>];
 
-export function createControls<S extends Spec>(
-  socket: Socket<ServerInputs<S>, ServerOutputs<S>>,
-  def: GameDefinition<S>
-) {
-  return {
-    game: createActions<S["actions"]>(def.actionStubs, (action) => {
-      socket.send(["machine", action]);
-    }),
-    server: createActions<ServerActions<S>>(actionStubs, (action) => {
-      socket.send(["server", action]);
-    }),
-  };
-}
-
-export function createClient<S extends Spec>(
+export default function createClient<S extends Spec>(
   server: ServerApi<S> | string,
-  def: GameDefinition<S>,
+  def: Cart<S>,
   history = false
 ) {
-  const { meta } = def;
   let connected = false;
   let step: Step<S> | null;
   let room: RoomData | null = null;
@@ -95,6 +87,8 @@ export function createClient<S extends Spec>(
     ...createControls(socket, def),
     meter,
   };
+
+  const { meta } = def;
 
   const sub = createSubscription<ViewProps<S>>([
     "title",
@@ -151,6 +145,8 @@ export function createClient<S extends Spec>(
 
   socket.open();
 
+  // Hash can eventually be moved out to plugin
+  // ------------------------------------------
   function reactToHash(hasRun = false) {
     let { id, player } = getHash();
     if (room && room.id === id && room.player === player) return;
@@ -164,21 +160,9 @@ export function createClient<S extends Spec>(
   }
   reactToHash();
   window.onhashchange = () => reactToHash(true);
+  // ------------------------------------------
 
   meter.subscribe(update);
 
-  return { meter, subscribe: sub.subscribe, controls, update };
-}
-
-function patch<T extends Object>(prev: Record<string, any>, next: T): T {
-  const merged = {} as T;
-  for (const k in prev) {
-    const key = k as keyof T;
-    if (deep(prev[k], next[key])) {
-      merged[key] = prev[k];
-    } else {
-      merged[key] = next[key];
-    }
-  }
-  return merged;
+  return { meter, subscribe: sub.subscribe, controls, update, reset };
 }
