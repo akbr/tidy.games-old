@@ -1,7 +1,7 @@
 import { Badge } from "@lib/components/Badge";
-import { Spec } from "../spec";
-import { LobbyProps } from "../client";
-import { OptionsView } from "./";
+import { Spec } from "../../spec";
+import { LobbyProps } from "..";
+import { OptionsView } from "./createClientView";
 import { Disconnected } from "./Disconnected";
 
 export const Lobby = <S extends Spec>({

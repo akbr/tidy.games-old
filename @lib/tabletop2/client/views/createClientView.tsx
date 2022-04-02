@@ -1,13 +1,13 @@
-import { FunctionalComponent, h } from "preact";
+import { ComponentChildren, FunctionalComponent, h } from "preact";
 import { memo } from "preact/compat";
 import { ErrorReciever } from "@lib/components/ErrorReceiver";
 
-import { TitleProps, LobbyProps, GameProps, ViewProps } from "../client";
+import { TitleProps, LobbyProps, GameProps, ViewProps } from "..";
 
 import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
-import { Spec } from "../spec";
+import { Spec } from "../../spec";
 
 export type OptionsView<S extends Spec> = (props: {
   set?: () => void;
@@ -21,6 +21,23 @@ export type ClientViewProps<S extends Spec> = {
   debug?: boolean;
 };
 
+function AppContainer<S extends Spec>({
+  props,
+  children,
+}: {
+  props: ViewProps<S>[1];
+  children: ComponentChildren;
+}) {
+  return (
+    <>
+      {children}
+      <div class="absolute bottom-1 left-1">
+        <ErrorReciever err={props.err || null} />
+      </div>
+    </>
+  );
+}
+
 export const createClientView = <S extends Spec>({
   Title = DefaultTitle,
   Lobby = DefaultLobby,
@@ -28,20 +45,6 @@ export const createClientView = <S extends Spec>({
   Options,
   debug = false,
 }: ClientViewProps<S>) => {
-  const Interface: FunctionalComponent<{ props: ViewProps<S>[1] }> = ({
-    children,
-    props,
-  }) => {
-    return (
-      <>
-        {children}
-        <div class="absolute bottom-1 left-1">
-          <ErrorReciever err={props.err || null} />
-        </div>
-      </>
-    );
-  };
-
   // Memoize so meter updates don't affect game itself
   const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);
 
@@ -51,26 +54,25 @@ export const createClientView = <S extends Spec>({
 
     if (type === "title") {
       return (
-        <Interface props={props}>
+        <AppContainer props={props}>
           <Title {...props} />
-        </Interface>
+        </AppContainer>
       );
     }
 
     if (type === "lobby") {
       return (
-        <Interface props={props}>
+        <AppContainer props={props}>
           <Lobby {...{ ...props, Options }} />
-        </Interface>
+        </AppContainer>
       );
     }
 
     if (type === "game") {
-      const { meter, ...gameProps } = props;
       const gameVnode = (
-        <Interface props={props}>
-          <GameMemo {...gameProps} />
-        </Interface>
+        <AppContainer props={props}>
+          <GameMemo {...props} />
+        </AppContainer>
       );
 
       if (debug) {

@@ -1,38 +1,31 @@
 import type { Spec } from "../spec";
-import type { Cart, AuthenticatedAction, Ctx } from "../cart";
-import { Step } from "../machine";
-import { RoomData, ServerActions, ServerApi } from "../server";
-
-import { getHash, replaceHash } from "./hashUtils";
+import type { ActionStubs, Cart } from "../cart";
+import { Segment, Frame, getFrames } from "../machine";
+import {
+  ServerApi,
+  RoomData,
+  ServerActions,
+  actionStubs as serverActionStubs,
+} from "../roomServer";
 
 import { createSocketManager } from "@lib/socket";
-import { createSubscription } from "@lib/state/subscription";
+import { createSubscription, Subscribe } from "@lib/state/subscription";
 import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
-import { createControls, getFrames, patch } from "./utils";
+import { shallowPatchWithDeep } from "@lib/compare/patch";
 
-export type Frame<S extends Spec> = {
-  state: S["gameStates"];
-  action: AuthenticatedAction<S> | null;
-  ctx: Ctx<S>;
-  player: number;
-};
-
-export type ConnectedActions<Actions extends Spec["actions"]> = {
-  [Action in Actions as Action["type"]]: undefined extends Action["data"]
-    ? (input?: Action["data"]) => void
-    : (input: Action["data"]) => void;
-};
-
-export type Controls<S extends Spec> = {
-  game: ConnectedActions<S["actions"]>;
-  server: ConnectedActions<ServerActions<S>>;
+export type Client<S extends Spec> = {
+  subscribe: Subscribe<ViewProps<S>>;
+  get: () => ViewProps<S>;
   meter: Meter<Frame<S>>;
+  controls: Controls<S>;
+  update: () => void;
+  reset: () => void;
 };
 
-export type Err = {
-  type: "serverErr" | "machineErr";
-  data: string;
-};
+export type ViewProps<S extends Spec> =
+  | ["title", TitleProps<S>]
+  | ["lobby", LobbyProps<S>]
+  | ["game", GameProps<S>];
 
 export type TitleProps<S extends Spec> = {
   connected: boolean;
@@ -47,24 +40,27 @@ export type LobbyProps<S extends Spec> = {
 
 export type GameProps<S extends Spec> = {
   frame: Frame<S>;
+  meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
-export type DebugProps<S extends Spec> = {
-  meter: MeterStatus<Frame<S>>;
-} & GameProps<S>;
+export type Controls<S extends Spec> = {
+  game: ConnectedActions<S["actions"]>;
+  server: ConnectedActions<ServerActions<S>>;
+  meter: Meter<Frame<S>>;
+};
 
-export type ViewProps<S extends Spec> =
-  | ["title", TitleProps<S>]
-  | ["lobby", LobbyProps<S>]
-  | ["game", DebugProps<S>];
+export type Err = {
+  type: "serverErr" | "machineErr";
+  data: string;
+};
 
 export default function createClient<S extends Spec>(
   server: ServerApi<S> | string,
-  def: Cart<S>,
+  cart: Cart<S>,
   history = false
-) {
+): Client<S> {
   let connected = false;
-  let step: Step<S> | null;
+  let segment: Segment<S> | null;
   let room: RoomData | null = null;
   let meterStatus: MeterStatus<Frame<S>>;
   let frame: Frame<S> | null;
@@ -84,11 +80,18 @@ export default function createClient<S extends Spec>(
   const meter = createMeter<Frame<S>>({ history });
 
   const controls = {
-    ...createControls(socket, def),
+    ...{
+      game: createActions<S["actions"]>(cart.actionStubs, (action) => {
+        socket.send(["machine", action]);
+      }),
+      server: createActions<ServerActions<S>>(serverActionStubs, (action) => {
+        socket.send(["server", action]);
+      }),
+    },
     meter,
   };
 
-  const { meta } = def;
+  const { meta } = cart;
 
   const sub = createSubscription<ViewProps<S>>([
     "title",
@@ -112,28 +115,27 @@ export default function createClient<S extends Spec>(
   }
 
   function reset() {
+    room = null;
     frame = null;
-    step = null;
+    segment = null;
     meter.reset();
-    controls.server.leave(null);
+    controls.server.leave();
   }
 
   socket.onmessage = ([type, payload]) => {
     if (type === "server") {
       room = payload;
-      if (room) {
-        replaceHash({ id: room.id, player: room.player });
-      } else {
-        replaceHash({});
-        reset();
-      }
+
       update();
     } else if (type === "machine") {
-      const nextStep = payload;
-      if (step) {
-        payload.prev[1] = patch(step.prev[1], nextStep.prev[1]);
+      const nextSegment = payload;
+      if (segment) {
+        payload.prev[1] = shallowPatchWithDeep(
+          segment.prev[1],
+          nextSegment.prev[1]
+        );
       }
-      step = nextStep;
+      segment = nextSegment;
       meter.push(...getFrames(payload));
     } else if (type === "serverErr" || type === "machineErr") {
       err = { type, data: payload };
@@ -144,25 +146,34 @@ export default function createClient<S extends Spec>(
   };
 
   socket.open();
-
-  // Hash can eventually be moved out to plugin
-  // ------------------------------------------
-  function reactToHash(hasRun = false) {
-    let { id, player } = getHash();
-    if (room && room.id === id && room.player === player) return;
-    if (id) {
-      controls.server.join({ id, seatIndex: player });
-    } else if (hasRun) {
-      room = null;
-      reset();
-      update();
-    }
-  }
-  reactToHash();
-  window.onhashchange = () => reactToHash(true);
-  // ------------------------------------------
-
   meter.subscribe(update);
 
-  return { meter, subscribe: sub.subscribe, controls, update, reset };
+  return {
+    meter,
+    subscribe: sub.subscribe,
+    get: sub.get,
+    controls,
+    update,
+    reset,
+  };
 }
+
+// ---
+
+export type ConnectedActions<Actions extends Spec["actions"]> = {
+  [Action in Actions as Action["type"]]: undefined extends Action["data"]
+    ? (input?: Action["data"]) => void
+    : (input: Action["data"]) => void;
+};
+
+export const createActions = <A extends Spec["actions"]>(
+  stubs: ActionStubs<A>,
+  submit: (action: A) => void
+) => {
+  const fns = {} as ConnectedActions<A>;
+  for (let k in stubs) {
+    const key = k as keyof ConnectedActions<A>;
+    fns[key] = (input: any) => submit({ type: key, data: input } as A);
+  }
+  return fns;
+};

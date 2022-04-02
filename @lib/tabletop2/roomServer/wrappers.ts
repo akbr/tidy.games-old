@@ -1,15 +1,18 @@
 import { Spec } from "../spec";
-import { Machine } from "../machine";
-import { ServerSocket } from "../server";
+import { BotFn } from "../cart";
+import { getFrames, Machine } from "../machine";
+import { ServerSocket } from ".";
+import { ServerApi } from "./roomServer";
+import { createLocalSocketPair } from "@lib/socket";
 
-export interface GameMaster<S extends Spec> {
+export interface MachineServer<S extends Spec> {
   submit: (player: number, action: S["actions"]) => string | void;
   setSocket: (player: number, socket: ServerSocket<S> | null) => string | void;
 }
 
-export const createGameMaster = <S extends Spec>(
+export const createMachineServer = <S extends Spec>(
   machine: Machine<S>
-): GameMaster<S> => {
+): MachineServer<S> => {
   const sockets: (ServerSocket<S> | undefined)[] = [];
   const actionQueue: [number, S["actions"]][] = [];
 
@@ -45,4 +48,23 @@ export const createGameMaster = <S extends Spec>(
       if (socket) socket.send(["machine", machine.get(player)]);
     },
   };
+};
+
+export const createBotSocket = <S extends Spec>(
+  botFn: BotFn<S>,
+  server: ServerApi<S>
+) => {
+  const [clientSocket, serverSocket] = createLocalSocketPair(server);
+
+  const botSend = (action: S["actions"]) =>
+    clientSocket.send(["machine", action]);
+  clientSocket.onmessage = ([type, payload]) => {
+    if (type !== "machine") return;
+    const frames = getFrames(payload);
+    frames.forEach((frame) => {
+      botFn(frame, botSend);
+    });
+  };
+
+  return serverSocket;
 };

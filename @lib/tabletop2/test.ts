@@ -2,35 +2,46 @@ import { CreateSpec } from "./spec";
 import { Cart } from "./cart";
 
 type SimpleSpec = CreateSpec<{
-  states: "start" | "end";
+  states: "start" | "playing" | "end";
   game: { count: number };
   actions: { type: "add"; data: number } | { type: "sub"; data: number };
   edges: {
+    start: "playing";
+    playing: null | "playing" | "end";
     end: true;
   };
   gameExtends: {
-    end: { count: -1 };
+    end: { count: 100 };
   };
 }>;
 
-const cart: Cart<SimpleSpec> = {
+type SimpleCart = Cart<SimpleSpec>;
+
+const cart: SimpleCart = {
   meta: {
     name: "Simple",
     players: [1, 1],
   },
   chart: {
-    start: ({ count }, { options, seed, numPlayers }, action) => {
-      return ["end", { count: -1 }];
+    start: () => ["playing", {}],
+    playing: ({ count }, { options, seed, numPlayers }, action) => {
+      if (!action) return null;
+
+      const { type, data: num } = action;
+      if (num < 0) return "Can't submit negative numbers.";
+
+      const nextCount = type === "add" ? count + num : count - num;
+
+      if (nextCount !== 100) return ["playing", { count: nextCount }];
+      return ["end", { count: nextCount }];
     },
-    end: ({ count }) => {
-      return true;
-    },
+    end: () => true,
   },
-  setup: () => ["start", { count: 0 }],
+  setup: () => ["playing", { count: 0 }],
   setOptions: () => null,
   actionStubs: {
     add: null,
     sub: null,
   },
-  botFn: ([state, game], player) => {},
+  botFn: ({ state, ctx, player }, send) => {},
 };

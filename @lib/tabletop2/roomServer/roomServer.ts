@@ -1,10 +1,24 @@
 import type { Socket, SocketServer } from "@lib/socket";
-
 import type { Spec } from "../spec";
 import type { Cart } from "../cart";
-import type { Step } from "../machine";
+import type { Segment } from "../machine";
 
 import { createMethods } from "./methods";
+
+export type ServerApi<S extends Spec> = SocketServer<
+  ServerOutputs<S>,
+  ServerInputs<S>
+>;
+
+export type ServerInputs<S extends Spec> =
+  | ["machine", S["actions"]]
+  | ["server", ServerActions<S>];
+
+export type ServerOutputs<S extends Spec> =
+  | ["machine", Segment<S>]
+  | ["machineErr", string]
+  | ["server", RoomData | null]
+  | ["serverErr", string];
 
 export type ServerActions<S extends Spec> =
   | {
@@ -26,16 +40,6 @@ export type RoomData = {
   started: boolean;
 };
 
-export type ServerInputs<S extends Spec> =
-  | ["machine", S["actions"]]
-  | ["server", ServerActions<S>];
-
-export type ServerOutputs<S extends Spec> =
-  | ["machine", Step<S>]
-  | ["machineErr", string]
-  | ["server", RoomData | null]
-  | ["serverErr", string];
-
 export type ServerSocket<S extends Spec> = Socket<
   ServerOutputs<S>,
   ServerInputs<S>
@@ -46,19 +50,14 @@ export type ClientSocket<S extends Spec> = Socket<
   ServerOutputs<S>
 >;
 
-export type ServerApi<S extends Spec> = SocketServer<
-  ServerOutputs<S>,
-  ServerInputs<S>
->;
-
-export type ServerOptions = { seed: string };
-
 export const actionStubs = {
   start: null,
   addBot: null,
   join: null,
   leave: null,
 };
+
+export type ServerOptions = { seed: string };
 
 export default function createServer<S extends Spec>(
   cart: Cart<S>,
@@ -68,28 +67,29 @@ export default function createServer<S extends Spec>(
     createMethods(cart, serverOptions);
 
   const server: ServerApi<S> = {
-    onopen: (socket) => {
-      // This broken initial hash connect
-      //socket.send(["server", null]);
-    },
+    onopen: () => {},
     onclose: (socket) => {
       leaveRoom(socket);
     },
-    onmessage: (socket, [msgType, msg]) => {
-      if (msgType === "server") {
-        if (msg.type === "join") {
+    onmessage: (socket, [type, payload]) => {
+      if (type === "server") {
+        if (payload.type === "join") {
           leaveRoom(socket);
-          const err = joinRoom(socket, msg.data?.id, msg.data?.seatIndex);
+          const err = joinRoom(
+            socket,
+            payload.data?.id,
+            payload.data?.seatIndex
+          );
           if (err) socket.send(["serverErr", err]);
           return;
         }
 
-        if (msg.type === "leave") {
+        if (payload.type === "leave") {
           leaveRoom(socket);
           return;
         }
 
-        if (msg.type === "addBot") {
+        if (payload.type === "addBot") {
           const res = addBot(socket, server);
           if (res) {
             return socket.send(["serverErr", res]);
@@ -97,8 +97,8 @@ export default function createServer<S extends Spec>(
           return;
         }
 
-        if (msg.type === "start") {
-          let err = startGame(socket, msg.data);
+        if (payload.type === "start") {
+          let err = startGame(socket, payload.data);
           if (err) socket.send(["serverErr", err]);
           return;
         }
@@ -106,8 +106,8 @@ export default function createServer<S extends Spec>(
         socket.send(["serverErr", "Invalid server action."]);
       }
 
-      if (msgType === "machine") {
-        const err = submitAction(socket, msg);
+      if (type === "machine") {
+        const err = submitAction(socket, payload);
         if (err) socket.send(["serverErr", err]);
       }
     },

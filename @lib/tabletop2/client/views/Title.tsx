@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
-import { Spec } from "../spec";
+import { Spec } from "../../spec";
 
-import { TitleProps } from "../client";
+import { TitleProps } from "..";
 import { Disconnected } from "./Disconnected";
 
 export const Title = <S extends Spec>({

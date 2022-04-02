@@ -1,9 +1,9 @@
-import { Spec } from "../spec";
-import { DebugProps } from "../client";
+import { Spec } from "../../spec";
+import { GameProps } from "..";
 
 import { JSONDiff } from "@lib/components/JsonDiff";
 
-const ListView = <S extends Spec>({ meter, controls }: DebugProps<S>) => {
+const ListView = <S extends Spec>({ meter, controls }: GameProps<S>) => {
   const { states, idx } = meter;
   const { setIdx } = controls.meter;
 
@@ -25,7 +25,7 @@ const ListView = <S extends Spec>({ meter, controls }: DebugProps<S>) => {
   );
 };
 
-const Controls = ({ meter, controls }: DebugProps<any>) => {
+const Controls = ({ meter, controls }: GameProps<any>) => {
   const { states, idx, auto } = meter;
   const { setIdx, play } = controls.meter;
 
@@ -65,7 +65,7 @@ const Controls = ({ meter, controls }: DebugProps<any>) => {
   );
 };
 
-export const Nav = <S extends Spec>(props: DebugProps<S>) => {
+export const Nav = <S extends Spec>(props: GameProps<S>) => {
   return (
     <section
       id="debug-nav"
@@ -81,7 +81,7 @@ export const Nav = <S extends Spec>(props: DebugProps<S>) => {
   );
 };
 
-export const FrameDisplay = <S extends Spec>(props: DebugProps<S>) => {
+export const FrameDisplay = <S extends Spec>(props: GameProps<S>) => {
   const { meter, frame } = props;
   const { states, idx } = meter;
   const state = meter.state;
@@ -114,7 +114,7 @@ export const FrameDisplay = <S extends Spec>(props: DebugProps<S>) => {
   );
 };
 
-export const DebugPanel = <S extends Spec>(props: DebugProps<S>) => {
+export const DebugPanel = <S extends Spec>(props: GameProps<S>) => {
   return (
     <section id="debug" class="h-full flex font-mono text-black">
       <Nav {...props} />

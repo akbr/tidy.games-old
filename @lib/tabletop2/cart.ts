@@ -19,7 +19,7 @@ export type Cart<S extends Spec> = {
     action: AuthenticatedAction<S>,
     player: number
   ) => AuthenticatedAction<S> | null;
-  botFn?: (state: S["gameStates"], player: number) => S["actions"] | void;
+  botFn?: BotFn<S>;
 };
 
 export type Ctx<S extends Spec> = {
@@ -28,12 +28,18 @@ export type Ctx<S extends Spec> = {
   seed?: string;
 };
 
+export type BotFn<S extends Spec> = (
+  frame: { state: S["gameStates"]; ctx: Ctx<S>; player: number },
+  send: (action: S["actions"]) => void
+) => void;
+
+export type GameStatePatch<S extends Spec> = [S["states"], Partial<S["game"]>];
 export type Chart<S extends Spec> = {
   [State in S["states"]]: (
     game: S["gameGlossary"][State],
     ctx: Ctx<S>,
     action: AuthenticatedAction<S> | null
-  ) => S["gameStateReturns"][State];
+  ) => S["gameStateReturns"][State] | string;
 };
 
 export type AuthenticatedAction<S extends Spec> = S["actions"] & {
