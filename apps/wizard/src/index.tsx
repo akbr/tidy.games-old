@@ -7,6 +7,12 @@ import { Options } from "./views/Options";
 const client = init(
   wizardDefinition,
   document.getElementById("app")!,
-  { Game, Options }
-  //{ seed: "test113" }
+  { Game, Options },
+  { seed: "test113" }
 );
+
+client.controls.server.join({ id: "test" });
+client.controls.server.addBot();
+client.controls.server.addBot();
+client.controls.server.addBot();
+client.controls.server.start();

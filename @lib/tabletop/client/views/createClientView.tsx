@@ -92,3 +92,4 @@ export const createClientView = <S extends Spec>({
     return null;
   };
 };
+export default createClientView;

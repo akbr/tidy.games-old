@@ -67,6 +67,10 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
     if (type === "roundEnd") {
     }
 
+    if (type === "end") {
+      return <div>Game over, man!</div>;
+    }
+
     return null;
   })();
 

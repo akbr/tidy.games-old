@@ -11,10 +11,10 @@ export type Cart<S extends Spec> = {
   setOptions: (numPlayers: number, options?: S["options"]) => S["options"];
   setup: (ctx: Ctx<S>) => S["gameStates"] | string;
   chart: Chart<S>;
-  stripGameState?: (
-    gameState: S["gameStates"],
+  stripGame?: <GS extends S["gameStates"]>(
+    gameState: [GS[0], Partial<GS[1]>],
     player: number
-  ) => S["gameStates"];
+  ) => Partial<GS[1]>;
   stripAction?: (
     action: AuthenticatedAction<S>,
     player: number

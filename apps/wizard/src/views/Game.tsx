@@ -9,7 +9,7 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 import { ScoreTable } from "./ScoreTable";
-import { Disconnected } from "@lib/tabletop/views/Disconnected";
+import { Disconnected } from "@lib/tabletop/client/views/Disconnected";
 
 export const GameView = (props: GameProps) => {
   const {

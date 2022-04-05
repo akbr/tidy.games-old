@@ -1,4 +1,5 @@
-import type { CreateSpec, Chart, GameDefinition } from "@lib/tabletop/types";
+import type { CreateSpec, Cart } from "@lib/tabletop";
+import type { Chart } from "@lib/tabletop/cart";
 
 import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex, getPlayableCards } from "./logic";
@@ -19,18 +20,18 @@ export type WizardSpec = CreateSpec<{
     | "roundEnd"
     | "end";
   edges: {
-    roundStart: [null, "deal"];
-    deal: ["trumpReveal"];
-    trumpReveal: ["select", "bid"];
-    select: [null, "selected"];
-    selected: ["bid"];
-    bid: [null, "bidded"];
-    bidded: ["bid", "bidsEnd"];
-    play: [null, "played"];
-    played: ["play", "trickWon"];
-    trickWon: ["play", "roundEnd"];
-    roundEnd: ["roundStart", "end"];
-    end: [true];
+    roundStart: null | "deal";
+    deal: "trumpReveal";
+    trumpReveal: "select" | "bid";
+    select: null | "selected";
+    selected: "bid";
+    bid: null | "bidded";
+    bidded: "bid" | "bidsEnd";
+    play: null | "played";
+    played: "play" | "trickWon";
+    trickWon: "play" | "roundEnd";
+    roundEnd: "roundStart" | "end";
+    end: true;
   };
   game: {
     round: number;
@@ -46,7 +47,7 @@ export type WizardSpec = CreateSpec<{
     trickWinner: number | null;
     scores: number[][];
   };
-  gameTypes: {
+  gameExtends: {
     roundStart: { player: null };
     deal: { player: null };
     select: { player: number };
@@ -63,7 +64,7 @@ export type WizardSpec = CreateSpec<{
     | { type: "select"; data: string }
     | { type: "bid"; data: number }
     | { type: "play"; data: string };
-  options: { canadian: boolean };
+  options: { canadian: boolean; numRounds: number };
 }>;
 
 type RoundStart = Extract<WizardSpec["gameStates"], { 0: "roundStart" }>;
@@ -193,7 +194,7 @@ export const chart: Chart<WizardSpec> = {
   },
   roundEnd: (game, ctx) => {
     const { round } = game;
-    const gameContinues = ctx.numPlayers * round !== 60;
+    const gameContinues = ctx.options.numRounds !== round;
     if (gameContinues) return getNextRound(ctx, game);
 
     const { scores, bids, actuals } = game;
@@ -208,12 +209,15 @@ export const chart: Chart<WizardSpec> = {
   end: () => true,
 };
 
-export const wizardDefinition: GameDefinition<WizardSpec> = {
+export const wizardDefinition: Cart<WizardSpec> = {
   meta: {
     name: "Wizard",
     players: [2, 6],
   },
-  getDefaultOptions: () => ({ canadian: false }),
+  setOptions: (
+    numPlayers,
+    options = { canadian: false, numRounds: 60 / numPlayers }
+  ) => ({ canadian: false, numRounds: 1 }),
   setup: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
@@ -224,25 +228,20 @@ export const wizardDefinition: GameDefinition<WizardSpec> = {
     play: null,
     select: null,
   },
-  stripGame: (patch, player) => {
-    const [state, game] = patch;
-    return game.hands
-      ? [
-          state,
-          {
-            ...game,
-            hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
-          },
-        ]
-      : patch;
+  stripGame: ([, game], player) => {
+    if (!game.hands) return game;
+    return {
+      ...game,
+      hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
+    };
   },
-  botFn: ({ state: [type, game], player }, { bid, select, play }) => {
+  botFn: ({ state: [type, game], player }, send) => {
     if (player !== game.player) return;
-    if (type === "select") select("h");
-    if (type === "bid") bid(0);
+    if (type === "select") send({ type: "select", data: "h" });
+    if (type === "bid") send({ type: "bid", data: 0 });
     if (type === "play") {
       const [card] = getPlayableCards(game.hands[player], game.trick);
-      play(card);
+      send({ type: "play", data: card });
     }
   },
 };

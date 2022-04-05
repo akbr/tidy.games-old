@@ -54,7 +54,8 @@ export type Err = {
   data: string;
 };
 
-export default function createClient<S extends Spec>(
+export default createClient;
+export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   cart: Cart<S>,
   history = false

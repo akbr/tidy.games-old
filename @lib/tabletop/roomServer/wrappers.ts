@@ -59,7 +59,11 @@ export const createBotSocket = <S extends Spec>(
   const botSend = (action: S["actions"]) =>
     clientSocket.send(["machine", action]);
   clientSocket.onmessage = ([type, payload]) => {
-    if (type !== "machine") return;
+    if (type !== "machine") {
+      if (type === "machineErr" || type === "serverErr")
+        console.warn("Bot err:", type, payload);
+      return;
+    }
     const frames = getFrames(payload);
     frames.forEach((frame) => {
       botFn(frame, botSend);

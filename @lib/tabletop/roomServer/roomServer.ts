@@ -59,7 +59,7 @@ export const actionStubs = {
 
 export type ServerOptions = { seed: string };
 
-export default function createServer<S extends Spec>(
+export function createServer<S extends Spec>(
   cart: Cart<S>,
   serverOptions?: ServerOptions
 ) {
@@ -115,3 +115,4 @@ export default function createServer<S extends Spec>(
 
   return server;
 }
+export default createServer;
