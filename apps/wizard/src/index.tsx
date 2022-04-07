@@ -1,14 +1,18 @@
-import { init } from "@shared/clientInit";
+import { initClient } from "@shared/initClient";
+import isDev from "@shared/isDev";
+import cart from "./game/cart";
+import views from "./views";
 
-import { wizardCart } from "./game";
-import { Game } from "./views/Game";
-import { Options } from "./views/Options";
+const serverOptions = { seed: "test113" };
 
-const client = init(
-  wizardCart,
-  document.getElementById("app")!,
-  { Game, Options },
-  { seed: "test113" }
-);
+const client = initClient({
+  cart,
+  views,
+  $el: document.getElementById("app")!,
+  serverOptions: isDev() ? serverOptions : undefined,
+});
 
-client.controls.server.join({ id: "test" });
+isDev() &&
+  (() => {
+    console.log("Hello from development");
+  })();

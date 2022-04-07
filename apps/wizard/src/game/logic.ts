@@ -1,5 +1,5 @@
-import type { WizardSpec } from "./";
-import { shuffle, deal, indexOfMax, rotateIndex } from "@lib/array";
+import type { WizardSpec } from "./spec";
+import { shuffle, deal, indexOfMax } from "@lib/array";
 import { createPRNG } from "@lib/random/prng";
 
 const SEPERATOR = "|";

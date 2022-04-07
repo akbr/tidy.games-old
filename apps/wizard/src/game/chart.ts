@@ -1,74 +1,11 @@
-import type { CreateSpec, Cart } from "@lib/tabletop";
 import type { Chart } from "@lib/tabletop/cart";
 
+import { WizardSpec } from "./spec";
 import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
 
-export type WizardSpec = CreateSpec<{
-  states:
-    | "roundStart"
-    | "deal"
-    | "trumpReveal"
-    | "select"
-    | "selected"
-    | "bid"
-    | "bidded"
-    | "bidsEnd"
-    | "play"
-    | "played"
-    | "trickWon"
-    | "roundEnd"
-    | "end";
-  edges: {
-    roundStart: null | "deal";
-    deal: "trumpReveal";
-    trumpReveal: "select" | "bid";
-    select: null | "selected";
-    selected: "bid";
-    bid: null | "bidded";
-    bidded: "bid" | "bidsEnd";
-    play: null | "played";
-    played: "play" | "trickWon";
-    trickWon: "play" | "roundEnd";
-    roundEnd: "roundStart" | "end";
-    end: true;
-  };
-  game: {
-    round: number;
-    player: number | null;
-    dealer: number;
-    trumpCard: string | null;
-    trumpSuit: string | null;
-    bids: (number | null)[];
-    actuals: number[];
-    hands: string[][];
-    trick: string[];
-    trickLeader: number;
-    trickWinner: number | null;
-    scores: number[][];
-  };
-  gameExtends: {
-    roundStart: { player: null };
-    deal: { player: null };
-    select: { player: number };
-    selected: { player: number };
-    bid: { player: number };
-    bidded: { player: number };
-    play: { player: number };
-    played: { player: number };
-    trickWon: { player: null; trickWinner: number };
-    roundEnd: { player: null };
-    end: { player: null };
-  };
-  actions:
-    | { type: "select"; data: string }
-    | { type: "bid"; data: number }
-    | { type: "play"; data: string };
-  options: { canadian: boolean; numRounds: number };
-}>;
-
 type RoundStart = Extract<WizardSpec["gameStates"], { 0: "roundStart" }>;
-const getNextRound = (
+export const getNextRound = (
   { numPlayers }: { numPlayers: number },
   game = {} as WizardSpec["game"]
 ): RoundStart => {
@@ -97,7 +34,7 @@ const getNextRound = (
   ];
 };
 
-export const chart: Chart<WizardSpec> = {
+export const wizardChart: Chart<WizardSpec> = {
   roundStart: ({ round }, { numPlayers, seed }) =>
     seed ? ["deal", getDeal(numPlayers, round, seed + round)] : null,
   deal: () => ["trumpReveal", {}],
@@ -208,54 +145,4 @@ export const chart: Chart<WizardSpec> = {
     ];
   },
   end: () => true,
-};
-
-export const wizardCart: Cart<WizardSpec> = {
-  meta: {
-    name: "Wizard",
-    players: [2, 6],
-  },
-  setOptions: (
-    numPlayers,
-    options = { canadian: true, numRounds: 60 / numPlayers }
-  ) => {
-    const maxRounds = 60 / numPlayers;
-    const numRounds =
-      options.numRounds > maxRounds ? maxRounds : options.numRounds;
-
-    return {
-      ...options,
-      numRounds,
-    };
-  },
-  setup: (ctx) => {
-    const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
-    return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
-  },
-  chart,
-  actionStubs: {
-    bid: null,
-    play: null,
-    select: null,
-  },
-  stripGame: ([, game], player) => {
-    if (!game.hands) return game;
-    return {
-      ...game,
-      hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
-    };
-  },
-  botFn: ({ state: [type, game], player, ctx }, send) => {
-    if (player !== game.player) return;
-    if (type === "select") send({ type: "select", data: "h" });
-    if (type === "bid") {
-      return !!checkBid(0, game, ctx.options)
-        ? send({ type: "bid", data: 1 })
-        : send({ type: "bid", data: 0 });
-    }
-    if (type === "play") {
-      const [card] = getPlayableCards(game.hands[player], game.trick);
-      send({ type: "play", data: card });
-    }
-  },
 };

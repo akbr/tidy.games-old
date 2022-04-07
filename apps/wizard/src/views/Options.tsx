@@ -1,5 +1,5 @@
 import { OptionsView } from "@lib/tabletop/client/views/OptionsView";
-import { WizardSpec } from "../game";
+import { WizardSpec } from "../game/spec";
 
 export const Options: OptionsView<WizardSpec> = ({
   numPlayers,
