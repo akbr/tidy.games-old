@@ -21,8 +21,6 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
   const biddingActive =
     type === "bid" || type === "bidded" || type == "bidsEnd";
 
-  if (type === "bid") controls.meter.waitFor(1000);
-
   const seats = room.seats.map(({ avatar }, idx) => {
     const vIdx = rotateIndex(room.seats.length, idx, -player);
     return (

@@ -8,15 +8,16 @@ import { BidInput } from "./BidInput";
 import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
 
-export const TableCenter = ({ frame, controls }: GameProps) => {
+export const TableCenter = (props: GameProps) => {
+  const { frame, controls } = props;
   const {
     state: [type, game],
-    ctx,
   } = frame;
   const { waitFor } = controls.meter;
-  const isMyTurn = frame.player === game.player;
 
   const vnode = (() => {
+    const isMyTurn = frame.player === game.player;
+
     if (type === "roundStart") {
       return <RoundStart num={game.round} waitFor={waitFor} />;
     }
@@ -40,6 +41,10 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
       );
     }
 
+    if (type === "bid" && !isMyTurn) {
+      controls.meter.waitFor(1000);
+    }
+
     if (type === "bid" || type === "bidded") {
       return !isMyTurn ? (
         <div class="animate-bounce text-center">
@@ -49,18 +54,12 @@ export const TableCenter = ({ frame, controls }: GameProps) => {
           </h3>
         </div>
       ) : type !== "bidded" ? (
-        <BidInput
-          turn={game.round}
-          bids={game.bids}
-          submit={controls.game.bid}
-          numPlayers={ctx.numPlayers}
-          waitFor={controls.meter.waitFor}
-        />
+        <BidInput {...props} />
       ) : null;
     }
 
     if (type === "bidsEnd") {
-      waitFor(1500);
+      waitFor(2500);
       return <BidsEnd frame={frame} />;
     }
 

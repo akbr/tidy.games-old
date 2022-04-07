@@ -29,15 +29,17 @@ export const delay = (ms: number, fn = noop): Task => {
   };
 };
 
-export const all = (tasks: Task[]): Task<null> => {
+export const all = (tasks: (Task | undefined)[]): Task<null> => {
   const { promise, resolve } = getPromiseParts();
-  Promise.all(tasks.map((t) => t.finished)).then(() => {
+  const fTasks = tasks.filter((x) => x !== undefined) as Task[];
+
+  Promise.all(fTasks.map((t) => t.finished)).then(() => {
     resolve(null);
   });
   return {
     finished: promise as Promise<null>,
     skip: () => {
-      tasks.forEach((t) => t.skip());
+      fTasks.forEach((t) => t.skip());
       resolve(null);
     },
   };

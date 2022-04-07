@@ -1,8 +1,16 @@
 import { Badge } from "@lib/components/Badge";
 import { Spec } from "../../spec";
 import { LobbyProps } from "..";
-import { OptionsView } from "./createClientView";
+import { OptionsView, OptionsWrapper } from "./OptionsView";
 import { Disconnected } from "./Disconnected";
+import { Cart } from "@lib/tabletop/cart";
+import { useState } from "preact/hooks";
+
+export type LobbyViewProps<S extends Spec> = LobbyProps<S> & {
+  Options?: OptionsView<S>;
+} & {
+  setOptions: Cart<S>["setOptions"];
+};
 
 export const Lobby = <S extends Spec>({
   meta,
@@ -10,7 +18,16 @@ export const Lobby = <S extends Spec>({
   controls,
   connected,
   Options,
-}: LobbyProps<S> & { Options?: OptionsView<S> }) => {
+  setOptions,
+}: LobbyViewProps<S>) => {
+  const numPlayers = room.seats.length;
+
+  const [options, setOptionsState] = useState(
+    setOptions(numPlayers, undefined)
+  );
+  const set = (options: S["options"]) =>
+    setOptionsState(setOptions(numPlayers, options));
+
   const url = window.location.host + "/#" + room.id;
   const isAdmin = room.player === 0;
 
@@ -59,20 +76,25 @@ export const Lobby = <S extends Spec>({
           {Options ? (
             <fieldset class="p-2 max-w-[300px]">
               <legend>Options:</legend>
-              <Options />
+              <OptionsWrapper
+                OptionsView={Options}
+                numPlayers={room.seats.length}
+                setOptions={set}
+                options={options}
+              />
             </fieldset>
           ) : null}
           {isAdmin ? (
             <>
               {
-                <button onClick={() => controls.server.addBot(null)}>
+                <button onClick={() => controls.server.addBot()}>
                   Add bot
                 </button>
               }
 
               <button
                 disabled={room.seats.length < meta.players[0]}
-                onClick={() => controls.server.start(null)}
+                onClick={() => controls.server.start(options)}
               >
                 Start
               </button>
@@ -81,7 +103,7 @@ export const Lobby = <S extends Spec>({
             <div>The game creator will start the game. Hang tight!</div>
           )}
 
-          <button onClick={() => controls.server.leave(null)}>Leave</button>
+          <button onClick={() => controls.server.leave()}>Leave</button>
         </>
       ) : (
         <Disconnected />

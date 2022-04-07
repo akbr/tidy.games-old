@@ -24,9 +24,8 @@ export function init<S extends Spec>(
     : location.origin.replace(/^http/, "ws");
 
   const debug = isDev;
-  const history = clientProps.debug;
   const client = createClient(server, cart, debug);
-  const View = createClientView({ ...clientProps, debug });
+  const View = createClientView(cart, clientProps, debug);
 
   client.subscribe((x) => render(h(View, { viewProps: x }, null), $el));
   client.update();

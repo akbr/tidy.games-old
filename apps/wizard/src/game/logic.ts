@@ -105,22 +105,29 @@ const toNum = (n: number | null) => (n === null ? 0 : n);
 export const getTotalBids = (bids: (number | null)[]) =>
   bids.reduce((a, b) => toNum(a) + toNum(b), 0) as number;
 
-export const isValidBid = (
+export const _checkBid = (
   bid: number,
-  { bids, round, dealer, player }: WizardSpec["game"],
-  { canadian }: WizardSpec["options"]
+  round: number,
+  canadian: boolean,
+  bids: number,
+  isLastBidder: boolean
 ) => {
   if (bid < 0 || bid > round) {
     return "Invalid bid amount.";
   }
 
   if (canadian) {
-    const isLastBidder = player === dealer;
     if (!isLastBidder) return;
 
-    const remainingBids = getTotalBids(bids) - round;
-    if (bid === remainingBids) {
+    let remainingBids = bids - round;
+    if (remainingBids > 0) return;
+    if (bid === Math.abs(remainingBids)) {
       return "Bids cannot be even";
     }
   }
 };
+export const checkBid = (
+  bid: number,
+  { round, bids, player, dealer }: WizardSpec["game"],
+  { canadian }: WizardSpec["options"]
+) => _checkBid(bid, round, canadian, getTotalBids(bids), player === dealer);

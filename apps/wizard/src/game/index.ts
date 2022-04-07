@@ -2,7 +2,7 @@ import type { CreateSpec, Cart } from "@lib/tabletop";
 import type { Chart } from "@lib/tabletop/cart";
 
 import { rotateIndex } from "@lib/array";
-import { getDeal, getWinningIndex, getPlayableCards } from "./logic";
+import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
 
 export type WizardSpec = CreateSpec<{
   states:
@@ -116,11 +116,12 @@ export const chart: Chart<WizardSpec> = {
     ];
   },
   selected: () => ["bid", {}],
-  bid: (game, _, action) => {
+  bid: (game, { options }, action) => {
     if (!action) return null;
     if (action.type !== "bid" || action.player !== game.player)
       return "Action mismatch.";
-    if (action.data < 0 || action.data > game.round) return "Invalid bid.";
+    const bidErr = checkBid(action.data, game, options);
+    if (bidErr) return bidErr;
 
     const bids = game.bids.map((bid, i) =>
       i === action.player ? action.data : bid
@@ -209,15 +210,24 @@ export const chart: Chart<WizardSpec> = {
   end: () => true,
 };
 
-export const wizardDefinition: Cart<WizardSpec> = {
+export const wizardCart: Cart<WizardSpec> = {
   meta: {
     name: "Wizard",
     players: [2, 6],
   },
   setOptions: (
     numPlayers,
-    options = { canadian: false, numRounds: 60 / numPlayers }
-  ) => ({ canadian: false, numRounds: 1 }),
+    options = { canadian: true, numRounds: 60 / numPlayers }
+  ) => {
+    const maxRounds = 60 / numPlayers;
+    const numRounds =
+      options.numRounds > maxRounds ? maxRounds : options.numRounds;
+
+    return {
+      ...options,
+      numRounds,
+    };
+  },
   setup: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
@@ -235,10 +245,14 @@ export const wizardDefinition: Cart<WizardSpec> = {
       hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
     };
   },
-  botFn: ({ state: [type, game], player }, send) => {
+  botFn: ({ state: [type, game], player, ctx }, send) => {
     if (player !== game.player) return;
     if (type === "select") send({ type: "select", data: "h" });
-    if (type === "bid") send({ type: "bid", data: 0 });
+    if (type === "bid") {
+      return !!checkBid(0, game, ctx.options)
+        ? send({ type: "bid", data: 1 })
+        : send({ type: "bid", data: 0 });
+    }
     if (type === "play") {
       const [card] = getPlayableCards(game.hands[player], game.trick);
       send({ type: "play", data: card });

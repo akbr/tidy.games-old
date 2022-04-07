@@ -1,24 +1,21 @@
-import { ComponentChildren, FunctionalComponent, h } from "preact";
+import { ComponentChildren, h } from "preact";
 import { memo } from "preact/compat";
 import { ErrorReciever } from "@lib/components/ErrorReceiver";
 
-import { TitleProps, LobbyProps, GameProps, ViewProps } from "..";
+import { TitleProps, GameProps, ViewProps } from "..";
 
 import { Title as DefaultTitle } from "./Title";
-import { Lobby as DefaultLobby } from "./Lobby";
+import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
 import { Spec } from "../../spec";
-
-export type OptionsView<S extends Spec> = (props: {
-  set?: () => void;
-}) => JSX.Element;
+import { Cart } from "../../cart";
+import { OptionsView } from "./OptionsView";
 
 export type ClientViewProps<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
-  Lobby?: (props: LobbyProps<S> & { Options?: OptionsView<S> }) => JSX.Element;
+  Lobby?: (props: LobbyViewProps<S>) => JSX.Element;
   Options?: OptionsView<S>;
   Game: (props: GameProps<S>) => JSX.Element;
-  debug?: boolean;
 };
 
 function AppContainer<S extends Spec>({
@@ -31,20 +28,23 @@ function AppContainer<S extends Spec>({
   return (
     <>
       {children}
-      <div class="absolute bottom-1 left-1">
+      <div class=" bottom-1 left-1">
         <ErrorReciever err={props.err || null} />
       </div>
     </>
   );
 }
 
-export const createClientView = <S extends Spec>({
-  Title = DefaultTitle,
-  Lobby = DefaultLobby,
-  Game,
-  Options,
-  debug = false,
-}: ClientViewProps<S>) => {
+export const createClientView = <S extends Spec>(
+  cart: Cart<S>,
+  {
+    Title = DefaultTitle,
+    Lobby = DefaultLobby,
+    Game,
+    Options,
+  }: ClientViewProps<S>,
+  debug?: boolean
+) => {
   // Memoize so meter updates don't affect game itself
   const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);
 
@@ -61,9 +61,10 @@ export const createClientView = <S extends Spec>({
     }
 
     if (type === "lobby") {
+      const { setOptions } = cart;
       return (
         <AppContainer props={props}>
-          <Lobby {...{ ...props, Options }} />
+          <Lobby {...{ ...props, Options, setOptions }} />
         </AppContainer>
       );
     }

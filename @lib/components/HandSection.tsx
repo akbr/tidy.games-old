@@ -4,13 +4,15 @@ import { useRefreshOnResize, RunDOMEffect, DOMEffect } from "@lib/hooks";
 import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
+import { all } from "@lib/async";
 
 export const applyHandStyles: DOMEffect<{
   justDealt: boolean;
 }> = ($handContainer: HTMLElement, { justDealt }) => {
   const { width } = $handContainer.getBoundingClientRect();
   const cardEls = Array.from($handContainer.children) as HTMLElement[];
-  cardEls.forEach(($card, idx) => {
+
+  const anims = cardEls.map(($card, idx) => {
     const { x, y, zIndex } = getIntraHandPosition(idx, cardEls.length, {
       width,
       height: window.innerHeight,
@@ -31,7 +33,7 @@ export const applyHandStyles: DOMEffect<{
     style($card, { zIndex, left: x, top: y });
   });
 
-  if (justDealt) return 400;
+  return all(anims);
 };
 
 export const HandSection: FunctionComponent<{

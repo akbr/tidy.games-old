@@ -22,13 +22,13 @@ function requireHeorkuHTTPS(req, res, next) {
   next();
 }
 
-export function startServer<S extends Spec>(
+export function createNodeServer<S extends Spec>(
   roomServer: ServerApi<S>,
   servePath = distPath
 ) {
   const expressServer = express()
     .use(express.static(servePath))
-    //.use(requireHeorkuHTTPS)
+    .use(requireHeorkuHTTPS)
     //@ts-ignore
     .get("/", function (_, res) {
       res.sendFile("index.html", { root: distPath });
@@ -39,3 +39,4 @@ export function startServer<S extends Spec>(
 
   mountWSServer(expressServer, roomServer);
 }
+export default createNodeServer;
