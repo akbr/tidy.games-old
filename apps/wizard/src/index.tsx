@@ -14,6 +14,6 @@ const client = initClient({
 
 isDev() &&
   (() => {
-    window.c = client.controls.server;
+    //window.c = client.controls.server;
     console.log("Hello from development");
   })();
