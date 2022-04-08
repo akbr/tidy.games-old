@@ -1,8 +1,9 @@
-import { useState } from "preact/hooks";
-import { Spec } from "../../spec";
+import type { Spec } from "../../spec";
 
+import { useState } from "preact/hooks";
 import { TitleProps } from "..";
 import { Disconnected } from "./Disconnected";
+import { Field } from "@lib/components/Field";
 
 export const Title = <S extends Spec>({
   controls,
@@ -17,12 +18,16 @@ export const Title = <S extends Spec>({
       <div class="text-center font-bold text-[64px]">{meta.name}</div>
       {connected ? (
         <div class="flex flex-col items-center gap-4">
-          <button onClick={() => join()} disabled={!connected}>
-            New Game
-          </button>
-          <h2> OR </h2>
-          <fieldset class="p-2">
-            <legend>✏️ Enter a code:</legend>
+          <Field legend="✨ New game">
+            <div class="text-center">
+              <button onClick={() => join()} disabled={!connected}>
+                Start
+              </button>
+            </div>
+          </Field>
+
+          <h3 class="font-italic font-light"> OR </h3>
+          <Field legend="✏️ Enter a code">
             <div class="flex gap-2">
               <input
                 onInput={
@@ -42,7 +47,7 @@ export const Title = <S extends Spec>({
                 Join Game
               </button>
             </div>
-          </fieldset>
+          </Field>
         </div>
       ) : (
         <Disconnected />

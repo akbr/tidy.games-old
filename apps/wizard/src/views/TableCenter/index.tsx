@@ -67,7 +67,11 @@ export const TableCenter = (props: GameProps) => {
     }
 
     if (type === "end") {
-      return <div>Game over, man!</div>;
+      return (
+        <>
+          <div>Game over, man!</div>
+        </>
+      );
     }
 
     return null;

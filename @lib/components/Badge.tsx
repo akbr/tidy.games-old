@@ -3,7 +3,7 @@ import { Twemoji } from "./Twemoji";
 import { Tooltip } from "./Tooltip";
 
 type BadgeProps = {
-  avatar: string;
+  avatar?: string;
   size?: number;
   name?: string;
   tr?: ComponentChildren;
@@ -16,7 +16,7 @@ type BadgeProps = {
 };
 
 export const Badge = ({
-  avatar,
+  avatar = "👤",
   size = 36,
   name,
   tr,

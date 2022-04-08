@@ -2,7 +2,7 @@ import type { Spec } from "../spec";
 import type { Cart } from "../cart";
 import { Machine, createMachine } from "../machine";
 
-import type { ServerSocket, ServerOptions, ServerApi } from "./";
+import type { ServerSocket, ServerOptions, SocketMeta, ServerApi } from "./";
 import {
   MachineServer,
   createMachineServer,
@@ -21,11 +21,20 @@ export const createMethods = <S extends Spec>(
   cart: Cart<S>,
   serverOptions?: ServerOptions
 ) => {
-  const rooms: Map<string, Room<S>> = new Map();
-  const sockets: Map<ServerSocket<S>, string> = new Map();
+  const rooms = new Map<string, Room<S>>();
+  const sockets = {
+    room: new Map<ServerSocket<S>, string>(),
+    meta: new Map<ServerSocket<S>, SocketMeta>(),
+    bot: new Set<ServerSocket<S>>(),
+  };
 
-  const avatars = ["🦊", "🐷", "🐔", "🐻", "🐭", "🦁"];
-  const botAvatar = "🤖";
+  function setMeta(
+    socket: ServerSocket<S>,
+    nextMeta: { name?: string; avatar?: string }
+  ) {
+    const meta = sockets.meta.get(socket) || ({} as SocketMeta);
+    sockets.meta.set(socket, { ...meta, ...nextMeta });
+  }
 
   function createRoom(requestId?: string) {
     const id = requestId ? requestId : getRandomRoomID();
@@ -40,7 +49,7 @@ export const createMethods = <S extends Spec>(
   }
 
   function getSocketRoom(socket: ServerSocket<S>) {
-    const id = sockets.get(socket);
+    const id = sockets.room.get(socket);
     return id ? rooms.get(id) : undefined;
   }
 
@@ -61,19 +70,19 @@ export const createMethods = <S extends Spec>(
     }
 
     room.seats[seatIndex] = socket;
-    sockets.set(socket, room.id);
+    sockets.room.set(socket, room.id);
 
-    broadcastRoomStatus(room);
+    broadcastRoomStatusFor(socket);
     room.machineServer?.setSocket(seatIndex, socket);
   }
 
-  function broadcastRoomStatus(room: Room<S>) {
-    const seats = room.seats.map((socket, idx) => ({
-      avatar:
-        socket && socket.meta && socket.meta.bot ? botAvatar : avatars[idx],
-      name: `P${idx + 1}`,
-      connected: socket ? true : false,
-    }));
+  function broadcastRoomStatusFor(socket: ServerSocket<S>) {
+    const room = getSocketRoom(socket);
+    if (!room) return;
+
+    const seats = room.seats.map((socket) =>
+      socket ? sockets.meta.get(socket) || ({} as SocketMeta) : null
+    );
 
     room.seats.forEach((socket, player) => {
       socket!.send([
@@ -107,7 +116,7 @@ export const createMethods = <S extends Spec>(
 
     room.machine = machine;
     room.machineServer = createMachineServer(machine);
-    broadcastRoomStatus(room);
+    broadcastRoomStatusFor(socket);
     room.seats.forEach((socket, idx) => {
       room.machineServer!.setSocket(idx, socket);
     });
@@ -118,7 +127,8 @@ export const createMethods = <S extends Spec>(
     const room = getSocketRoom(socket);
     if (!room) return "Socket not in a room";
     const botSocket = createBotSocket(cart.botFn, server);
-    botSocket.meta = { bot: true };
+    sockets.bot.add(botSocket);
+    sockets.meta.set(botSocket, { avatar: "🤖", name: "BOT" });
     const err = joinRoom(botSocket, room.id);
     if (err) return err;
   }
@@ -144,14 +154,25 @@ export const createMethods = <S extends Spec>(
       return "Socket is in a room but not in a seat. (Huh? This shouldn't happen.)";
     }
 
-    sockets.delete(socket);
-    socket.send(["server", null]);
+    clearSocket(socket);
 
     const noHumans =
-      room.seats.filter((s) => s && !(s.meta && s.meta.bot)).length === 0;
+      room.seats.filter((s) => {
+        if (!s) return false;
+        return !sockets.bot.has(s);
+      }).length === 0;
+
     if (noHumans) {
+      room.seats.forEach(clearSocket);
       rooms.delete(room.id);
     }
+  }
+
+  function clearSocket(s: ServerSocket<S> | null) {
+    if (!s) return;
+    sockets.room.delete(s);
+    sockets.bot.delete(s);
+    s.send(["server", null]);
   }
 
   return {
@@ -160,5 +181,7 @@ export const createMethods = <S extends Spec>(
     startGame,
     submitAction,
     leaveRoom,
+    setMeta,
+    broadcastRoomStatusFor,
   };
 };

@@ -16,10 +16,27 @@ const Options = (props: GameProps) => {
   );
 };
 
+const Analysis = ({ frame }: GameProps) => {
+  if (!frame.history) return <div>Error: No history data.</div>;
+  return (
+    <div class="text-sm font-mono">
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+      {JSON.stringify(frame.history)}
+    </div>
+  );
+};
+
 export const UiButtons = (props: GameProps) => {
   const {
     frame: {
       state: [, game],
+      history,
     },
   } = props;
 
@@ -28,7 +45,7 @@ export const UiButtons = (props: GameProps) => {
   );
 
   const { width } = document.body.getBoundingClientRect();
-
+  console.log(history);
   return (
     <>
       <div class="absolute top-0 left-0 m-1">
@@ -42,6 +59,14 @@ export const UiButtons = (props: GameProps) => {
               onClick={() => setDialog(() => ScoreTable)}
             >
               <Twemoji char={"🗒️"} size={36} />
+            </div>
+          )}
+          {history && (
+            <div
+              class="cursor-pointer"
+              onClick={() => setDialog(() => Analysis)}
+            >
+              <Twemoji char={"📊"} size={36} />
             </div>
           )}
         </div>

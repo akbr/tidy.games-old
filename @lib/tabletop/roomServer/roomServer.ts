@@ -22,6 +22,10 @@ export type ServerOutputs<S extends Spec> =
 
 export type ServerActions<S extends Spec> =
   | {
+      type: "setMeta";
+      data: SocketMeta;
+    }
+  | {
       type: "join";
       data?: { id: string; seatIndex?: number };
     }
@@ -29,13 +33,14 @@ export type ServerActions<S extends Spec> =
   | { type: "addBot" }
   | { type: "start"; data?: S["options"] };
 
+export type SocketMeta = {
+  avatar?: string;
+  name?: string;
+};
+
 export type RoomData = {
   id: string;
-  seats: {
-    name: string;
-    avatar: string;
-    connected: boolean;
-  }[];
+  seats: (SocketMeta | null)[];
   player: number;
   started: boolean;
 };
@@ -55,6 +60,7 @@ export const actionStubs = {
   addBot: null,
   join: null,
   leave: null,
+  setMeta: null,
 };
 
 export type ServerOptions = { seed: string };
@@ -63,8 +69,15 @@ export function createServer<S extends Spec>(
   cart: Cart<S>,
   serverOptions?: ServerOptions
 ) {
-  const { joinRoom, addBot, startGame, submitAction, leaveRoom } =
-    createMethods(cart, serverOptions);
+  const {
+    joinRoom,
+    addBot,
+    startGame,
+    submitAction,
+    leaveRoom,
+    setMeta,
+    broadcastRoomStatusFor,
+  } = createMethods(cart, serverOptions);
 
   const server: ServerApi<S> = {
     onopen: () => {},
@@ -73,6 +86,12 @@ export function createServer<S extends Spec>(
     },
     onmessage: (socket, [type, payload]) => {
       if (type === "server") {
+        if (payload.type === "setMeta") {
+          setMeta(socket, payload.data);
+          broadcastRoomStatusFor(socket);
+          return;
+        }
+
         if (payload.type === "join") {
           leaveRoom(socket);
           const err = joinRoom(

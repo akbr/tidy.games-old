@@ -43,6 +43,8 @@ export type GameProps<S extends Spec> = {
   meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
+export type FinalProps<S extends Spec> = {} & GameProps<S>;
+
 export type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;
   server: ConnectedActions<ServerActions<S>>;
@@ -126,7 +128,6 @@ export function createClient<S extends Spec>(
   socket.onmessage = ([type, payload]) => {
     if (type === "server") {
       room = payload;
-
       update();
     } else if (type === "machine") {
       const nextSegment = payload;

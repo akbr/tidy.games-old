@@ -1,10 +1,16 @@
-import { Badge } from "@lib/components/Badge";
-import { Spec } from "../../spec";
-import { LobbyProps } from "..";
+import type { Spec, Cart } from "../../";
+import type { SocketMeta } from "../../roomServer";
+import type { LobbyProps } from "../";
+
+import avatars from "../../roomServer/avatars";
+
+import { FunctionalComponent } from "preact";
+import { useState } from "preact/hooks";
 import { OptionsView, OptionsWrapper } from "./OptionsView";
 import { Disconnected } from "./Disconnected";
-import { Cart } from "@lib/tabletop/cart";
-import { useState } from "preact/hooks";
+import { Badge } from "@lib/components/Badge";
+import { DialogOf } from "@lib/components/DialogOf";
+import { Field } from "@lib/components/Field";
 
 export type LobbyViewProps<S extends Spec> = LobbyProps<S> & {
   Options?: OptionsView<S>;
@@ -12,15 +18,12 @@ export type LobbyViewProps<S extends Spec> = LobbyProps<S> & {
   setOptions: Cart<S>["setOptions"];
 };
 
-export const Lobby = <S extends Spec>({
-  meta,
-  room,
-  controls,
-  connected,
-  Options,
-  setOptions,
-}: LobbyViewProps<S>) => {
+export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
+  const { meta, room, controls, connected, Options, setOptions } = props;
   const numPlayers = room.seats.length;
+
+  const [Dialog, setDialog] =
+    useState<FunctionalComponent<MetaDialogProps> | null>(null);
 
   const [options, setOptionsState] = useState(
     setOptions(numPlayers, undefined)
@@ -28,34 +31,23 @@ export const Lobby = <S extends Spec>({
   const set = (options: S["options"]) =>
     setOptionsState(setOptions(numPlayers, options));
 
-  const url = window.location.host + "/#" + room.id;
   const isAdmin = room.player === 0;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px]">{meta.name}</div>
-      <h1>Lobby ({room.id})</h1>
+      <div class="text-center font-bold text-[64px] -mb-2">{meta.name}</div>
       {connected ? (
         <>
           <div class="animate-bounce">Waiting for players...</div>
-
-          <fieldset class="p-2">
-            <legend>⚡ Direct link:</legend>
-            <div class="text-center">
-              <input
-                class="cursor-pointer"
-                readonly
-                size={url.length - 2}
-                type={"text"}
-                value={url}
-                onClick={(e: any) => {
-                  navigator.clipboard.writeText(e.target.value);
-                }}
-              />
+          <Field legend="🖇️ Share link">
+            <div class="cursor-pointer">
+              {location.protocol + "//" + window.location.host + "/#"}
+              <span class="font-bold">{room.id}</span> 📋
             </div>
-          </fieldset>
-          <fieldset class="p-2">
-            <legend>Players in room (up to {meta.players[1]}):</legend>
+          </Field>
+          <Field
+            legend={`🪑 Players in room (${room.seats.length}/${meta.players[1]})`}
+          >
             <div class="flex justify-center">
               {room.seats.map((player, idx) => {
                 let isPlayer = idx === room.player;
@@ -63,47 +55,61 @@ export const Lobby = <S extends Spec>({
                   backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
                   padding: "8px",
                   borderRadius: "4px",
+                  cursor: isPlayer ? "pointer" : "",
                 };
                 return (
-                  <div style={style}>
+                  <div
+                    style={style}
+                    onClick={() => {
+                      if (!isPlayer) return;
+                      setDialog(() => SetMeta);
+                    }}
+                  >
                     <Badge {...player}></Badge>
                     {isPlayer && <div class="text-center text-base">YOU</div>}
                   </div>
                 );
               })}
             </div>
-          </fieldset>
-          {Options ? (
-            <fieldset class="p-2 max-w-[300px]">
-              <legend>Options:</legend>
-              <OptionsWrapper
-                OptionsView={Options}
-                numPlayers={room.seats.length}
-                setOptions={set}
-                options={options}
-              />
-            </fieldset>
+          </Field>
+
+          {Options && isAdmin ? (
+            <div class="max-w-[300px]">
+              <Field legend="⚙️ Options">
+                <OptionsWrapper
+                  OptionsView={Options}
+                  numPlayers={room.seats.length}
+                  setOptions={set}
+                  options={options}
+                />
+              </Field>
+            </div>
           ) : null}
           {isAdmin ? (
             <>
-              {
-                <button onClick={() => controls.server.addBot()}>
-                  Add bot
-                </button>
-              }
-
               <button
                 disabled={room.seats.length < meta.players[0]}
                 onClick={() => controls.server.start(options)}
               >
                 Start
               </button>
+              <button onClick={() => controls.server.addBot()}>Add bot</button>
             </>
           ) : (
             <div>The game creator will start the game. Hang tight!</div>
           )}
 
           <button onClick={() => controls.server.leave()}>Leave</button>
+
+          {Dialog && (
+            <DialogOf close={() => setDialog(null)}>
+              <Dialog
+                close={() => setDialog(null)}
+                meta={room.seats[room.player]!}
+                set={controls.server.setMeta}
+              />
+            </DialogOf>
+          )}
         </>
       ) : (
         <Disconnected />
@@ -111,3 +117,69 @@ export const Lobby = <S extends Spec>({
     </div>
   );
 };
+
+/**           
+ <input
+  class="cursor-pointer"
+  readonly
+  size={url.length - 2}
+  type={"text"}
+  value={url}
+  onClick={(e: any) => {
+    navigator.clipboard.writeText(e.target.value);
+  }}
+/>
+ */
+
+type MetaDialogProps = {
+  meta?: SocketMeta;
+  set: (meta: SocketMeta) => void;
+  close: () => void;
+};
+
+function SetMeta({ meta = {}, set, close }: MetaDialogProps) {
+  const [name, setName] = useState(meta.name);
+  const [avatar, setAvatar] = useState(meta.avatar || avatars[0]);
+
+  return (
+    <div>
+      <div>
+        <label for="name">Initials: </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          size={3}
+          onChange={(e: any) => {
+            let modName = e.target.value.substr(0, 3).toUpperCase();
+            setName(modName);
+            e.target.value = modName;
+          }}
+          value={name}
+        />
+      </div>
+      <div>
+        <label for="avatar">Avatar: </label>
+        <select
+          class="text-2xl"
+          value={avatar}
+          onChange={(e: any) => {
+            setAvatar(e.target.value);
+          }}
+        >
+          {avatars.map((a) => (
+            <option value={a}>{a}</option>
+          ))}
+        </select>
+      </div>
+      <button
+        onClick={() => {
+          set({ name, avatar });
+          close();
+        }}
+      >
+        Apply
+      </button>
+    </div>
+  );
+}

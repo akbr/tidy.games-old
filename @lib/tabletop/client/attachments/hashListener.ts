@@ -1,7 +1,7 @@
 import { Spec } from "../../spec";
-import { Client } from "../";
+import { Client } from "..";
 
-export function attachHashListener<S extends Spec>(client: Client<S>) {
+export default function attachHashListener<S extends Spec>(client: Client<S>) {
   const { get, controls, reset, update, subscribe } = client;
 
   function reactToHash(hasRun = false) {

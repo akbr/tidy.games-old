@@ -28,7 +28,7 @@ function AppContainer<S extends Spec>({
   return (
     <>
       {children}
-      <div class=" bottom-1 left-1">
+      <div class="absolute bottom-1 left-1">
         <ErrorReciever err={props.err || null} />
       </div>
     </>

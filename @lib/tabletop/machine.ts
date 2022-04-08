@@ -7,20 +7,23 @@ import { lastOf } from "@lib/array";
 export type Machine<S extends Spec> = {
   get: (player?: number) => Segment<S>;
   submit: (action: S["actions"], player: number) => string | void;
-  export: () => {
-    ctx: Ctx<S>;
-    initial: S["gameStates"];
-    actions: AuthenticatedAction<S>[];
-  };
+  getHistory: () => History<S>;
+};
+
+export type History<S extends Spec> = {
+  ctx: Ctx<S>;
+  initial: S["gameStates"];
+  actions: AuthenticatedAction<S>[];
 };
 
 export type Segment<S extends Spec> = {
   prev: S["gameStates"];
   action: AuthenticatedAction<S> | null;
   patches: GameStatePatch<S>[];
-  final: boolean;
   ctx: Ctx<S>;
   player: number;
+  final: boolean;
+  history?: History<S>;
 };
 
 export type Frame<S extends Spec> = {
@@ -28,6 +31,7 @@ export type Frame<S extends Spec> = {
   action: AuthenticatedAction<S> | null;
   ctx: Ctx<S>;
   player: number;
+  history?: History<S>;
 };
 
 export const createMachine = <S extends Spec>(
@@ -57,6 +61,14 @@ export const createMachine = <S extends Spec>(
   if (is.null(initialSegment)) return "Initial step returned null.";
   segment = initialSegment;
 
+  const getHistory = (): History<S> => {
+    return {
+      ctx,
+      initial: initialState,
+      actions,
+    };
+  };
+
   return {
     get: (player = -1) => {
       const { prev, patches, action } = segment;
@@ -78,6 +90,7 @@ export const createMachine = <S extends Spec>(
               cart.stripGame ? [patch[0], cart.stripGame(patch, player)] : patch
             ),
         action: action ? (isGod ? stripAction(action, player) : action) : null,
+        history: segment.final ? getHistory() : undefined,
       };
     },
     submit: (action, player) => {
@@ -99,27 +112,23 @@ export const createMachine = <S extends Spec>(
       actions.push(authedAction);
       segment = res;
     },
-    export: () => ({
-      ctx,
-      initial: initialState,
-      actions,
-    }),
+    getHistory,
   };
 };
 
 export const getNextSegment = <S extends Spec>(
   cart: Cart<S>,
-  initialState: S["gameStates"],
+  prevState: S["gameStates"],
   ctx: Ctx<S>,
   action: AuthenticatedAction<S> | null
 ): Segment<S> | null | string => {
-  const res = getNextStates(cart, initialState, ctx, action);
+  const res = getNextStates(cart, prevState, ctx, action);
 
   if (is.null(res)) return res;
   if (is.string(res)) return res;
 
   return {
-    prev: initialState,
+    prev: prevState,
     patches: res.patches,
     final: res.final,
     ctx,
@@ -196,11 +205,19 @@ export const getStates = <S extends Spec>({
 };
 
 export const getFrames = <S extends Spec>(segment: Segment<S>): Frame<S>[] => {
-  const { action, ctx, player } = segment;
-  return getStates(segment).map((state, idx) => ({
+  const { action, ctx, player, history } = segment;
+  const frames: Frame<S>[] = getStates(segment).map((state, idx) => ({
     state,
     action: idx === 0 ? action : null,
     ctx,
     player,
   }));
+
+  console.log(history);
+
+  if (history) {
+    frames[frames.length - 1].history = history;
+  }
+
+  return frames;
 };

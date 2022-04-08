@@ -21,13 +21,14 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
   const biddingActive =
     type === "bid" || type === "bidded" || type == "bidsEnd";
 
-  const seats = room.seats.map(({ avatar }, idx) => {
+  const seats = room.seats.map((info, idx) => {
+    const { name, avatar } = info || {};
     const vIdx = rotateIndex(room.seats.length, idx, -player);
     return (
       <div style={{ padding: "26px 16px 26px 16px" }}>
         <Badge
           avatar={avatar}
-          name={`PL${idx}`}
+          name={name}
           info={
             type === "roundEnd" ? (
               <ScorePop
