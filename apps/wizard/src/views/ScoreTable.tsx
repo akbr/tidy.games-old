@@ -72,11 +72,14 @@ export const ScoreTable = ({
       {/** @ts-ignore  */}
       <table border={"1"} class="bg-white text-black rounded pb-0.5">
         <tr>
-          {modSeats.map(({ avatar }) => (
-            <PlayerHead>
-              <Twemoji char={avatar} size={24} />
-            </PlayerHead>
-          ))}
+          {modSeats.map((player) => {
+            const avatar = player?.avatar || "👤";
+            return (
+              <PlayerHead>
+                <Twemoji char={avatar} size={24} />
+              </PlayerHead>
+            );
+          })}
         </tr>
         {table.map((columns) => (
           <PlayerRow columns={columns} />

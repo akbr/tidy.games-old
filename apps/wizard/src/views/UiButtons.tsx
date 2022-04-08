@@ -18,18 +18,7 @@ const Options = (props: GameProps) => {
 
 const Analysis = ({ frame }: GameProps) => {
   if (!frame.history) return <div>Error: No history data.</div>;
-  return (
-    <div class="text-sm font-mono">
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-      {JSON.stringify(frame.history)}
-    </div>
-  );
+  return <div class="text-sm font-mono">{JSON.stringify(frame.history)}</div>;
 };
 
 export const UiButtons = (props: GameProps) => {

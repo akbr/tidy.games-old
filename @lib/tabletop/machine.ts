@@ -213,8 +213,6 @@ export const getFrames = <S extends Spec>(segment: Segment<S>): Frame<S>[] => {
     player,
   }));
 
-  console.log(history);
-
   if (history) {
     frames[frames.length - 1].history = history;
   }
