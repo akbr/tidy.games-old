@@ -14,28 +14,28 @@ import { Field } from "@lib/components/Field";
 
 export type LobbyViewProps<S extends Spec> = LobbyProps<S> & {
   Options?: OptionsView<S>;
-} & {
-  setOptions: Cart<S>["setOptions"];
 };
 
 export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
-  const { meta, room, controls, connected, Options, setOptions } = props;
+  const { cart, room, controls, connected, Options } = props;
   const numPlayers = room.seats.length;
 
   const [Dialog, setDialog] =
     useState<FunctionalComponent<MetaDialogProps> | null>(null);
 
   const [options, setOptionsState] = useState(
-    setOptions(numPlayers, undefined)
+    cart.setOptions(numPlayers, undefined)
   );
   const set = (options: S["options"]) =>
-    setOptionsState(setOptions(numPlayers, options));
+    setOptionsState(cart.setOptions(numPlayers, options));
 
   const isAdmin = room.player === 0;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px] -mb-2">{meta.name}</div>
+      <div class="text-center font-bold text-[64px] -mb-2">
+        {cart.meta.name}
+      </div>
       {connected ? (
         <>
           <div class="animate-bounce">Waiting for players...</div>
@@ -46,7 +46,7 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
             </div>
           </Field>
           <Field
-            legend={`🪑 Players in room (${room.seats.length}/${meta.players[1]})`}
+            legend={`🪑 Players in room (${room.seats.length}/${cart.meta.players[1]})`}
           >
             <div class="flex justify-center">
               {room.seats.map((player, idx) => {
@@ -88,7 +88,7 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
           {isAdmin ? (
             <>
               <button
-                disabled={room.seats.length < meta.players[0]}
+                disabled={room.seats.length < cart.meta.players[0]}
                 onClick={() => controls.server.start(options)}
               >
                 Start

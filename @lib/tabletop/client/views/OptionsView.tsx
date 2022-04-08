@@ -1,6 +1,5 @@
-import { Cart } from "@lib/tabletop/cart";
-import { Spec } from "@lib/tabletop/spec";
-import { useEffect, useState } from "preact/hooks";
+import { Spec } from "../../";
+import { useEffect } from "preact/hooks";
 
 export type OptionsView<S extends Spec> = (props: {
   options: S["options"];

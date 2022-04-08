@@ -1,5 +1,5 @@
-import type { Spec } from "../spec";
-import type { ActionStubs, Cart } from "../cart";
+import type { Spec, Cart } from "../";
+import type { ActionStubs } from "../cart";
 import { Segment, Frame, getFrames } from "../machine";
 import {
   ServerApi,
@@ -28,10 +28,10 @@ export type ViewProps<S extends Spec> =
   | ["game", GameProps<S>];
 
 export type TitleProps<S extends Spec> = {
+  cart: Cart<S>;
   connected: boolean;
-  meta: Cart<S>["meta"];
-  err?: Err;
   controls: Controls<S>;
+  err?: Err;
 };
 
 export type LobbyProps<S extends Spec> = {
@@ -94,11 +94,9 @@ export function createClient<S extends Spec>(
     meter,
   };
 
-  const { meta } = cart;
-
   const sub = createSubscription<ViewProps<S>>([
     "title",
-    { connected, meta, controls },
+    { connected, cart, controls },
   ]);
 
   function update() {
@@ -106,12 +104,12 @@ export function createClient<S extends Spec>(
     frame = meterStatus.state || null;
 
     const nextProps: ViewProps<S> = !room
-      ? ["title", { connected, meta, controls, err }]
+      ? ["title", { connected, cart, controls, err }]
       : !frame
-      ? ["lobby", { connected, meta, controls, err, room }]
+      ? ["lobby", { connected, cart, controls, err, room }]
       : [
           "game",
-          { connected, meta, controls, err, room, frame, meter: meterStatus },
+          { connected, cart, controls, err, room, frame, meter: meterStatus },
         ];
 
     nextProps && sub.push(nextProps);

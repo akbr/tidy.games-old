@@ -6,13 +6,33 @@ import { DialogOf } from "@lib/components/DialogOf";
 
 import { GameProps } from "./types";
 import { ScoreTable } from "./ScoreTable";
+import { OptionsDisplay } from "./Options";
 
-const Options = (props: GameProps) => {
+const Options = ({ frame, cart, controls, room }: GameProps) => {
   return (
-    <div>
-      <div>Maybe more here?</div>
-      <button onClick={() => props.controls.server.leave(null)}>Exit</button>
-    </div>
+    <>
+      <div class="flex flex-col gap-2">
+        <h2>{cart.meta.name}</h2>
+        <div>
+          <span class="font-bold">Room:</span> {room.id}
+        </div>
+        <div>
+          <span class="font-bold">Player:</span> {room.player}
+        </div>
+        <div class="flex flex-col max-w-xs gap-0.5">
+          <div class="font-bold">Ruleset</div>
+          <div class="text-sm pl-2">
+            <OptionsDisplay options={frame.ctx.options} />
+          </div>
+        </div>
+      </div>
+      <br />
+      <div class="text-center">
+        <button onClick={() => controls.server.leave(null)}>
+          🛑 Leave game
+        </button>
+      </div>
+    </>
   );
 };
 
@@ -34,7 +54,7 @@ export const UiButtons = (props: GameProps) => {
   );
 
   const { width } = document.body.getBoundingClientRect();
-  console.log(history);
+
   return (
     <>
       <div class="absolute top-0 left-0 m-1">

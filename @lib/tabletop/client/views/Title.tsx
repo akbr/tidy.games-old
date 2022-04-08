@@ -8,14 +8,14 @@ import { Field } from "@lib/components/Field";
 export const Title = <S extends Spec>({
   controls,
   connected,
-  meta,
+  cart,
 }: TitleProps<S>) => {
   const [code, setCode] = useState("");
   const { join } = controls.server;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px]">{meta.name}</div>
+      <div class="text-center font-bold text-[64px]">{cart.meta.name}</div>
       {connected ? (
         <div class="flex flex-col items-center gap-4">
           <Field legend="✨ New game">
