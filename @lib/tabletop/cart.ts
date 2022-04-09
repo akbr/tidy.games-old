@@ -1,7 +1,7 @@
 import type { Spec } from "./spec";
 
 export type Cart<S extends Spec> = {
-  // metadaa
+  // metadata
   meta: {
     name: string;
     players: [number, number];
