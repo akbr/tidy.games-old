@@ -15,7 +15,8 @@ function requireHeorkuHTTPS(req, res, next) {
   if (
     !req.secure &&
     req.get("x-forwarded-proto") !== "https" &&
-    process.env.NODE_ENV !== "development"
+    process.env.NODE_ENV !== "development" &&
+    req.hostname !== "localhost"
   ) {
     return res.redirect("https://" + req.get("host") + req.url);
   }
@@ -27,8 +28,8 @@ export function createNodeServer<S extends Spec>(
   servePath = distPath
 ) {
   const expressServer = express()
-    .use(express.static(servePath))
     .use(requireHeorkuHTTPS)
+    .use(express.static(servePath))
     //@ts-ignore
     .get("/", function (_, res) {
       res.sendFile("index.html", { root: distPath });

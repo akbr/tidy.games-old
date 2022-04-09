@@ -85,15 +85,16 @@ export const createMethods = <S extends Spec>(
     );
 
     room.seats.forEach((socket, player) => {
-      socket!.send([
-        "server",
-        {
-          id: room.id,
-          player,
-          seats,
-          started: room.machineServer ? true : false,
-        },
-      ]);
+      socket &&
+        socket.send([
+          "server",
+          {
+            id: room.id,
+            player,
+            seats,
+            started: room.machineServer ? true : false,
+          },
+        ]);
     });
   }
 

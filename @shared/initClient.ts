@@ -29,7 +29,6 @@ export function initClient<S extends Spec>(props: InitClientProps<S>) {
     : location.origin.replace(/^http/, "ws");
 
   const client = createClient(serverOrURL, props.cart, isDev());
-  attachHashListener(client);
   attachLocalStorageMemory(client);
 
   const View = createClientView(props.cart, props.views, isDev());
@@ -38,6 +37,9 @@ export function initClient<S extends Spec>(props: InitClientProps<S>) {
     render(h(View, { viewProps }, null), props.$el)
   );
   client.update();
+
+  // This must come after initial forced upate (to allow for initial /#game access)
+  attachHashListener(client);
 
   return client;
 }
