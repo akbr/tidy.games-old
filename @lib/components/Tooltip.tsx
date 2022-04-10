@@ -3,7 +3,7 @@ import { FunctionComponent } from "preact";
 import { tw } from "twind";
 import { fadeIn } from "@shared/twindCss";
 
-const gap = 12;
+const gap = 10;
 const positions: Record<string, any> = {
   left: {
     bottom: "50%",

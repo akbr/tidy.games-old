@@ -1,10 +1,29 @@
 import { Twemoji } from "@lib/components/Twemoji";
-import { MiniCard } from "@lib/components/cards/MiniCard";
 import { splitCard } from "@lib/components/cards";
 import { GameProps } from "../types";
 import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async";
+
+import { suits, colors } from "@lib/components/cards/core";
+
+export const MiniCard = ({ glyphs }: { glyphs: string[] }) => {
+  return (
+    <div class="inline-block">
+      <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
+        {glyphs.map((g) => {
+          const Icon = suits[g];
+          if (!Icon) return null;
+          return (
+            <div class="w-4 h-4" style={{ fill: colors[g] }}>
+              <Icon />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const delayedFade: DOMEffect<"in" | null> = ($el, prop) => {
   if (prop !== "in") return;
@@ -33,16 +52,11 @@ const TrumpCard = ({
       </div>
     );
 
-  const [value, suit] = splitCard(trumpCard);
-  const isWild = suit === "w" || suit === "j";
+  const [, suit] = splitCard(trumpCard);
+  let glyphs = [trumpSuit];
+  if (suit === "w") glyphs.unshift("w");
 
-  return (
-    <MiniCard
-      suit={trumpSuit}
-      value={isWild ? null : value}
-      color={isWild ? "blue" : undefined}
-    />
-  );
+  return <MiniCard glyphs={glyphs} />;
 };
 
 export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {

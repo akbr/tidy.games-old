@@ -35,7 +35,7 @@ export const Badge = ({
       {tl && (
         <div
           class="absolute top-0 left-0"
-          style={{ transform: "translate(-4px, calc(-40%))" }}
+          style={{ transform: "translate(-4px, calc(-35%))" }}
         >
           {tl}
         </div>
@@ -43,7 +43,7 @@ export const Badge = ({
       {tr && (
         <div
           class="absolute top-0 right-0"
-          style={{ transform: "translate(4px, calc(-40%))" }}
+          style={{ transform: "translate(4px, calc(-35%))" }}
         >
           {tr}
         </div>
@@ -63,7 +63,7 @@ export const Badge = ({
       <Twemoji char={avatar} size={size} />
       {name && (
         <div
-          class="translate-y-[-2px] text-white bg-blue-600 text-sm"
+          class="translate-y-[-4px] text-white bg-blue-600 text-sm"
           style={{
             "clip-path":
               "polygon(100% 0, 90% 50%, 100% 100%, 0% 100%, 10% 50%, 0% 0%)",
