@@ -25,7 +25,7 @@ export const getPlayedPosition = (
   dimensions: Dimensions,
   childDimensions = CHILD_DIMENSIONS
 ) => {
-  const minYRatio = 0.33;
+  const minYRatio = 0.35;
   const seat = getSeatPosition(numPlayers, seatIndex, dimensions);
   const direction = getSeatDirectionVector(numPlayers, seatIndex);
 
@@ -38,6 +38,7 @@ export const getPlayedPosition = (
     childDimensions[1] / 2,
   ]);
   const cardCenter = Vec.mul(childDimensions, -0.5);
+  const positionVector = Vec.add(seat, playOffset, padding, cardCenter);
 
-  return toXY(Vec.add(seat, playOffset, padding, cardCenter));
+  return toXY(positionVector);
 };

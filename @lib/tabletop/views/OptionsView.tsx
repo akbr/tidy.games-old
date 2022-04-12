@@ -1,4 +1,4 @@
-import { Spec } from "../../";
+import { Spec } from "..";
 import { useEffect } from "preact/hooks";
 
 export type OptionsView<S extends Spec> = (props: {

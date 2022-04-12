@@ -3,7 +3,7 @@ import { RunDOMEffect, DOMEffect } from "@lib/hooks";
 import { WaitFor } from "@lib/state/meter";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
-import { seq } from "@lib/async";
+import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
 import { splitCard } from "@lib/components/cards";
 

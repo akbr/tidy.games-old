@@ -1,5 +1,5 @@
-import { Spec } from "../../spec";
-import { GameProps } from "..";
+import { Spec } from "../spec";
+import { GameProps } from "../client";
 
 import { JSONDiff } from "@lib/components/JsonDiff";
 

@@ -1,5 +1,4 @@
 import { FunctionalComponent, h } from "preact";
-import { useRef } from "preact/hooks";
 import { deep } from "@lib/compare/deep";
 
 import { useRefreshOnResize, RunDOMEffect } from "@lib/hooks";
@@ -11,7 +10,7 @@ import { getWaggle } from "@lib/layouts/anim";
 import { WaitFor } from "@lib/state/meter";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
-import { seq, delay } from "@lib/async";
+import { seq, delay } from "@lib/async/task";
 
 export type TrickProps = {
   numPlayers: number;

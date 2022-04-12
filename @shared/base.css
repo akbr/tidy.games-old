@@ -12,9 +12,9 @@
 
 html,
 body {
-  overflow: hidden;
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -26,4 +26,16 @@ button,
 textarea,
 select {
   font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+a:visited {
+  color: inherit;
+}
+
+a:hover {
+  color: inherit;
 }

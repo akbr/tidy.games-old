@@ -1,14 +1,14 @@
-import { ComponentChildren, h } from "preact";
+import { h } from "preact";
 import { memo } from "preact/compat";
-import { ErrorReciever } from "@lib/components/ErrorReceiver";
 
-import { TitleProps, GameProps, ViewProps } from "..";
+import { Spec } from "../spec";
+import { Cart } from "../cart";
+import { TitleProps, GameProps, ViewProps } from "../client";
 
+import { AppWrapper } from "./AppWrapper";
 import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
-import { Spec } from "../../spec";
-import { Cart } from "../../cart";
 import { OptionsView } from "./OptionsView";
 
 export type ClientViewProps<S extends Spec> = {
@@ -17,23 +17,6 @@ export type ClientViewProps<S extends Spec> = {
   Options?: OptionsView<S>;
   Game: (props: GameProps<S>) => JSX.Element;
 };
-
-function AppContainer<S extends Spec>({
-  props,
-  children,
-}: {
-  props: ViewProps<S>[1];
-  children: ComponentChildren;
-}) {
-  return (
-    <>
-      {children}
-      <div class="absolute bottom-1 left-1">
-        <ErrorReciever err={props.err || null} />
-      </div>
-    </>
-  );
-}
 
 export const createClientView = <S extends Spec>(
   cart: Cart<S>,
@@ -50,30 +33,29 @@ export const createClientView = <S extends Spec>(
 
   return ({ viewProps }: { viewProps: ViewProps<S> }) => {
     const [type, props] = viewProps;
-    const { err } = props;
 
     if (type === "title") {
       return (
-        <AppContainer props={props}>
+        <AppWrapper props={props}>
           <Title {...props} />
-        </AppContainer>
+        </AppWrapper>
       );
     }
 
     if (type === "lobby") {
       const { setOptions } = cart;
       return (
-        <AppContainer props={props}>
+        <AppWrapper props={props}>
           <Lobby {...{ ...props, Options, setOptions }} />
-        </AppContainer>
+        </AppWrapper>
       );
     }
 
     if (type === "game") {
       const gameVnode = (
-        <AppContainer props={props}>
+        <AppWrapper props={props}>
           <GameMemo {...props} />
-        </AppContainer>
+        </AppWrapper>
       );
 
       if (debug) {

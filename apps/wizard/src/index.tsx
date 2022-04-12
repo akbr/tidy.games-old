@@ -1,3 +1,5 @@
+import "@shared/base.css";
+
 import { initClient } from "@shared/initClient";
 import isDev from "@shared/isDev";
 import cart from "./game/cart";
@@ -10,6 +12,7 @@ const client = initClient({
   views,
   $el: document.getElementById("app")!,
   serverOptions: isDev() ? serverOptions : undefined,
+  debug: isDev(),
 });
 
 isDev() &&

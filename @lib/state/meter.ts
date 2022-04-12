@@ -1,5 +1,5 @@
-import type { Task } from "../async";
-import { delay, all } from "../async";
+import type { Task } from "../async/task";
+import { delay, all } from "../async/task";
 import { createSubscription, Listener } from "./subscription";
 
 export type WaitRequest = Task | number | null | undefined | void;
@@ -124,14 +124,12 @@ export const createMeter = <T>({ history = false }: MeterOptions): Meter<T> => {
     },
     setIdx: (input) => {
       if (!history) {
-        console.warn("meter.setIdx requires history");
         return;
       }
 
       const nextIdx =
         typeof input === "function" ? input(idx, states.length) : input;
       if (nextIdx > states.length - 1) return;
-
       auto = false;
       waiting && waiting.skip();
       waiting = null;
@@ -139,6 +137,7 @@ export const createMeter = <T>({ history = false }: MeterOptions): Meter<T> => {
       idx = nextIdx;
       state = states[nextIdx];
       update();
+      compileWaiting();
     },
     get: () => getStatus(),
   };

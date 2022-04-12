@@ -4,7 +4,7 @@ import { useRefreshOnResize, RunDOMEffect, DOMEffect } from "@lib/hooks";
 import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
-import { all } from "@lib/async";
+import { all } from "@lib/async/task";
 
 export const applyHandStyles: DOMEffect<{
   justDealt: boolean;

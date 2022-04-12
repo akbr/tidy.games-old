@@ -1,5 +1,5 @@
 import type { SingleFrame, MultiFrame, Options } from "./types";
-import { all, Task } from "../async";
+import { all, Task } from "../async/task";
 import { runElement } from "./runElement";
 
 export function style(

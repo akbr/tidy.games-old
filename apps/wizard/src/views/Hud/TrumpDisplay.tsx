@@ -1,11 +1,12 @@
+import type { GameProps } from "../types";
+
 import { Twemoji } from "@lib/components/Twemoji";
 import { splitCard } from "@lib/components/cards";
-import { GameProps } from "../types";
+import { suits, colors } from "@lib/components/cards/core";
+
 import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
-import { delay, seq } from "@lib/async";
-
-import { suits, colors } from "@lib/components/cards/core";
+import { delay, seq } from "@lib/async/task";
 
 export const MiniCard = ({ glyphs }: { glyphs: string[] }) => {
   return (

@@ -52,6 +52,7 @@ export function createAnimation(
   });
 
   anim.skip = () => {
+    if (done) return;
     setDone();
     anim.finish();
   };

@@ -7,7 +7,7 @@ import { PositionSeats } from "@lib/components/PositionSeats";
 import { Badge } from "@lib/components/Badge";
 import { Twemoji } from "@lib/components/Twemoji";
 
-import { ScorePop } from "./ScorePop";
+import { BidDisplay } from "./BidDisplay";
 
 export const Seats = ({ frame, room, controls }: GameProps) => {
   const {
@@ -24,20 +24,21 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
   const seats = room.seats.map((info, idx) => {
     const { name, avatar } = info || {};
     const vIdx = rotateIndex(room.seats.length, idx, -player);
+    const showBidDisplay = !biddingActive && bids[idx] !== null;
+
     return (
       <div style={{ padding: "26px 16px 26px 16px" }}>
         <Badge
           avatar={avatar}
           name={name}
           info={
-            type === "roundEnd" ? (
-              <ScorePop
+            showBidDisplay ? (
+              <BidDisplay
                 bid={bids[idx]!}
-                actual={actuals[idx]!}
+                actual={actuals[idx]}
                 waitFor={controls.meter.waitFor}
+                shouldPop={type === "roundEnd"}
               />
-            ) : !biddingActive && bids[idx] !== null ? (
-              <div class="text-white">{`${actuals[idx]}/${bids[idx]}`}</div>
             ) : null
           }
           say={
