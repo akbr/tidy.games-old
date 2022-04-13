@@ -1,10 +1,33 @@
-import { FunctionComponent, h } from "preact";
+import { ComponentChildren } from "preact";
+
 import { style } from "@lib/stylus";
 import { useRefreshOnResize, RunDOMEffect, DOMEffect } from "@lib/hooks";
-import { getIntraHandPosition } from "@lib/layouts/hand";
 import { randomBetween } from "@lib/random";
 import { WaitFor } from "@lib/state/meter";
 import { all } from "@lib/async/task";
+
+import { getIntraHandPosition } from "./handLayout";
+
+export const PositionHand = ({
+  justDealt,
+  waitFor,
+  children,
+}: {
+  justDealt: boolean;
+  waitFor?: WaitFor;
+  children: ComponentChildren;
+}) => {
+  useRefreshOnResize();
+
+  return (
+    <RunDOMEffect fn={applyHandStyles} props={{ justDealt }} waitFor={waitFor}>
+      <section id="hand" class="relative cursor-pointer">
+        {children}
+      </section>
+    </RunDOMEffect>
+  );
+};
+export default PositionHand;
 
 export const applyHandStyles: DOMEffect<{
   justDealt: boolean;
@@ -34,19 +57,4 @@ export const applyHandStyles: DOMEffect<{
   });
 
   return all(anims);
-};
-
-export const HandSection: FunctionComponent<{
-  justDealt: boolean;
-  waitFor?: WaitFor;
-}> = ({ justDealt, waitFor, children }) => {
-  useRefreshOnResize();
-
-  return (
-    <RunDOMEffect fn={applyHandStyles} props={{ justDealt }} waitFor={waitFor}>
-      <section id="hand" class="relative cursor-pointer">
-        {children}
-      </section>
-    </RunDOMEffect>
-  );
 };

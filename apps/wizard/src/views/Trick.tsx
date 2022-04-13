@@ -1,17 +1,17 @@
 import { GameProps } from "./types";
-import { TrickSection } from "@lib/components/TrickSection";
-import { Card } from "@lib/components/cards/";
+
+import { PositionTrick } from "@shared/components/PositionTrick";
+import { Card } from "@shared/components/Card";
 
 export const Trick = ({ frame, controls }: GameProps) => {
   const [phase, game] = frame.state;
+  const { trickLeader, trick } = game;
 
   const {
     action,
     ctx: { numPlayers },
     player,
   } = frame;
-
-  const { trickLeader, trick } = game;
 
   const effect = (() => {
     if (phase === "played") {
@@ -30,7 +30,7 @@ export const Trick = ({ frame, controls }: GameProps) => {
   })();
 
   return (
-    <TrickSection
+    <PositionTrick
       numPlayers={numPlayers}
       leadPlayer={trickLeader}
       perspective={player}
@@ -42,6 +42,6 @@ export const Trick = ({ frame, controls }: GameProps) => {
           <Card key={"trick-" + cardId} card={cardId} />
         </div>
       ))}
-    </TrickSection>
+    </PositionTrick>
   );
 };

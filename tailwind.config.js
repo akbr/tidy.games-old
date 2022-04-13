@@ -2,7 +2,6 @@ module.exports = {
   mode: "jit",
   content: [
     "./apps/**/*.{html,js,ts,jsx,tsx}",
-    "./@lib/**/*.{html,js,ts,jsx,tsx}",
     "./@shared/**/*.{html,js,ts,jsx,tsx}",
   ],
   theme: {

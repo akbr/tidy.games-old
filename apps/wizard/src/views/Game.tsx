@@ -1,5 +1,5 @@
 import type { GameProps } from "./types";
-import { getHandHeight } from "@lib/layouts/hand";
+import { getHandHeight } from "@shared/components/PositionHand/handLayout";
 import { useRefreshOnResize } from "@lib/hooks";
 
 import { UiButtons } from "./UiButtons";

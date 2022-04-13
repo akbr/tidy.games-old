@@ -1,4 +1,4 @@
-import { OptionsView } from "@lib/tabletop/views/OptionsView";
+import { OptionsView } from "@shared/components/Tabletop/OptionsView";
 import { WizardSpec } from "../game/spec";
 
 export const BidsDescript = () => (

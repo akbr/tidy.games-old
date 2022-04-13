@@ -1,5 +1,5 @@
-import { getSeatRatio } from "../layouts/seats";
-import { FunctionalComponent, toChildArray } from "preact";
+import { getSeatRatio } from "./seatsLayout";
+import { ComponentChildren, toChildArray } from "preact";
 
 const getTranslateAdjustment = (ratio: number) =>
   ratio === 0 ? 0 : ratio === 1 ? -100 : -50;
@@ -13,12 +13,17 @@ const getStyle = ([xRatio, yRatio]: number[]) => ({
   )`,
 });
 
-export const PositionSeats: FunctionalComponent = ({ children }) => {
-  const arrayChildren = toChildArray(children);
-  const numSeats = arrayChildren.length;
+export const PositionSeats = ({
+  children,
+}: {
+  children: ComponentChildren;
+}) => {
+  const childArray = toChildArray(children);
+  const numSeats = childArray.length;
+
   return (
     <>
-      {arrayChildren.map((child, index) => {
+      {childArray.map((child, index) => {
         const ratio = getSeatRatio(numSeats, index);
         return (
           <div class="absolute" style={getStyle(ratio)}>
@@ -29,3 +34,4 @@ export const PositionSeats: FunctionalComponent = ({ children }) => {
     </>
   );
 };
+export default PositionSeats;

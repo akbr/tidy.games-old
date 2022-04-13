@@ -1,11 +1,10 @@
-import { Card } from "@lib/components/cards";
+import { Card, splitCard } from "@shared/components/Card";
 import { RunDOMEffect, DOMEffect } from "@lib/hooks";
 import { WaitFor } from "@lib/state/meter";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
-import { splitCard } from "@lib/components/cards";
 
 const revealEffect: DOMEffect<string> = ($card, suit) => {
   const { width, height } = getNearestDimensions($card.parentElement!);

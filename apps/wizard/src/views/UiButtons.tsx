@@ -1,8 +1,8 @@
 import { FunctionalComponent } from "preact";
 import { useState } from "preact/hooks";
 
-import { Twemoji } from "@lib/components/Twemoji";
-import { DialogOf } from "@lib/components/DialogOf";
+import { Twemoji } from "@shared/components/Twemoji";
+import { DialogOf } from "@shared/components/DialogOf";
 
 import { GameProps } from "./types";
 import { ScoreTable } from "./ScoreTable";

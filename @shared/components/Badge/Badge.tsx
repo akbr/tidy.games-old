@@ -1,6 +1,6 @@
 import { ComponentChildren } from "preact";
-import { Twemoji } from "./Twemoji";
 import { Tooltip } from "./Tooltip";
+import { Twemoji } from "../Twemoji";
 
 type BadgeProps = {
   avatar?: string;
@@ -76,3 +76,4 @@ export const Badge = ({
     </div>
   );
 };
+export default Badge;

@@ -1,8 +1,11 @@
-import { FunctionalComponent } from "preact";
+import { ComponentChildren } from "preact";
 
-export const Field: FunctionalComponent<{ legend: string }> = ({
-  children,
+export const Field = ({
   legend,
+  children,
+}: {
+  legend: string;
+  children: ComponentChildren;
 }) => {
   return (
     <fieldset class="p-3 border-0 bg-black bg-opacity-40 rounded">
@@ -11,4 +14,5 @@ export const Field: FunctionalComponent<{ legend: string }> = ({
     </fieldset>
   );
 };
+
 export default Field;

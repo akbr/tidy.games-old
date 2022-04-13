@@ -2,7 +2,7 @@ import { GameProps } from "./types";
 import { ComponentChildren, FunctionComponent } from "preact";
 import { rotateArray } from "@lib/array";
 import { getScore } from "../game/logic";
-import { Twemoji } from "@lib/components/Twemoji";
+import { Twemoji } from "@shared/components/Twemoji";
 
 const convert = (scores: number[][]) => {
   let rows: number[][][] = [];

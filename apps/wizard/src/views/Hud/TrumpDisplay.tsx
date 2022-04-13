@@ -1,8 +1,8 @@
 import type { GameProps } from "../types";
 
-import { Twemoji } from "@lib/components/Twemoji";
-import { splitCard } from "@lib/components/cards";
-import { suits, colors } from "@lib/components/cards/core";
+import { Twemoji } from "@shared/components/Twemoji";
+import { splitCard } from "@shared/components/Card";
+import { suits, colors } from "@shared/components/Card/glyphs";
 
 import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
@@ -13,10 +13,13 @@ export const MiniCard = ({ glyphs }: { glyphs: string[] }) => {
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
         {glyphs.map((g) => {
-          const Icon = suits[g];
+          const Icon = suits[g as keyof typeof suits];
           if (!Icon) return null;
           return (
-            <div class="w-4 h-4" style={{ fill: colors[g] }}>
+            <div
+              class="w-4 h-4"
+              style={{ fill: colors[g as keyof typeof colors] }}
+            >
               <Icon />
             </div>
           );

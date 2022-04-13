@@ -1,15 +1,16 @@
 import { h } from "preact";
 import { memo } from "preact/compat";
 
-import { Spec } from "../spec";
-import { Cart } from "../cart";
-import { TitleProps, GameProps, ClientState } from "../client";
+import { Spec } from "@lib/tabletop/spec";
+import { Cart } from "@lib/tabletop/cart";
+import { TitleProps, GameProps, ClientState } from "@lib/tabletop/client";
 
 import { AppWrapper } from "./AppWrapper";
 import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
 import { OptionsView } from "./OptionsView";
+import isDev from "@shared/isDev";
 
 export type ClientViewProps<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
@@ -26,7 +27,7 @@ export const createClientView = <S extends Spec>(
     Game,
     Options,
   }: ClientViewProps<S>,
-  debug?: boolean
+  debug = isDev()
 ) => {
   // Memoize so meter updates don't affect game itself
   const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);

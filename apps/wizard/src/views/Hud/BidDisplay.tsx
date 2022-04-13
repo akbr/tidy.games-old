@@ -1,6 +1,6 @@
 import { GameProps } from "../types";
 import { getTotalBids } from "../../game/logic";
-import { Twemoji } from "@lib/components/Twemoji";
+import { Twemoji } from "@shared/components/Twemoji";
 
 export const BidDisplay = ({
   frame: {

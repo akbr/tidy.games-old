@@ -1,16 +1,33 @@
-import { FunctionalComponent, h } from "preact";
-import { deep } from "@lib/compare/deep";
+import { ComponentChildren } from "preact";
 
+import { deep } from "@lib/compare/deep";
 import { useRefreshOnResize, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
-import { getHeldPosition, getPlayedPosition } from "@lib/layouts/trick";
-import { getWaggle } from "@lib/layouts/anim";
 
 import { WaitFor } from "@lib/state/meter";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
 import { seq, delay } from "@lib/async/task";
+
+import { getHeldPosition, getPlayedPosition, getWaggle } from "./trickLayout";
+
+export const PositionTrick = ({
+  children,
+  waitFor,
+  ...props
+}: TrickProps & { children: ComponentChildren }) => {
+  useRefreshOnResize();
+
+  return (
+    <RunDOMEffect fn={applyTrickStyles} props={props} waitFor={waitFor}>
+      <section id="trick" class="absolute top-0 left-0">
+        {children}
+      </section>
+    </RunDOMEffect>
+  );
+};
+export default PositionTrick;
 
 export type TrickProps = {
   numPlayers: number;
@@ -129,20 +146,4 @@ export const applyTrickStyles = (
       ),
     () => delay(500),
   ]);
-};
-
-export const TrickSection: FunctionalComponent<TrickProps> = ({
-  children,
-  waitFor,
-  ...props
-}) => {
-  useRefreshOnResize();
-
-  return (
-    <RunDOMEffect fn={applyTrickStyles} props={props} waitFor={waitFor}>
-      <section id="trick" class="absolute top-0 left-0">
-        {children}
-      </section>
-    </RunDOMEffect>
-  );
 };

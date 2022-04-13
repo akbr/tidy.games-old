@@ -2,11 +2,11 @@ import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import { style } from "@lib/stylus";
 import { dragify } from "@lib/dom/dragify";
-import { Card } from "@lib/components/cards";
-import { getPlayedPosition } from "@lib/layouts/trick";
+import { Card } from "@shared/components/Card";
+import { getPlayedPosition } from "@shared/components/PositionTrick/trickLayout";
 import { getNearestDimensions } from "@lib/dom";
 
-import { HandSection } from "@lib/components/HandSection";
+import { PositionHand } from "@shared/components/PositionHand";
 import { GameProps } from "./types";
 
 const initCardEvents = (
@@ -72,7 +72,7 @@ export const Hand = ({ frame, controls, err }: GameProps) => {
   } = frame;
   const hand = game.hands[player];
   return (
-    <HandSection justDealt={type === "deal"} waitFor={controls.meter.waitFor}>
+    <PositionHand justDealt={type === "deal"} waitFor={controls.meter.waitFor}>
       {hand.map((id) => (
         <HandCard
           key={id}
@@ -81,6 +81,6 @@ export const Hand = ({ frame, controls, err }: GameProps) => {
           play={(s) => controls.game.play(s)}
         />
       ))}
-    </HandSection>
+    </PositionHand>
   );
 };

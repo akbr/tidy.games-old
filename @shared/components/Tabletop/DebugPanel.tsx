@@ -1,7 +1,7 @@
-import { Spec } from "../spec";
-import { GameProps } from "../client";
+import { Spec } from "@lib/tabletop/spec";
+import { GameProps } from "@lib/tabletop/client";
 
-import { JSONDiff } from "@lib/components/JsonDiff";
+import { JSONDiff } from "@shared/components/JsonDiff";
 
 const ListView = <S extends Spec>({ meter, controls }: GameProps<S>) => {
   const { states, idx } = meter;

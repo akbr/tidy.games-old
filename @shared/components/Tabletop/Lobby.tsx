@@ -1,15 +1,15 @@
-import type { Spec, Cart } from "..";
-import type { SocketMeta } from "../roomServer";
-import type { LobbyProps } from "../client";
+import type { Spec, Cart } from "@lib/tabletop";
+import type { SocketMeta } from "@lib/tabletop/roomServer";
+import type { LobbyProps } from "@lib/tabletop/client";
 
-import avatars from "../roomServer/avatars";
+import avatars from "@lib/tabletop/roomServer/avatars";
 
 import { FunctionalComponent } from "preact";
 import { useState } from "preact/hooks";
 import { OptionsView, OptionsWrapper } from "./OptionsView";
-import { Badge } from "@lib/components/Badge";
-import { DialogOf } from "@lib/components/DialogOf";
-import { Field } from "@lib/components/Field";
+import { Badge } from "@shared/components/Badge";
+import { DialogOf } from "@shared/components/DialogOf";
+import { Field } from "@shared/components/Field";
 
 export type LobbyViewProps<S extends Spec> = LobbyProps<S> & {
   Options?: OptionsView<S>;

@@ -2,10 +2,10 @@ import { GameProps } from "../types";
 
 import { rotateArray, rotateIndex } from "@lib/array";
 
-import { getSeatCSSDirection } from "@lib/layouts/seats";
-import { PositionSeats } from "@lib/components/PositionSeats";
-import { Badge } from "@lib/components/Badge";
-import { Twemoji } from "@lib/components/Twemoji";
+import { PositionSeats } from "@shared/components/PositionSeats";
+import { getSeatCSSDirection } from "@shared/components/PositionSeats/seatsLayout";
+import { Badge } from "@shared/components/Badge";
+import { Twemoji } from "@shared/components/Twemoji";
 
 import { BidDisplay } from "./BidDisplay";
 

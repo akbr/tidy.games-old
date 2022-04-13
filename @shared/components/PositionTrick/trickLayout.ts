@@ -1,5 +1,10 @@
 import { Vec, toXY } from "@lib/vector";
-import { getSeatPosition, getSeatDirectionVector } from "./seats";
+import { randomBetween } from "@lib/random";
+
+import {
+  getSeatPosition,
+  getSeatDirectionVector,
+} from "../PositionSeats/seatsLayout";
 
 type Dimensions = { width: number; height: number };
 const CHILD_DIMENSIONS = [80, 112];
@@ -41,4 +46,13 @@ export const getPlayedPosition = (
   const positionVector = Vec.add(seat, playOffset, padding, cardCenter);
 
   return toXY(positionVector);
+};
+
+export const getWaggle = (amt: number, amt2: number) => {
+  const getAmt = () => randomBetween(amt, amt2);
+  return [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4].map(
+    (rotate) => ({
+      rotate,
+    })
+  );
 };

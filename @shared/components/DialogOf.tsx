@@ -1,8 +1,11 @@
-import { FunctionalComponent } from "preact";
+import { ComponentChildren } from "preact";
 
-export const DialogOf: FunctionalComponent<{ close: () => void }> = ({
+export const DialogOf = ({
   close,
   children,
+}: {
+  close: () => void;
+  children: ComponentChildren;
 }) => {
   return (
     <div class="absolute top-0 w-full h-full flex items-center justify-center">

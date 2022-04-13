@@ -15,6 +15,25 @@ export type WizardSpec = CreateSpec<{
     | "trickWon"
     | "roundEnd"
     | "end";
+  game: {
+    round: number;
+    player: number | null;
+    dealer: number;
+    trumpCard: string | null;
+    trumpSuit: string | null;
+    bids: (number | null)[];
+    actuals: number[];
+    hands: string[][];
+    trick: string[];
+    trickLeader: number;
+    trickWinner: number | null;
+    scores: number[][];
+  };
+  actions:
+    | { type: "select"; data: string }
+    | { type: "bid"; data: number }
+    | { type: "play"; data: string };
+  options: { canadian: boolean; numRounds: number };
   transitions: {
     roundStart: null | "deal";
     deal: "trumpReveal";
@@ -30,20 +49,6 @@ export type WizardSpec = CreateSpec<{
     roundEnd: "roundStart" | "end";
     end: true;
   };
-  game: {
-    round: number;
-    player: number | null;
-    dealer: number;
-    trumpCard: string | null;
-    trumpSuit: string | null;
-    bids: (number | null)[];
-    actuals: number[];
-    hands: string[][];
-    trick: string[];
-    trickLeader: number;
-    trickWinner: number | null;
-    scores: number[][];
-  };
   constraints: {
     roundStart: { player: null };
     deal: { player: null };
@@ -57,9 +62,4 @@ export type WizardSpec = CreateSpec<{
     roundEnd: { player: null };
     end: { player: null };
   };
-  actions:
-    | { type: "select"; data: string }
-    | { type: "bid"; data: number }
-    | { type: "play"; data: string };
-  options: { canadian: boolean; numRounds: number };
 }>;

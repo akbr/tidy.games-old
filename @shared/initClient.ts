@@ -5,7 +5,9 @@ import { createServer, ServerOptions } from "@lib/tabletop/roomServer";
 import { createClient } from "@lib/tabletop/client";
 import attachHashListener from "@lib/tabletop/client/attachments/hashListener";
 import attachLocalStorageMemory from "@lib/tabletop/client/attachments/localStorageMeta";
-import { createClientView, ClientViewProps } from "@lib/tabletop/views";
+
+import { createClientView, ClientViewProps } from "./components/Tabletop";
+
 import { isDev } from "./isDev";
 
 type InitClientProps<S extends Spec> = {

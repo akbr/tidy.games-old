@@ -1,5 +1,5 @@
-import { Spec } from "../spec";
-import { ClientState } from "../client";
+import { Spec } from "@lib/tabletop/spec";
+import { ClientState } from "@lib/tabletop/client";
 
 import { ComponentChildren, h } from "preact";
 import {

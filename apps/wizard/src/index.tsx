@@ -12,11 +12,10 @@ const client = initClient({
   views,
   $el: document.getElementById("app")!,
   serverOptions: isDev() ? serverOptions : undefined,
-  debug: isDev(),
+  //debug: false,
 });
 
 isDev() &&
   (() => {
-    //window.c = client.controls.server;
     console.log("Hello from development");
   })();

@@ -1,4 +1,4 @@
-import { Twemoji } from "@lib/components/Twemoji";
+import { Twemoji } from "../Twemoji";
 
 export const Disconnected = () => {
   return (

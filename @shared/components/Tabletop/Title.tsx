@@ -1,8 +1,8 @@
-import type { Spec } from "../spec";
-
 import { useState } from "preact/hooks";
-import { TitleProps } from "../client";
-import { Field } from "@lib/components/Field";
+
+import type { Spec } from "@lib/tabletop/spec";
+import { TitleProps } from "@lib/tabletop/client";
+import { Field } from "../Field";
 
 export const Title = <S extends Spec>({
   controls,

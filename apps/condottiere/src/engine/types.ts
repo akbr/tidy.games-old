@@ -31,16 +31,11 @@ export type Cities =
   | "nap";
 
 export type Core = {
-  // ------
-  // Static
-  // ------
-  numPlayers: number;
-  seed?: string;
   // -------
   // Context
   // -------
   round: number;
-  activePlayer: number;
+  player: number | null;
   condottiere: number;
   status: (boolean | null)[]; // Players in active play OR async discard decisions
   // ---------
