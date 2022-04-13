@@ -1,5 +1,4 @@
 import { h, render } from "preact";
-import { setup } from "@twind/preact";
 
 import { Spec, Cart } from "@lib/tabletop/";
 import { createServer, ServerOptions } from "@lib/tabletop/roomServer";
@@ -18,11 +17,6 @@ type InitClientProps<S extends Spec> = {
 };
 
 export function initClient<S extends Spec>(props: InitClientProps<S>) {
-  setup({
-    preflight: false,
-    props: { className: true },
-  });
-
   const serverOrURL = isDev()
     ? createServer(props.cart, props.serverOptions)
     : location.origin.replace(/^http/, "ws");
@@ -34,8 +28,8 @@ export function initClient<S extends Spec>(props: InitClientProps<S>) {
 
   const View = createClientView(props.cart, props.views, debugFlag);
 
-  client.subscribe((viewProps) =>
-    render(h(View, { viewProps }, null), props.$el)
+  client.subscribe((clientState) =>
+    render(h(View, { clientState }, null), props.$el)
   );
   client.update();
 

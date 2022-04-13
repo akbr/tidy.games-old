@@ -1,5 +1,5 @@
 import { Spec } from "../spec";
-import { ViewProps } from "../client";
+import { ClientState } from "../client";
 
 import { ComponentChildren, h } from "preact";
 import {
@@ -14,7 +14,7 @@ export function AppWrapper<S extends Spec>({
   props,
   children,
 }: {
-  props: ViewProps<S>[1];
+  props: ClientState<S>[1];
   children: ComponentChildren;
 }) {
   return (

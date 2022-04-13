@@ -1,6 +1,3 @@
-import { tw } from "twind";
-import { fadeIn } from "@shared/twindCss";
-
 import { GameProps } from "../types";
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
@@ -48,7 +45,7 @@ export const TableCenter = (props: GameProps) => {
     if (type === "bid" || type === "bidded") {
       return !isMyTurn ? (
         <div class="animate-bounce text-center">
-          <h3 class={`${tw(fadeIn)}`}>
+          <h3>
             Waiting for
             <br /> bids...
           </h3>
@@ -77,9 +74,5 @@ export const TableCenter = (props: GameProps) => {
     return null;
   })();
 
-  return (
-    <div class="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
-      {vnode}
-    </div>
-  );
+  return <div class="absolute top-1/2 left-1/2 translate-center">{vnode}</div>;
 };

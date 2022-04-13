@@ -9,9 +9,9 @@ export type Cart<S extends Spec> = {
   actionStubs: ActionStubs<S["actions"]>;
   // "server side" stuff
   setOptions: (numPlayers: number, options?: S["options"]) => S["options"];
-  setup: (ctx: Ctx<S>) => S["gameStates"] | string;
+  setup: (ctx: Ctx<S>) => S["states"] | string;
   chart: Chart<S>;
-  stripGame?: <GS extends S["gameStates"]>(
+  stripGame?: <GS extends S["states"]>(
     gameState: [GS[0], Partial<GS[1]>],
     player: number
   ) => Partial<GS[1]>;
@@ -29,17 +29,17 @@ export type Ctx<S extends Spec> = {
 };
 
 export type BotFn<S extends Spec> = (
-  frame: { state: S["gameStates"]; ctx: Ctx<S>; player: number },
+  frame: { state: S["states"]; ctx: Ctx<S>; player: number },
   send: (action: S["actions"]) => void
 ) => void;
 
-export type GameStatePatch<S extends Spec> = [S["states"], Partial<S["game"]>];
+export type StatePatch<S extends Spec> = [S["phases"], Partial<S["game"]>];
 export type Chart<S extends Spec> = {
-  [State in S["states"]]: (
-    game: S["gameGlossary"][State],
+  [Phase in S["phases"]]: (
+    game: S["stateGlossary"][Phase],
     ctx: Ctx<S>,
     action: AuthenticatedAction<S> | null
-  ) => S["gameStateReturns"][State] | string;
+  ) => S["patchGlossary"][Phase] | string;
 };
 
 export type AuthenticatedAction<S extends Spec> = S["actions"] & {

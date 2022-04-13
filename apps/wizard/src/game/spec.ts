@@ -1,7 +1,7 @@
 import { CreateSpec } from "@lib/tabletop";
 
 export type WizardSpec = CreateSpec<{
-  states:
+  phases:
     | "roundStart"
     | "deal"
     | "trumpReveal"
@@ -15,7 +15,7 @@ export type WizardSpec = CreateSpec<{
     | "trickWon"
     | "roundEnd"
     | "end";
-  edges: {
+  transitions: {
     roundStart: null | "deal";
     deal: "trumpReveal";
     trumpReveal: "select" | "bid";
@@ -23,6 +23,7 @@ export type WizardSpec = CreateSpec<{
     selected: "bid";
     bid: null | "bidded";
     bidded: "bid" | "bidsEnd";
+    bidsEnd: "play";
     play: null | "played";
     played: "play" | "trickWon";
     trickWon: "play" | "roundEnd";
@@ -43,7 +44,7 @@ export type WizardSpec = CreateSpec<{
     trickWinner: number | null;
     scores: number[][];
   };
-  gameExtends: {
+  constraints: {
     roundStart: { player: null };
     deal: { player: null };
     select: { player: number };

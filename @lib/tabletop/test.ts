@@ -2,15 +2,15 @@ import { CreateSpec } from "./spec";
 import { Cart } from "./cart";
 
 type SimpleSpec = CreateSpec<{
-  states: "start" | "playing" | "end";
+  phases: "start" | "playing" | "end";
   game: { count: number };
   actions: { type: "add"; data: number } | { type: "sub"; data: number };
-  edges: {
+  transitions: {
     start: "playing";
     playing: null | "playing" | "end";
     end: true;
   };
-  gameExtends: {
+  constraints: {
     end: { count: 100 };
   };
 }>;

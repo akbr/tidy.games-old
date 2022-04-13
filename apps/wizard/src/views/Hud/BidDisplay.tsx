@@ -1,8 +1,6 @@
 import { GameProps } from "../types";
 import { getTotalBids } from "../../game/logic";
 import { Twemoji } from "@lib/components/Twemoji";
-import { tw } from "twind";
-import { fadeIn } from "@shared/twindCss";
 
 export const BidDisplay = ({
   frame: {
@@ -20,7 +18,7 @@ export const BidDisplay = ({
   const str = diff !== 0 ? `${sign + Math.abs(diff)}` : "=";
 
   return (
-    <div class={`${tw(fadeIn)}`}>
+    <div>
       Bids:{" "}
       {type === "bid" || type === "bidded" ? (
         <div class="inline align-middle">

@@ -4,7 +4,7 @@ import { WizardSpec } from "./spec";
 import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
 
-type RoundStart = Extract<WizardSpec["gameStates"], { 0: "roundStart" }>;
+type RoundStart = Extract<WizardSpec["states"], { 0: "roundStart" }>;
 export const getNextRound = (
   { numPlayers }: { numPlayers: number },
   game = {} as WizardSpec["game"]

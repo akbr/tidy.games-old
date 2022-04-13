@@ -1,8 +1,5 @@
 import { FunctionComponent } from "preact";
 
-import { tw } from "twind";
-import { fadeIn } from "@shared/twindCss";
-
 const gap = 10;
 const positions: Record<string, any> = {
   left: {
@@ -55,9 +52,7 @@ export const Tooltip: FunctionComponent<{
 }> = ({ dir, children }) => {
   return (
     <div
-      class={`absolute bg-yellow-200 text-black p-1.5 rounded whitespace-nowrap ${tw(
-        fadeIn
-      )}`}
+      class={`absolute bg-yellow-200 text-black p-1.5 rounded whitespace-nowrap`}
       style={positions[dir]}
     >
       {children}

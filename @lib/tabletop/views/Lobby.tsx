@@ -32,9 +32,7 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px] -mb-2">
-        {cart.meta.name}
-      </div>
+      <div class="text-center font-bold text-[64px] mb-2">{cart.meta.name}</div>
       <div class="animate-bounce">Waiting for players...</div>
       <Field legend="🖇️ Share link">
         <div class="cursor-pointer">
@@ -56,6 +54,7 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
             };
             return (
               <div
+                class={`animate-fadeIn`}
                 style={style}
                 onClick={() => {
                   if (!isPlayer) return;

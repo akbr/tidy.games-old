@@ -2,7 +2,6 @@ import type { Spec } from "../spec";
 
 import { useState } from "preact/hooks";
 import { TitleProps } from "../client";
-import { Disconnected } from "./Disconnected";
 import { Field } from "@lib/components/Field";
 
 export const Title = <S extends Spec>({
@@ -14,7 +13,7 @@ export const Title = <S extends Spec>({
   const { join } = controls.server;
 
   return (
-    <div class="flex flex-col h-full justify-center items-center gap-4 ">
+    <div class="flex flex-col h-full justify-center items-center gap-14 ">
       <div class="text-center font-bold text-[64px]">{cart.meta.name}</div>
       <div class="flex flex-col items-center gap-4">
         <Field legend="✨ New game">

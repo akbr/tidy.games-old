@@ -14,15 +14,15 @@ import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
 import { shallowPatchWithDeep } from "@lib/compare/patch";
 
 export type Client<S extends Spec> = {
-  subscribe: Subscribe<ViewProps<S>>;
-  get: () => ViewProps<S>;
+  subscribe: Subscribe<ClientState<S>>;
+  get: () => ClientState<S>;
   meter: Meter<Frame<S>>;
   controls: Controls<S>;
   update: () => void;
   reset: () => void;
 };
 
-export type ViewProps<S extends Spec> =
+export type ClientState<S extends Spec> =
   | ["title", TitleProps<S>]
   | ["lobby", LobbyProps<S>]
   | ["game", GameProps<S>];
@@ -43,7 +43,7 @@ export type GameProps<S extends Spec> = {
   meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
-export type FinalProps<S extends Spec> = {} & GameProps<S>;
+export type FinalProps<S extends Spec> = GameProps<S>;
 
 export type Controls<S extends Spec> = {
   game: ConnectedActions<S["actions"]>;
@@ -94,7 +94,7 @@ export function createClient<S extends Spec>(
     meter,
   };
 
-  const sub = createSubscription<ViewProps<S>>([
+  const sub = createSubscription<ClientState<S>>([
     "title",
     { connected, cart, controls },
   ]);
@@ -103,7 +103,7 @@ export function createClient<S extends Spec>(
     meterStatus = meter.get();
     frame = meterStatus.state || null;
 
-    const nextProps: ViewProps<S> = !room
+    const nextProps: ClientState<S> = !room
       ? ["title", { connected, cart, controls, err }]
       : !frame
       ? ["lobby", { connected, cart, controls, err, room }]

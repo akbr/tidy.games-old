@@ -3,7 +3,7 @@ import { memo } from "preact/compat";
 
 import { Spec } from "../spec";
 import { Cart } from "../cart";
-import { TitleProps, GameProps, ViewProps } from "../client";
+import { TitleProps, GameProps, ClientState } from "../client";
 
 import { AppWrapper } from "./AppWrapper";
 import { Title as DefaultTitle } from "./Title";
@@ -31,8 +31,8 @@ export const createClientView = <S extends Spec>(
   // Memoize so meter updates don't affect game itself
   const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);
 
-  return ({ viewProps }: { viewProps: ViewProps<S> }) => {
-    const [type, props] = viewProps;
+  return ({ clientState }: { clientState: ClientState<S> }) => {
+    const [type, props] = clientState;
 
     if (type === "title") {
       return (

@@ -1,5 +1,5 @@
 import type { Spec } from "./spec";
-import type { Cart, Ctx, AuthenticatedAction, GameStatePatch } from "./cart";
+import type { Cart, Ctx, AuthenticatedAction, StatePatch } from "./cart";
 
 import { is } from "@lib/compare/is";
 import { lastOf } from "@lib/array";
@@ -12,14 +12,14 @@ export type Machine<S extends Spec> = {
 
 export type History<S extends Spec> = {
   ctx: Ctx<S>;
-  initial: S["gameStates"];
+  initial: S["states"];
   actions: AuthenticatedAction<S>[];
 };
 
 export type Segment<S extends Spec> = {
-  prev: S["gameStates"];
+  prev: S["states"];
   action: AuthenticatedAction<S> | null;
-  patches: GameStatePatch<S>[];
+  patches: StatePatch<S>[];
   ctx: Ctx<S>;
   player: number;
   final: boolean;
@@ -27,7 +27,7 @@ export type Segment<S extends Spec> = {
 };
 
 export type Frame<S extends Spec> = {
-  state: S["gameStates"];
+  state: S["states"];
   action: AuthenticatedAction<S> | null;
   ctx: Ctx<S>;
   player: number;
@@ -37,7 +37,7 @@ export type Frame<S extends Spec> = {
 export const createMachine = <S extends Spec>(
   cart: Cart<S>,
   inputCtx: Ctx<S>,
-  inputState?: S["gameStates"],
+  inputState?: S["states"],
   inputActions?: AuthenticatedAction<S>[]
 ): Machine<S> | string => {
   const { stripAction = (x) => x } = cart;
@@ -118,7 +118,7 @@ export const createMachine = <S extends Spec>(
 
 export const getNextSegment = <S extends Spec>(
   cart: Cart<S>,
-  prevState: S["gameStates"],
+  prevState: S["states"],
   ctx: Ctx<S>,
   action: AuthenticatedAction<S> | null
 ): Segment<S> | null | string => {
@@ -139,25 +139,25 @@ export const getNextSegment = <S extends Spec>(
 
 export const getNextStates = <S extends Spec>(
   cart: Cart<S>,
-  initial: S["gameStates"],
+  initial: S["states"],
   ctx: Ctx<S>,
   action: AuthenticatedAction<S> | null
 ) => {
-  const gameStates: S["gameStates"][] = [];
-  const patches: GameStatePatch<S>[] = [];
+  const gameStates: S["states"][] = [];
+  const patches: StatePatch<S>[] = [];
 
   let iterarting = true;
   let final = false;
 
   while (iterarting) {
     const prev = lastOf(gameStates) || initial;
-    const [state, prevGame] = prev as GameStatePatch<S>;
+    const [state, prevGame] = prev as StatePatch<S>;
 
     const patch = cart.chart[state](
-      prevGame as S["gameGlossary"][S["states"]],
+      prevGame as S["stateGlossary"][S["phases"]],
       ctx,
       gameStates.length ? null : action
-    ) as GameStatePatch<S> | true | null | string;
+    ) as StatePatch<S> | true | null | string;
 
     if (is.string(patch)) return patch;
 
@@ -185,16 +185,16 @@ export const getNextStates = <S extends Spec>(
 };
 
 export const applyPatch = <S extends Spec>(
-  [, game]: S["gameStates"],
-  [nextState, patch]: GameStatePatch<S>
-): S["gameStates"] => [nextState, { ...game, ...patch }];
+  [, game]: S["states"],
+  [nextState, patch]: StatePatch<S>
+): S["states"] => [nextState, { ...game, ...patch }];
 
 export const getStates = <S extends Spec>({
   prev,
   patches,
   action,
 }: Segment<S>) => {
-  const states: S["gameStates"][] = [];
+  const states: S["states"][] = [];
   const isInitialStep = !action;
   if (isInitialStep) states.push(prev);
   patches.forEach((patch) => {
