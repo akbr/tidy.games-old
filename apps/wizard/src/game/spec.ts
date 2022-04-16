@@ -62,4 +62,9 @@ export type WizardSpec = CreateSpec<{
     roundEnd: { player: null };
     end: { player: null };
   };
+  analysis: {
+    runningScore: number[][];
+    numWizards: number[];
+    numJesters: number[];
+  };
 }>;

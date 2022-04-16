@@ -37,15 +37,15 @@ const Options = ({ frame, cart, controls, room }: GameProps) => {
 };
 
 const Analysis = ({ frame }: GameProps) => {
-  if (!frame.history) return <div>Error: No history data.</div>;
-  return <div class="text-sm font-mono">{JSON.stringify(frame.history)}</div>;
+  if (!frame.analysis) return <div>Error: No analysis data.</div>;
+  return <div class="text-sm font-mono">{JSON.stringify(frame.analysis)}</div>;
 };
 
 export const UiButtons = (props: GameProps) => {
   const {
     frame: {
       state: [, game],
-      history,
+      analysis,
     },
   } = props;
 
@@ -70,7 +70,7 @@ export const UiButtons = (props: GameProps) => {
               <Twemoji char={"🗒️"} size={36} />
             </div>
           )}
-          {history && (
+          {analysis && (
             <div
               class="cursor-pointer"
               onClick={() => setDialog(() => Analysis)}

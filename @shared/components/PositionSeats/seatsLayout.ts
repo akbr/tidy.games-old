@@ -28,10 +28,10 @@ const ratio2DirectionVec = ([ratioX, ratioY]: number[]) => {
 };
 
 const ratio2CSSDirection = ([x, y]: number[]) => {
-  if (x === 0 && y > 0) return "right";
-  if (x === 1 && y > 0) return "left";
-  if (y === 1 && x > 0) return "top";
-  return "bottom";
+  if (x === 0 && y > 0) return "left";
+  if (x === 1 && y > 0) return "right";
+  if (y === 1 && x > 0) return "bottom";
+  return "top";
 };
 
 export const getSeatRatio = (numPlayers: number, seatIndex: number) =>

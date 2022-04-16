@@ -43,26 +43,28 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
       <Field
         legend={`🪑 Players in room (${room.seats.length}/${cart.meta.players[1]})`}
       >
-        <div class="flex justify-center">
+        <div class="flex justify-center gap-1">
           {room.seats.map((player, idx) => {
+            console.log(player, idx);
             let isPlayer = idx === room.player;
             let style = {
               backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
-              padding: "8px",
               borderRadius: "4px",
               cursor: isPlayer ? "pointer" : "",
             };
             return (
               <div
-                class={`animate-fadeIn`}
+                class={`animate-fadeIn p-[8px]`}
                 style={style}
                 onClick={() => {
                   if (!isPlayer) return;
                   setDialog(() => SetMeta);
                 }}
               >
-                <Badge {...player}></Badge>
-                {isPlayer && <div class="text-center text-base">YOU</div>}
+                <Badge {...{ ...player, player: idx }}></Badge>
+                {isPlayer && (
+                  <div class="text-center text-base mt-1 -mb-1">YOU</div>
+                )}
               </div>
             );
           })}

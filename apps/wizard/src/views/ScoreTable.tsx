@@ -1,10 +1,10 @@
 import { GameProps } from "./types";
-import { ComponentChildren, FunctionComponent } from "preact";
+import { ComponentChildren } from "preact";
 import { rotateArray } from "@lib/array";
 import { getScore } from "../game/logic";
 import { Twemoji } from "@shared/components/Twemoji";
 
-const convert = (scores: number[][]) => {
+export const convert = (scores: number[][]) => {
   let rows: number[][][] = [];
 
   let runningTotal = scores[0].map(() => 0);

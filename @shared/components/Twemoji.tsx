@@ -24,7 +24,7 @@ function getEmojiCode(rawText: string) {
     rawText.indexOf(U200D) < 0 ? rawText.replace(UFE0Fg, "") : rawText
   );
 }
-const getCDNUrl = (emoji: string) =>
+export const getCDNUrl = (emoji: string) =>
   `https://twemoji.maxcdn.com/v/13.1.0/svg/${getEmojiCode(emoji)}.svg`;
 
 export const Twemoji = ({

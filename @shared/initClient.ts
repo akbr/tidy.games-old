@@ -23,7 +23,7 @@ export function initClient<S extends Spec>(props: InitClientProps<S>) {
     ? createServer(props.cart, props.serverOptions)
     : location.origin.replace(/^http/, "ws");
 
-  const debugFlag = !!props.debug;
+  const debugFlag = props.debug || isDev();
 
   const client = createClient(serverOrURL, props.cart, debugFlag);
   attachLocalStorageMemory(client);

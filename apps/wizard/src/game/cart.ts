@@ -3,6 +3,7 @@ import type { Cart } from "@lib/tabletop";
 import { WizardSpec } from "./spec";
 import { wizardChart, getNextRound } from "./chart";
 import { wizardBotFn } from "./botFn";
+import { createAnalysis } from "./analysis";
 
 export const wizardCart: Cart<WizardSpec> = {
   meta: {
@@ -40,5 +41,6 @@ export const wizardCart: Cart<WizardSpec> = {
     };
   },
   botFn: wizardBotFn,
+  createAnalysis,
 };
 export default wizardCart;

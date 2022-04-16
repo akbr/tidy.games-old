@@ -20,6 +20,7 @@ export type Cart<S extends Spec> = {
     player: number
   ) => AuthenticatedAction<S> | null;
   botFn?: BotFn<S>;
+  createAnalysis?: (stream: Stream<S>, ctx: Ctx<S>) => S["analysis"];
 };
 
 export type Ctx<S extends Spec> = {
@@ -50,3 +51,5 @@ export type AuthenticatedAction<S extends Spec> = S["actions"] & {
 export type ActionStubs<Actions extends Spec["actions"]> = {
   [Action in Actions as Action["type"]]: null;
 };
+
+export type Stream<S extends Spec> = (S["states"] | AuthenticatedAction<S>)[];

@@ -48,6 +48,22 @@ export function deal<T>(deck: T[], handSpecs: number[]): T[][] {
   );
 }
 
+export function indexOfInt(arr: number[], doMax = true) {
+  if (arr.length === 0) return -1;
+
+  let max = arr[0];
+  let maxIndex = 0;
+
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > max) {
+      maxIndex = i;
+      max = arr[i];
+    }
+  }
+
+  return maxIndex;
+}
+
 export function indexOfMax(arr: number[]) {
   if (arr.length === 0) return -1;
 
@@ -65,8 +81,10 @@ export function indexOfMax(arr: number[]) {
 }
 
 export function maxInt(arr: number[]) {
-  const index = indexOfMax(arr);
-  return arr[index];
+  return arr.sort((a, b) => a - b).at(-1) as number;
+}
+export function minInt(arr: number[]) {
+  return arr.sort((a, b) => a - b).at(0) as number;
 }
 
 export const sortBySpec = <T>(arr: T[], sortSpec: T[]) => {

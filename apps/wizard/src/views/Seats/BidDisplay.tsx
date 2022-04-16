@@ -70,7 +70,7 @@ const scorePopEffect: DOMEffect<{
 type BidsDisplayProps = {
   bid: number;
   actual: number;
-  shouldPop?: boolean;
+  shouldPop: boolean;
   waitFor: WaitFor;
 };
 
@@ -83,7 +83,7 @@ export function BidDisplay({
   return (
     <RunDOMEffect
       fn={scorePopEffect}
-      props={{ bid, actual, shouldPop: !!shouldPop }}
+      props={{ bid, actual, shouldPop }}
       waitFor={waitFor}
     >
       <div />

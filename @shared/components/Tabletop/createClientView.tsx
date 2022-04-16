@@ -10,7 +10,6 @@ import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
 import { DebugPanel } from "./DebugPanel";
 import { OptionsView } from "./OptionsView";
-import isDev from "@shared/isDev";
 
 export type ClientViewProps<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
@@ -27,7 +26,7 @@ export const createClientView = <S extends Spec>(
     Game,
     Options,
   }: ClientViewProps<S>,
-  debug = isDev()
+  debug: boolean
 ) => {
   // Memoize so meter updates don't affect game itself
   const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);

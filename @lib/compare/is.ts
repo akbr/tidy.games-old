@@ -3,4 +3,5 @@ export const is = {
   number: (x: unknown): x is number => typeof x === "number",
   null: (x: unknown): x is null => x === null,
   undefined: (x: unknown): x is undefined => x === undefined,
+  defined: <T>(x: T | undefined): x is T => x !== undefined,
 };

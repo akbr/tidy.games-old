@@ -4,7 +4,7 @@ import { useRefreshOnResize } from "@lib/hooks";
 
 import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
-import { Seats } from "./Seats";
+import { Seats } from "./Seats/Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
@@ -51,13 +51,18 @@ export const Game = (props: GameProps) => {
   const { width } = document.body.getBoundingClientRect();
 
   return (
-    <div class="h-full flex justify-center gap-6 ">
+    <div class="h-full flex justify-center">
       <GameView {...props} />
+    </div>
+  );
+};
+
+/**
+ * 
+ * 
       {width > 1000 && (
         <div class="p-3 overflow-y-auto">
           <ScoreTable {...props} />
         </div>
       )}
-    </div>
-  );
-};
+ */

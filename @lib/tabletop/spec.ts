@@ -2,6 +2,7 @@ export type Phase = string;
 export type Game = Record<string, any>;
 export type Actions = { type: string; data?: any };
 export type Options = Record<string, any> | null;
+export type Analysis = Record<string, any> | null;
 
 export type noChange = null;
 export type finalState = true;
@@ -11,6 +12,7 @@ export type SpecInput = {
   game: Game;
   actions: Actions;
   options?: Options;
+  analysis?: Analysis;
   transitions?: Record<
     SpecInput["phases"],
     SpecInput["phases"] | noChange | finalState
@@ -23,6 +25,7 @@ export type Spec = {
   game: Game;
   actions: Actions;
   options: Options;
+  analysis: Analysis;
   // --
   states: [Spec["phases"], Spec["game"]];
   stateGlossary: Record<Spec["phases"], Spec["game"]>;
@@ -50,6 +53,7 @@ export type _CreateSpec<
   game: I["game"];
   actions: I["actions"];
   options: Fill<I["options"], null>;
+  analysis: Fill<I["analysis"], null>;
   stateGlossary: StateGlossary;
   states: {
     [Key in keyof StateGlossary]: [Key, StateGlossary[Key]];

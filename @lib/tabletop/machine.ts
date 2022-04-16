@@ -1,5 +1,11 @@
 import type { Spec } from "./spec";
-import type { Cart, Ctx, AuthenticatedAction, StatePatch } from "./cart";
+import type {
+  Cart,
+  Ctx,
+  AuthenticatedAction,
+  StatePatch,
+  Stream,
+} from "./cart";
 
 import { is } from "@lib/compare/is";
 import { lastOf } from "@lib/array";
@@ -23,7 +29,7 @@ export type Segment<S extends Spec> = {
   ctx: Ctx<S>;
   player: number;
   final: boolean;
-  history?: History<S>;
+  analysis?: S["analysis"];
 };
 
 export type Frame<S extends Spec> = {
@@ -31,7 +37,7 @@ export type Frame<S extends Spec> = {
   action: AuthenticatedAction<S> | null;
   ctx: Ctx<S>;
   player: number;
-  history?: History<S>;
+  analysis?: S["analysis"];
 };
 
 export const createMachine = <S extends Spec>(
@@ -53,6 +59,7 @@ export const createMachine = <S extends Spec>(
   if (is.string(initialState)) return initialState;
 
   let segment: Segment<S>;
+  let analysis: S["analysis"] | null = null;
 
   const actions = inputActions || [];
   const initialSegment = getNextSegment(cart, initialState, ctx, null);
@@ -90,7 +97,7 @@ export const createMachine = <S extends Spec>(
               cart.stripGame ? [patch[0], cart.stripGame(patch, player)] : patch
             ),
         action: action ? (isGod ? stripAction(action, player) : action) : null,
-        history: segment.final ? getHistory() : undefined,
+        analysis: segment.final && analysis ? analysis : null,
       };
     },
     submit: (action, player) => {
@@ -111,6 +118,13 @@ export const createMachine = <S extends Spec>(
 
       actions.push(authedAction);
       segment = res;
+
+      if (segment.final && cart.createAnalysis) {
+        const stream = createStream(cart, getHistory());
+        console.log(JSON.stringify(stream));
+        console.log(JSON.stringify(ctx));
+        analysis = cart.createAnalysis(stream, ctx);
+      }
     },
     getHistory,
   };
@@ -184,6 +198,30 @@ export const getNextStates = <S extends Spec>(
   };
 };
 
+export const createStream = <S extends Spec>(
+  cart: Cart<S>,
+  { initial, actions, ctx }: History<S>
+) => {
+  const stream: Stream<S> = [];
+
+  // Create a "null" initial action, to get initial segment.
+  const modActions = [null, ...actions];
+
+  modActions.forEach((action) => {
+    const segment = getNextSegment(
+      cart,
+      (stream.at(-1) as S["states"]) || initial,
+      ctx,
+      action
+    ) as Segment<S>;
+    const states = getStates(segment);
+    action && stream.push(action);
+    stream.push(...states);
+  });
+
+  return stream;
+};
+
 export const applyPatch = <S extends Spec>(
   [, game]: S["states"],
   [nextState, patch]: StatePatch<S>
@@ -205,7 +243,7 @@ export const getStates = <S extends Spec>({
 };
 
 export const getFrames = <S extends Spec>(segment: Segment<S>): Frame<S>[] => {
-  const { action, ctx, player, history } = segment;
+  const { action, ctx, player, analysis } = segment;
   const frames: Frame<S>[] = getStates(segment).map((state, idx) => ({
     state,
     action: idx === 0 ? action : null,
@@ -213,8 +251,8 @@ export const getFrames = <S extends Spec>(segment: Segment<S>): Frame<S>[] => {
     player,
   }));
 
-  if (history) {
-    frames[frames.length - 1].history = history;
+  if (analysis) {
+    frames[frames.length - 1].analysis = analysis;
   }
 
   return frames;
