@@ -71,12 +71,14 @@ export const Seat = ({
         )}
       </div>
       {showBidDisplay ? (
-        <BidDisplay
-          bid={bid!}
-          actual={actual!}
-          waitFor={waitFor}
-          shouldPop={shouldPop}
-        />
+        <div class="-z-10 animate-fadeIn">
+          <BidDisplay
+            bid={bid!}
+            actual={actual!}
+            waitFor={waitFor}
+            shouldPop={shouldPop}
+          />
+        </div>
       ) : (
         <div class="invisible">_</div>
       )}

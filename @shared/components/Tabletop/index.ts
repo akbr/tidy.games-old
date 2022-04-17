@@ -1,2 +1,2 @@
-export * from "./createClientView";
-export { default } from "./createClientView";
+export * from "./App";
+export { default } from "./App";

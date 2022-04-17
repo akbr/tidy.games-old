@@ -2,18 +2,19 @@ import type { GameProps } from "../types";
 
 import { Twemoji } from "@shared/components/Twemoji";
 import { splitCard } from "@shared/components/Card";
-import { suits, colors } from "@shared/components/Card/glyphs";
+import { suits, values, colors } from "@shared/components/Card/glyphs";
 
 import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async/task";
 
-export const MiniCard = ({ glyphs }: { glyphs: string[] }) => {
+export const MiniCard = ({ glyphs }: { glyphs: (string | number)[] }) => {
   return (
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
         {glyphs.map((g) => {
-          const Icon = suits[g as keyof typeof suits];
+          const Icon =
+            suits[g as keyof typeof suits] || values[g as keyof typeof values];
           if (!Icon) return null;
           return (
             <div
@@ -56,9 +57,8 @@ const TrumpCard = ({
       </div>
     );
 
-  const [, suit] = splitCard(trumpCard);
-  let glyphs = [trumpSuit];
-  if (suit === "w") glyphs.unshift("w");
+  const [value, suit] = splitCard(trumpCard);
+  let glyphs = [suit === "w" ? "w" : value, trumpSuit];
 
   return <MiniCard glyphs={glyphs} />;
 };

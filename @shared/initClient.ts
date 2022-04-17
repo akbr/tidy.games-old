@@ -1,37 +1,37 @@
 import { h, render } from "preact";
 
-import { Spec, Cart } from "@lib/tabletop/";
+import { Spec } from "@lib/tabletop/";
 import { createServer, ServerOptions } from "@lib/tabletop/roomServer";
 import { createClient } from "@lib/tabletop/client";
 import attachHashListener from "@lib/tabletop/client/attachments/hashListener";
 import attachLocalStorageMemory from "@lib/tabletop/client/attachments/localStorageMeta";
 
-import { createClientView, ClientViewProps } from "./components/Tabletop";
+import { ClientViewProps } from "./components/Tabletop";
+
+import { createAppView } from "./components/Tabletop/App";
 
 import { isDev } from "./isDev";
 
-type InitClientProps<S extends Spec> = {
-  cart: Cart<S>;
+type InitClientProps = {
   $el: HTMLElement;
-  views: ClientViewProps<S>;
   serverOptions?: ServerOptions;
-  debug?: boolean;
 };
 
-export function initClient<S extends Spec>(props: InitClientProps<S>) {
+export function initClient<S extends Spec>(
+  props: ClientViewProps<S>,
+  { serverOptions, $el }: InitClientProps
+) {
   const serverOrURL = isDev()
-    ? createServer(props.cart, props.serverOptions)
+    ? createServer(props.cart, serverOptions)
     : location.origin.replace(/^http/, "ws");
 
-  const debugFlag = props.debug || isDev();
-
-  const client = createClient(serverOrURL, props.cart, debugFlag);
+  const client = createClient(serverOrURL, props.cart, props.debug);
   attachLocalStorageMemory(client);
 
-  const View = createClientView(props.cart, props.views, debugFlag);
+  const View = createAppView(props);
 
   client.subscribe((clientState) =>
-    render(h(View, { clientState }, null), props.$el)
+    render(h(View, { clientState }, null), $el)
   );
   client.update();
 

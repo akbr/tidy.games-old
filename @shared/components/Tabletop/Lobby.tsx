@@ -37,15 +37,15 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
       <Field legend="🖇️ Share link">
         <div class="cursor-pointer">
           {location.protocol + "//" + window.location.host + "/#"}
-          <span class="font-bold">{room.id}</span> 📋
+          <span class="font-bold">{room.id}</span>{" "}
+          <div class="inline-block animate-bounce">📋</div>
         </div>
       </Field>
       <Field
-        legend={`🪑 Players in room (${room.seats.length}/${cart.meta.players[1]})`}
+        legend={`🪑 Players (${room.seats.length}/${cart.meta.players[1]})`}
       >
         <div class="flex justify-center gap-1">
           {room.seats.map((player, idx) => {
-            console.log(player, idx);
             let isPlayer = idx === room.player;
             let style = {
               backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
@@ -88,7 +88,7 @@ export const Lobby = <S extends Spec>(props: LobbyViewProps<S>) => {
             disabled={room.seats.length < cart.meta.players[0]}
             onClick={() => controls.server.start(options)}
           >
-            Start
+            Start game
           </button>
           <button onClick={() => controls.server.addBot()}>Add bot</button>
         </>

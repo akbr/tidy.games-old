@@ -1,10 +1,10 @@
 import type { WizardSpec } from "src/game/spec";
-import type { ClientViewProps } from "@shared/components/Tabletop";
+import type { ClientViews } from "@shared/components/Tabletop";
 
 import { Game } from "./Game";
 import { Options } from "./Options";
 
-export const WizardViews: ClientViewProps<WizardSpec> = {
+export const WizardViews: ClientViews<WizardSpec> = {
   Game,
   Options,
 };

@@ -5,13 +5,17 @@ import views from "./views";
 
 const serverOptions = { seed: "test113" };
 
-const client = initClient({
-  cart,
-  views,
-  $el: document.getElementById("app")!,
-  serverOptions: isDev() ? serverOptions : undefined,
-  //debug: false,
-});
+const client = initClient(
+  {
+    cart,
+    debug: isDev(),
+    views,
+  },
+  {
+    $el: document.body,
+    serverOptions: isDev() ? serverOptions : undefined,
+  }
+);
 
 isDev() &&
   (() => {
