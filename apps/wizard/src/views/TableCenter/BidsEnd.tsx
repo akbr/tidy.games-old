@@ -13,7 +13,7 @@ export function BidsEnd({ frame }: { frame: GameProps["frame"] }) {
       {diff > 0
         ? `Underbid by ${diff}`
         : diff < 0
-        ? `Overbid by ${diff}`
+        ? `Overbid by ${Math.abs(diff)}`
         : "Even bids"}
     </h3>
   );

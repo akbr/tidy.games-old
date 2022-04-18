@@ -121,8 +121,6 @@ export const createMachine = <S extends Spec>(
 
       if (segment.final && cart.createAnalysis) {
         const stream = createStream(cart, getHistory());
-        console.log(JSON.stringify(stream));
-        console.log(JSON.stringify(ctx));
         analysis = cart.createAnalysis(stream, ctx);
       }
     },

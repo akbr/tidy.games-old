@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { render, h } from "preact";
 import { WizardSpec } from "./game/spec";
 import { maxInt, minInt } from "@lib/array";

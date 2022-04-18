@@ -58,7 +58,11 @@ const TrumpCard = ({
     );
 
   const [value, suit] = splitCard(trumpCard);
-  let glyphs = [suit === "w" ? "w" : value, trumpSuit];
+  const glyphs = (() => {
+    if (suit === "w") return ["w", value];
+    if (suit === "j") return ["j"];
+    return [value, trumpSuit];
+  })();
 
   return <MiniCard glyphs={glyphs} />;
 };

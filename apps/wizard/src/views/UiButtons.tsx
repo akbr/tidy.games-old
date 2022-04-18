@@ -62,7 +62,7 @@ export const UiButtons = (props: GameProps) => {
           <div class="cursor-pointer" onClick={() => setDialog(() => Options)}>
             <Twemoji char={"⚙️"} size={36} />
           </div>
-          {width < 1000 && game.scores.length > 0 && (
+          {game.scores.length > 0 && (
             <div
               class="cursor-pointer"
               onClick={() => setDialog(() => ScoreTable)}
