@@ -10,7 +10,7 @@ import {
 
 import { createSocketManager } from "@lib/socket";
 import { createSubscription, Subscribe } from "@lib/state/subscription";
-import { createMeter, MeterStatus, Meter } from "@lib/state/meter";
+import { createMeter, Meter } from "@lib/state/meter";
 import { shallowPatchWithDeep } from "@lib/compare/patch";
 
 export type Client<S extends Spec> = {
@@ -40,7 +40,6 @@ export type LobbyProps<S extends Spec> = {
 
 export type GameProps<S extends Spec> = {
   frame: Frame<S>;
-  meter: MeterStatus<Frame<S>>;
 } & LobbyProps<S>;
 
 export type FinalProps<S extends Spec> = GameProps<S>;
@@ -65,7 +64,6 @@ export function createClient<S extends Spec>(
   let connected = false;
   let segment: Segment<S> | null;
   let room: RoomData | null = null;
-  let meterStatus: MeterStatus<Frame<S>>;
   let frame: Frame<S> | null;
   let err: Err | undefined;
 
@@ -100,19 +98,13 @@ export function createClient<S extends Spec>(
   ]);
 
   function update() {
-    meterStatus = meter.get();
-    frame = meterStatus.state || null;
+    const nextProps: ClientState<S> = (() => {
+      if (!room) return ["title", { connected, cart, controls, err }];
+      if (!frame) return ["lobby", { connected, cart, controls, err, room }];
+      return ["game", { connected, cart, controls, err, room, frame }];
+    })();
 
-    const nextProps: ClientState<S> = !room
-      ? ["title", { connected, cart, controls, err }]
-      : !frame
-      ? ["lobby", { connected, cart, controls, err, room }]
-      : [
-          "game",
-          { connected, cart, controls, err, room, frame, meter: meterStatus },
-        ];
-
-    nextProps && sub.push(nextProps);
+    sub.push(nextProps);
   }
 
   function reset() {
@@ -126,6 +118,7 @@ export function createClient<S extends Spec>(
   socket.onmessage = ([type, payload]) => {
     if (type === "server") {
       room = payload;
+      if (room === null) reset();
       update();
     } else if (type === "machine") {
       const nextSegment = payload;
@@ -136,7 +129,7 @@ export function createClient<S extends Spec>(
         );
       }
       segment = nextSegment;
-      meter.push(...getFrames(payload));
+      meter.push(...getFrames(segment));
     } else if (type === "serverErr" || type === "machineErr") {
       err = { type, data: payload };
       update();
@@ -146,7 +139,12 @@ export function createClient<S extends Spec>(
   };
 
   socket.open();
-  meter.subscribe(update);
+
+  meter.subscribe(({ state: nextFrame }, { state: prevFrame }) => {
+    if (nextFrame === prevFrame) return;
+    frame = nextFrame || null;
+    update();
+  });
 
   return {
     meter,

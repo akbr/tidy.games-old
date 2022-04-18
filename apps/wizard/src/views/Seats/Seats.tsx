@@ -39,7 +39,7 @@ export const Seat = ({
   waitFor,
 }: SeatProps) => {
   return (
-    <div class="flex flex-col gap-[5px] text-center m-3">
+    <div class="flex flex-col gap-[5px] text-center m-4">
       <div class="relative">
         <Badge player={player} name={name} avatar={avatar} />
         {showBidBubble && (

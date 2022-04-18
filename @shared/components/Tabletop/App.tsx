@@ -6,7 +6,6 @@ import {
   useLayoutEffect,
   useCallback,
 } from "preact/hooks";
-import { memo } from "preact/compat";
 
 import { Cart } from "@lib/tabletop/cart";
 import { Spec } from "@lib/tabletop/spec";
@@ -14,81 +13,61 @@ import { ClientState, GameProps, TitleProps } from "@lib/tabletop/client";
 
 import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
-import { DebugPanel } from "./DebugPanel";
 import { OptionsView } from "./OptionsView";
 
-export type ClientViews<S extends Spec> = {
+export type AppViews<S extends Spec> = {
+  Backdrop?: (props: { clientState: ClientState<S> }) => JSX.Element;
+  AppContainer?: (props: { clientState: ClientState<S> }) => JSX.Element;
   Title?: (props: TitleProps<S>) => JSX.Element;
   Lobby?: (props: LobbyViewProps<S>) => JSX.Element;
   Options?: OptionsView<S>;
-  Game: (props: GameProps<S>) => JSX.Element;
+  Game?: (props: GameProps<S>) => JSX.Element;
 };
 
-export type ClientViewProps<S extends Spec> = {
+export type AppProps<S extends Spec> = {
+  state: ClientState<S>;
   cart: Cart<S>;
-  views: ClientViews<S>;
-  debug: boolean;
+  views: AppViews<S>;
 };
 
-export function createAppView<S extends Spec>({
-  cart,
-  debug,
-  views,
-}: ClientViewProps<S>) {
-  const { Title = DefaultTitle, Lobby = DefaultLobby, Game, Options } = views;
+export function App<S extends Spec>({ state, views, cart }: AppProps<S>) {
+  const [type, props] = state;
+  const {
+    Backdrop = DefaultBackrop,
+    AppContainer = DefaultAppContainer,
+    Title = DefaultTitle,
+    Lobby = DefaultLobby,
+    Game = DefaultGame,
+    Options,
+  } = views;
 
-  // Memoize so meter updates don't affect game itself
-  const GameMemo = memo((props: GameProps<S>) => <Game {...props} />);
+  return (
+    <Backdrop clientState={state}>
+      <AppContainer clientState={state}>
+        <NotificationsWrapper {...props}>
+          {(() => {
+            if (type === "title") {
+              return <Title {...props} />;
+            }
 
-  function Wrapper({
-    props,
-    children,
-  }: {
-    children: ComponentChildren;
-    props: ClientState<S>[1];
-  }) {
-    return (
-      <Backdrop>
-        <AppContainer>
-          <NotificationsWrapper {...props}>{children}</NotificationsWrapper>
-        </AppContainer>
-      </Backdrop>
-    );
-  }
+            if (type === "lobby") {
+              const { setOptions } = cart;
+              return <Lobby {...{ ...props, Options, setOptions }} />;
+            }
 
-  return function AppView({ clientState }: { clientState: ClientState<S> }) {
-    const [type, props] = clientState;
-
-    const InnerView = (() => {
-      if (type === "title") {
-        return <Title {...props} />;
-      }
-
-      if (type === "lobby") {
-        const { setOptions } = cart;
-        return <Lobby {...{ ...props, Options, setOptions }} />;
-      }
-
-      if (type === "game") {
-        return <GameMemo {...props} />;
-      }
-    })();
-
-    //<DebugPanel {...props} />
-
-    return (
-      <section type="Root" class="h-full w-full flex">
-        <section type="Game" class="relative h-full flex-grow">
-          <Wrapper props={props}>{InnerView}</Wrapper>
-        </section>
-      </section>
-    );
-  };
+            if (type === "game") {
+              return <Game {...props} />;
+            }
+          })()}
+        </NotificationsWrapper>
+      </AppContainer>
+    </Backdrop>
+  );
 }
 
-export default createAppView;
+export default App;
 
-function Backdrop({ children }: { children: ComponentChildren }) {
+function DefaultBackrop({ children }: { children: ComponentChildren }) {
   return (
     <section type="Backdrop" class="h-full flex justify-center bg-[#2a1b0e]">
       {children}
@@ -96,7 +75,7 @@ function Backdrop({ children }: { children: ComponentChildren }) {
   );
 }
 
-function AppContainer({ children }: { children: ComponentChildren }) {
+function DefaultAppContainer({ children }: { children: ComponentChildren }) {
   return (
     <section
       type="AppContainer"
@@ -108,6 +87,10 @@ function AppContainer({ children }: { children: ComponentChildren }) {
       {children}
     </section>
   );
+}
+
+function DefaultGame<S extends Spec>(props: GameProps<S>) {
+  return <div>{JSON.stringify(props)}</div>;
 }
 
 export function NotificationsWrapper<S extends Spec>({

@@ -1,20 +1,19 @@
-import { initClient } from "@shared/initClient";
-import isDev from "@shared/isDev";
+import { initTabletop } from "@shared/initTabletop";
 import cart from "./game/cart";
 import views from "./views";
 
+import isDev from "@shared/isDev";
+
 const serverOptions = { seed: "test113" };
 
-const client = initClient(
+const client = initTabletop(
   {
     cart,
-    debug: isDev(),
     views,
-  },
-  {
+    dev: isDev(),
     $el: document.body,
-    serverOptions: isDev() ? serverOptions : undefined,
-  }
+  },
+  isDev() ? serverOptions : undefined
 );
 
 isDev() &&
