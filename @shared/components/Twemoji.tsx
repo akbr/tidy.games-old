@@ -35,6 +35,12 @@ export const Twemoji = ({
   size?: number;
 }) => {
   return (
-    <img src={getCDNUrl(char)} height={size} width={size} alt={char}></img>
+    <img
+      class="align-middle"
+      src={getCDNUrl(char)}
+      height={size}
+      width={size}
+      alt={char}
+    ></img>
   );
 };

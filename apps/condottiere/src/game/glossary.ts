@@ -1,6 +1,26 @@
-import type { Cards, Cities } from "./types";
+export type Mercenaries = 1 | 2 | 3 | 4 | 5 | 6 | 10;
+export type Specials = "s" | "d" | "b" | "m" | "w" | "h";
+export type Cards = Mercenaries | Specials;
+export type Cities =
+  | "tor"
+  | "mil"
+  | "ven"
+  | "gen"
+  | "man"
+  | "par"
+  | "mod"
+  | "fer"
+  | "luc"
+  | "bol"
+  | "fir"
+  | "sie"
+  | "urb"
+  | "anc"
+  | "spo"
+  | "rom"
+  | "nap";
 
-export const cardNumbers: {
+export const cardQuantities: {
   [Type in Cards]: number;
 } = {
   1: 15,
@@ -52,7 +72,7 @@ export const cardGlyphs: {
   h: "🦸🏿‍♀️",
 };
 
-export const adjacencyList: Record<Cities, Cities[]> = {
+export const cityAdjacencies: Record<Cities, Cities[]> = {
   tor: ["gen", "mil"],
   mil: ["tor", "gen", "par", "mod", "man", "ven"],
   ven: ["mil", "man", "fer"],

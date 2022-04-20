@@ -16,7 +16,9 @@ export const GameView = (props: GameProps) => {
   const numCards = game.hands[frame.player].length || 1;
   const tableHeight = getHandHeight(
     numCards,
-    document.body.getBoundingClientRect()
+    document.body.getBoundingClientRect(),
+    35,
+    60
   );
 
   return (

@@ -1,9 +1,15 @@
-import { Twemoji } from "@lib/components/Twemoji";
-import { spec } from "@lib/premix";
-import { FunctionComponent } from "preact";
+import { Twemoji } from "@shared/components/Twemoji";
+import { ComponentChildren } from "preact";
+
+import { Cards, cardGlyphs } from "../game/glossary";
+import { getBattleStrength } from "../game/logic";
+import { playerColors } from "@shared/ui/colors";
+import { Badge } from "@shared/components/Badge";
+
+import { countOf } from "@lib/array";
 
 const Entry = ({ char = "X", num = 0 }) => {
-  const opacity = num === 0 ? 0.3 : 1;
+  const opacity = num === 0 ? 0.2 : 1;
   return (
     <div class="inline-flex items-center w-[42px] h-[24px]" style={{ opacity }}>
       <Twemoji char={char} size={18} />
@@ -12,49 +18,71 @@ const Entry = ({ char = "X", num = 0 }) => {
   );
 };
 
-const Total: FunctionComponent = ({ children }) => (
-  <div class="flex items-center p-1 bg-red-600 rounded-md">{children}</div>
+const Total = ({
+  colors,
+  num,
+}: {
+  colors: readonly [string, string];
+  num: number;
+}) => (
+  <div
+    class="flex items-center p-[3px] rounded-md"
+    style={{ backgroundColor: colors[0], color: colors[1] }}
+  >
+    {num}
+  </div>
 );
 
-const Row = spec(<div class="flex justify-around items-center p-1" />);
+const Row = ({ children }: { children: ComponentChildren }) => (
+  <div class="flex justify-around items-center p-[6px] ">{children}</div>
+);
 
-const CardMat = () => {
+export const PlayerMat = ({
+  player,
+  line,
+  isWinter,
+  avatar,
+}: {
+  player: number;
+  line: Cards[];
+  isWinter?: boolean;
+  avatar?: string;
+}) => {
   return (
-    <div class="flex flex-col border border-white rounded">
-      <Row class="bg-black bg-opacity-20">
-        <Entry char="🥁" num={1} />
-        <Entry char="❄️" num={0} />
-        <Total>30</Total>
-      </Row>
-      <Row>
-        <Entry char="1️⃣" num={1} />
-        <Entry char="2️⃣" num={2} />
-        <Entry char="3️⃣" num={0} />
-      </Row>
-      <Row>
-        <Entry char="4️⃣" num={1} />
-        <Entry char="5️⃣" num={0} />
-        <Entry char="6️⃣" num={1} />
-      </Row>
-      <Row>
-        <Entry char="🔟" num={0} />
-        <Entry char="🗡️" num={0} />
-        <Entry char="💨" num={0} />
-      </Row>
+    <div class="w-[160px] bg-[#51361A]  border-black border-solid border-[1px] rounded">
+      <div class="flex flex-col border border-white rounded">
+        <div class="bg-black bg-opacity-20">
+          <Row>
+            <div class="mr-3 flex gap-2">
+              <Badge avatar={avatar} name={null} player={player} size={24} />
+              <Total
+                colors={playerColors[player]}
+                num={getBattleStrength(line, !!isWinter)}
+              />
+            </div>
+            <Entry char={cardGlyphs["d"]} num={countOf("d", line)} />
+            <Entry char={cardGlyphs["w"]} num={countOf("w", line)} />
+          </Row>
+        </div>
+
+        <Row>
+          <Entry char={cardGlyphs[1]} num={countOf(1, line)} />
+          <Entry char={cardGlyphs[2]} num={countOf(2, line)} />
+          <Entry char={cardGlyphs[3]} num={countOf(3, line)} />
+        </Row>
+        <Row>
+          <Entry char={cardGlyphs[4]} num={countOf(4, line)} />
+          <Entry char={cardGlyphs[5]} num={countOf(5, line)} />
+          <Entry char={cardGlyphs[6]} num={countOf(6, line)} />
+        </Row>
+        <Row>
+          <Entry char={cardGlyphs[10]} num={countOf(10, line)} />
+          <Entry char={cardGlyphs["h"]} num={countOf("h", line)} />
+          <Entry char={cardGlyphs["s"]} num={countOf("s", line)} />
+        </Row>
+      </div>
     </div>
   );
 };
 
-const PlayerMatContainer = spec(<div class="w-[160px]" />);
-const BottomStuff = spec(<div class="flex items-center justify-around mt-1" />);
-export const PlayerMat = () => {
-  return (
-    <PlayerMatContainer>
-      <CardMat />
-      <BottomStuff>
-        <div>Meety</div>
-        <Entry char="🎴" num={12} />
-      </BottomStuff>
-    </PlayerMatContainer>
-  );
-};
+export default PlayerMat;

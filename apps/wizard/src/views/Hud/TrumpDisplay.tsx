@@ -8,7 +8,13 @@ import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async/task";
 
-export const MiniCard = ({ glyphs }: { glyphs: (string | number)[] }) => {
+export const MiniCard = ({
+  glyphs,
+  color,
+}: {
+  glyphs: (string | number)[];
+  color: string;
+}) => {
   return (
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
@@ -17,10 +23,7 @@ export const MiniCard = ({ glyphs }: { glyphs: (string | number)[] }) => {
             suits[g as keyof typeof suits] || values[g as keyof typeof values];
           if (!Icon) return null;
           return (
-            <div
-              class="w-4 h-4"
-              style={{ fill: colors[g as keyof typeof colors] }}
-            >
+            <div class="w-4 h-4" style={{ fill: color }}>
               <Icon />
             </div>
           );
@@ -63,8 +66,13 @@ const TrumpCard = ({
     if (suit === "j") return ["j"];
     return [value, trumpSuit];
   })();
+  const color = (() => {
+    if (suit === "w") return colors["w"];
+    if (suit === "j") return colors["j"];
+    return colors[trumpSuit as keyof typeof colors];
+  })();
 
-  return <MiniCard glyphs={glyphs} />;
+  return <MiniCard glyphs={glyphs} color={color} />;
 };
 
 export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {

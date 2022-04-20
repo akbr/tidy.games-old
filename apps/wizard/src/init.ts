@@ -1,10 +1,14 @@
-import { initTabletop } from "@shared/initTabletop";
+import { createServer } from "@lib/tabletop/roomServer";
+import { initTabletop } from "@shared/initPrimaryClient";
+
 import cart from "./game/cart";
 import views from "./views";
 
 import isDev from "@shared/isDev";
 
-const serverOptions = { seed: "test113" };
+const server = isDev()
+  ? createServer(cart, { seed: "test113" })
+  : location.origin.replace(/^http/, "ws");
 
 const client = initTabletop(
   {
@@ -13,7 +17,7 @@ const client = initTabletop(
     dev: isDev(),
     $el: document.body,
   },
-  isDev() ? serverOptions : undefined
+  server
 );
 
 isDev() &&

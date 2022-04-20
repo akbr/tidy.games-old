@@ -1,10 +1,13 @@
 import { Spec } from "@lib/tabletop/";
-import { createServer, ServerOptions } from "@lib/tabletop/roomServer";
+import {
+  createServer,
+  ServerApi,
+  ServerOptions,
+} from "@lib/tabletop/roomServer";
 import { createClient } from "@lib/tabletop/client";
 import attachHashListener from "@lib/tabletop/client/attachments/hashListener";
 import attachLocalStorageMemory from "@lib/tabletop/client/attachments/localStorageMeta";
 
-import { isDev } from "./isDev";
 import {
   initTabletopViews,
   InitAppProps,
@@ -12,12 +15,8 @@ import {
 
 export function initTabletop<S extends Spec>(
   props: Omit<InitAppProps<S>, "client">,
-  serverOptions?: ServerOptions
+  serverOrURL: string | ServerApi<S>
 ) {
-  const serverOrURL = isDev()
-    ? createServer(props.cart, serverOptions)
-    : location.origin.replace(/^http/, "ws");
-
   const client = createClient(serverOrURL, props.cart, props.dev);
   attachLocalStorageMemory(client);
 

@@ -4,7 +4,7 @@ import { playerColors } from "@shared/ui";
 export type BadgeProps = {
   player: number;
   avatar?: string;
-  name?: string;
+  name?: string | null;
   size?: number;
 };
 
@@ -18,7 +18,7 @@ export const Badge = (props: BadgeProps) => {
     </div>
   );
 
-  const vName = (
+  const vName = name ? (
     <div
       class="-mt-[6px] text-sm inline text-center rounded-md"
       style={{
@@ -29,7 +29,7 @@ export const Badge = (props: BadgeProps) => {
     >
       {name}
     </div>
-  );
+  ) : null;
 
   return (
     <section data-type="badge" class="inline-flex flex-col">

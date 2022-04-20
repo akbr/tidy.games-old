@@ -10,7 +10,7 @@
     "local-deploy": "npm run build-all --app-id=$npm_config_app_id && node ./dist/apps/$npm_config_app_id/index-express.js",
     "heroku-postbuild": "npm run build-all --app-id=$APP_NAME",
     "heroku-deploy": "git push https://git.heroku.com/$npm_config_app_id-tidy-games.git HEAD:master --force",
-    "test": "vitest basic",
+    "test": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {

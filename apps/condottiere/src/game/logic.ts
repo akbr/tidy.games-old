@@ -1,5 +1,5 @@
-import { Core, Cards, Cities } from "./types";
-import { cardNumbers, adjacencyList, handOrder } from "./glossary";
+import type { Cards, Cities } from "./glossary";
+import { cardQuantities, cityAdjacencies, handOrder } from "./glossary";
 import {
   deal,
   indexOfMax,
@@ -8,25 +8,30 @@ import {
   shuffle,
   sortBySpec,
 } from "@lib/array";
+import { createPRNG } from "@lib/random/prng";
 import { getClusterSizes } from "@lib/graph";
+import { is } from "@lib/compare/is";
+
+type InputMap = Partial<{ [City in Cities]: null | number }>;
 
 export const createMap = () => {
   const map = {} as { [City in Cities]: null | number };
-  (Object.keys(adjacencyList) as Cities[]).forEach((id) => {
+  (Object.keys(cityAdjacencies) as Cities[]).forEach((id) => {
     map[id] = null;
   });
   return map;
 };
 
+const parseNum = (x: string) => {
+  const parsed = Number(x);
+  return isNaN(parsed) ? x : parsed;
+};
 export const createDeck = () => {
   const deck: Cards[] = [];
-  const parseNum = (arg: string) => {
-    const parsed = Number(arg);
-    return isNaN(parsed) ? arg : parsed;
-  };
-  Object.entries(cardNumbers).forEach(([card, num]) => {
+  Object.entries(cardQuantities).forEach(([card, num]) => {
+    let parsed = parseNum(card) as Cards;
     while (num > 0) {
-      deck.push(parseNum(card) as Cards);
+      deck.push(parsed);
       num--;
     }
   });
@@ -35,21 +40,27 @@ export const createDeck = () => {
 
 export const sortHand = (hand: Cards[]) => sortBySpec(hand, handOrder);
 
-export const createHands = (
-  numPlayers: number,
-  map: Core["map"],
-  seed?: string
-) => {
-  const handSpecs = Array.from({ length: numPlayers }).map(() => 10);
+export const getControlCount = (numPlayers: number, map: InputMap) => {
+  const controlPerPlayer = Array.from({ length: numPlayers }, () => 0);
   Object.values(map)
     .filter((control): control is number => control !== null && control > -1)
     .forEach((controllingPlayer) => {
-      handSpecs[controllingPlayer] += 2;
+      controlPerPlayer[controllingPlayer] += 1;
     });
+  return controlPerPlayer;
+};
 
-  const deck = shuffle(createDeck(), seed);
-
-  return deal(deck, handSpecs).map((hand) => sortHand(hand));
+export const createHands = (
+  numPlayers: number,
+  map: InputMap,
+  seed?: string
+) => {
+  const controlPerPlayer = getControlCount(numPlayers, map);
+  const handSpecs = Array.from({ length: numPlayers }).map(
+    (_, idx) => 10 + controlPerPlayer[idx] * 2
+  );
+  const deck = shuffle(createDeck(), seed ? createPRNG(seed) : undefined);
+  return deal(deck, handSpecs).map(sortHand);
 };
 
 export const getBattleStrength = (line: Cards[], isWinter: boolean) => {
@@ -74,25 +85,26 @@ export const getBattleStrength = (line: Cards[], isWinter: boolean) => {
 };
 
 /**
- * void = battle continues
- * -1 = battle is resolved with no victor
- * 0-6 = winningIndex
+ * null = battle continues
+ * -1 = battle is a tie
+ * 0-6 = index of winning player
  */
 export const getBattleStatus = (
   lines: Cards[][],
-  playStatus: Core["status"]
-): number | void => {
+  playerStatuses: boolean[]
+): number | null => {
   const cards = new Set(lines.flat());
 
-  // Resolve bishop
+  // If bishop, battle is tie
   if (cards.has("b")) return -1;
 
-  // Battle is scored and resolved if mayor has been played, or only one player has cards
+  // Battle should be scored if mayor has been played, or less than two active players
   const battleIsOver =
-    cards.has("m") || playStatus.filter((x) => x === true).length < 2;
+    cards.has("m") || playerStatuses.filter((x) => x === true).length < 2;
 
-  if (!battleIsOver) return;
+  if (!battleIsOver) return null;
 
+  // Score the battle
   const isWinter = cards.has("w");
   const playerStrengths = lines.map((playerCards) =>
     getBattleStrength(playerCards, isWinter)
@@ -102,43 +114,49 @@ export const getBattleStatus = (
   const maxStrength = playerStrengths[winningIndex];
   const isTied = playerStrengths.filter((s) => s === maxStrength).length > 1;
 
-  return !isTied ? winningIndex : -1;
+  if (isTied) return -1;
+
+  return winningIndex;
 };
 
-export const isWinner = (map: Core["map"], numPlayers: number) => {
+export const getWinner = (map: InputMap, numPlayers: number) => {
   const playerCities: Map<number, Cities[]> = new Map();
 
-  Object.entries(map).forEach(([city, playerIndex]) => {
-    if (playerIndex === null || playerIndex === -1) return;
-    const cities = playerCities.get(playerIndex) || [];
+  Object.entries(map).forEach(([city, controllingPlayer]) => {
+    if (controllingPlayer === null || controllingPlayer === -1) return;
+    const cities = playerCities.get(controllingPlayer) || [];
     cities.push(city as Cities);
-    playerCities.set(playerIndex, cities);
+    playerCities.set(controllingPlayer, cities);
   });
 
   const adjScores = Array.from({ length: numPlayers }).map(() => 0);
   playerCities.forEach((cities, playerIndex) => {
-    const adjCounts = getClusterSizes(cities, adjacencyList);
+    const adjCounts = getClusterSizes(cities, cityAdjacencies);
     adjScores[playerIndex] = maxInt(adjCounts);
   });
 
   const numToWin = numPlayers < 4 ? 4 : 3;
   const thereIsAWinner = adjScores.filter((n) => n === numToWin).length > 0;
 
-  return thereIsAWinner ? indexOfMax(adjScores) : null;
+  if (thereIsAWinner) {
+    return indexOfMax(adjScores);
+  }
+
+  return null;
 };
 
 export const getNextPlayer = (
   activePlayer: number,
-  playStatus: Core["status"]
+  playerStatuses: boolean[]
 ) => {
   let nextPlayer = null;
   let lastTried = activePlayer;
   while (nextPlayer === null) {
-    lastTried = rotateIndex(playStatus.length, lastTried);
-    nextPlayer = playStatus[lastTried] === true ? lastTried : null;
+    lastTried = rotateIndex(playerStatuses.length, lastTried, 1);
+    nextPlayer = playerStatuses[lastTried] === true ? lastTried : null;
   }
   return nextPlayer;
 };
 
 export const canDiscard = (hand: Cards[]) =>
-  hand.filter((c) => typeof c === "number").length === 0;
+  is.undefined(hand.find((c) => typeof c === "number"));

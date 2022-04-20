@@ -35,6 +35,7 @@ export type BotFn<S extends Spec> = (
 ) => void;
 
 export type StatePatch<S extends Spec> = [S["phases"], Partial<S["game"]>];
+
 export type Chart<S extends Spec> = {
   [Phase in S["phases"]]: (
     game: S["stateGlossary"][Phase],

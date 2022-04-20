@@ -1,23 +1,19 @@
-const X_PEEK = 35;
-const Y_PEEK = 60;
-const CHILD_WIDTH = 80;
-
 type Dimensions = { width: number; height: number };
 
 export const getHandHeight = (
   numChildren: number,
   { width }: Dimensions,
-  xPeek = X_PEEK,
-  yPeek = Y_PEEK
+  xPeek: number,
+  yPeek: number
 ) => Math.ceil(numChildren / Math.floor(width / xPeek)) * yPeek;
 
 export const getIntraHandPosition = (
   childIdx: number,
   numChildren: number,
   { width, height }: Dimensions,
-  childWidth = CHILD_WIDTH,
-  xPeek = X_PEEK,
-  yPeek = Y_PEEK
+  childWidth: number,
+  xPeek: number,
+  yPeek: number
 ) => {
   const maxInRow = Math.floor(width / xPeek);
   const numRows = Math.ceil(numChildren / maxInRow);

@@ -24,6 +24,15 @@ export const getHeldPosition = (
   return toXY(Vec.add(seat, heldOffset, cardCenter));
 };
 
+export const getCenterPlayedPosition = (
+  { width, height }: Dimensions,
+  childDimensions = CHILD_DIMENSIONS
+) => {
+  const screenCenter = Vec.mul([width, height], 0.5);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
+  return toXY(Vec.add(screenCenter, cardCenter));
+};
+
 export const getPlayedPosition = (
   numPlayers: number,
   seatIndex: number,

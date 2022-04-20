@@ -17,7 +17,10 @@ import { OptionsView } from "./OptionsView";
 
 export type AppViews<S extends Spec> = {
   Backdrop?: (props: { clientState: ClientState<S> }) => JSX.Element;
-  AppContainer?: (props: { clientState: ClientState<S> }) => JSX.Element;
+  AppContainer?: (props: {
+    clientState: ClientState<S>;
+    children: ComponentChildren;
+  }) => JSX.Element;
   Title?: (props: TitleProps<S>) => JSX.Element;
   Lobby?: (props: LobbyViewProps<S>) => JSX.Element;
   Options?: OptionsView<S>;
@@ -90,7 +93,7 @@ function DefaultAppContainer({ children }: { children: ComponentChildren }) {
 }
 
 function DefaultGame<S extends Spec>(props: GameProps<S>) {
-  return <div>{JSON.stringify(props)}</div>;
+  return <div>Hello, world!</div>;
 }
 
 export function NotificationsWrapper<S extends Spec>({
@@ -101,7 +104,7 @@ export function NotificationsWrapper<S extends Spec>({
   return (
     <>
       {children}
-      <div class="absolute bottom-2 left-2">
+      <div class="absolute bottom-2 left-2 z-50">
         <ErrorReciever err={err || null} />
         <ConnectionWarning connected={connected} />
       </div>

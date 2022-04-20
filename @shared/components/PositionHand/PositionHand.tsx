@@ -12,15 +12,25 @@ export const PositionHand = ({
   justDealt,
   waitFor,
   children,
+  childWidth = 80,
+  xPeek = 35,
+  yPeek = 60,
 }: {
   justDealt: boolean;
   waitFor?: WaitFor;
   children: ComponentChildren;
+  xPeek?: number;
+  yPeek?: number;
+  childWidth?: number;
 }) => {
   useRefreshOnResize();
 
   return (
-    <RunDOMEffect fn={applyHandStyles} props={{ justDealt }} waitFor={waitFor}>
+    <RunDOMEffect
+      fn={applyHandStyles}
+      props={{ justDealt, xPeek, yPeek, childWidth }}
+      waitFor={waitFor}
+    >
       <section id="hand" class="relative cursor-pointer">
         {children}
       </section>
@@ -31,15 +41,25 @@ export default PositionHand;
 
 export const applyHandStyles: DOMEffect<{
   justDealt: boolean;
-}> = ($handContainer: HTMLElement, { justDealt }) => {
+  childWidth: number;
+  xPeek: number;
+  yPeek: number;
+}> = ($handContainer: HTMLElement, { justDealt, xPeek, yPeek, childWidth }) => {
   const { width } = $handContainer.getBoundingClientRect();
   const cardEls = Array.from($handContainer.children) as HTMLElement[];
 
   const anims = cardEls.map(($card, idx) => {
-    const { x, y, zIndex } = getIntraHandPosition(idx, cardEls.length, {
-      width,
-      height: window.innerHeight,
-    });
+    const { x, y, zIndex } = getIntraHandPosition(
+      idx,
+      cardEls.length,
+      {
+        width,
+        height: window.innerHeight,
+      },
+      childWidth,
+      xPeek,
+      yPeek
+    );
     if (justDealt) {
       style($card, {
         zIndex,

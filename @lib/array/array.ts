@@ -18,8 +18,16 @@ export function rotateArray<T>(array: T[], numSteps = 1) {
   return rotatedArray;
 }
 
+export function setIndex<T>(array: T[], idx: number, value: T) {
+  return array.map((x, i) => (i === idx ? value : x));
+}
+
 export function lastOf<T>(array: T[]) {
   return array[array.length - 1];
+}
+
+export function countOf<T>(value: T, line: T[]) {
+  return line.filter((x) => x === value).length;
 }
 
 export function shuffle<T>(array: T[], random = Math.random) {
