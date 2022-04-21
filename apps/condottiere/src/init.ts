@@ -6,7 +6,9 @@ import views from "./views";
 import isDev from "@shared/isDev";
 import createClient from "@lib/tabletop/client";
 
-const server = createServer(cart, { seed: "test" });
+const server = isDev()
+  ? createServer(cart, { seed: "test" })
+  : location.origin.replace(/^http/, "ws") + location.pathname;
 
 const client = initTabletop(
   {
@@ -33,7 +35,7 @@ isDev() &&
     c0.server.join({ id: "test" });
     c1.server.join({ id: "test" });
     c0.server.start();
-    c0.game.choose("anc");
+    //c0.game.choose("anc");
     /**
      * 
      * 

@@ -2,8 +2,11 @@ import type { GameProps } from "./types";
 import { getHandHeight } from "@shared/components/PositionHand/handLayout";
 
 import { xPeek, yPeek } from "./uiVars";
+
+import UiButtons from "./UiButtons";
 import Hand from "./Hand";
 import Seats from "./Seats";
+import CenterDisplay from "./CenterDisplay";
 
 export const Game = (props: GameProps) => {
   const { frame, controls } = props;
@@ -27,12 +30,14 @@ export const Game = (props: GameProps) => {
         style={{ height: `calc(100% - ${tableHeight}px)` }}
       >
         <Seats {...props} />
+        <CenterDisplay {...props} />
         <Hand
           cards={game.hands[player]}
           err={props.err}
           play={controls.game.play as any}
         />
       </section>
+      <UiButtons {...props} />
     </div>
   );
 };

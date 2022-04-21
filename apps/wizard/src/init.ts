@@ -8,7 +8,7 @@ import isDev from "@shared/isDev";
 
 const server = isDev()
   ? createServer(cart, { seed: "test113" })
-  : location.origin.replace(/^http/, "ws");
+  : location.origin.replace(/^http/, "ws") + location.pathname;
 
 const client = initTabletop(
   {

@@ -1,14 +1,22 @@
-import type { SocketServer, Socket } from "./";
 import { Server } from "ws";
+import type { Socket } from "@lib/socket";
+import type { ServerApi } from "@lib/tabletop/roomServer";
 
 export const mountWSServer = (
   expressServer: any,
-  socketServer: SocketServer<any, any>
+  roomServers: Record<string, ServerApi<any>>
 ) => {
   const wss = new Server({ server: expressServer });
   addHeartbeat(wss);
 
-  wss.on("connection", function (ws) {
+  wss.on("connection", function (ws, req) {
+    const gameId = (req.url || "").replace(/\//g, "");
+    const socketServer = roomServers[gameId];
+
+    if (!socketServer) {
+      ws.close(1006, `Can't find server for game code ${gameId}`);
+    }
+
     const socket: Socket<any, any> = {
       send: (msg) => ws.send(JSON.stringify(msg)),
       close: () => {

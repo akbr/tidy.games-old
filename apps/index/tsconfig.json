@@ -23,6 +23,6 @@
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment"
   },
-  "include": ["./src"],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

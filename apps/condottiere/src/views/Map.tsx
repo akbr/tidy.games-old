@@ -1,5 +1,6 @@
-//@ts-ignore
-import map from "../../assets/map.jpg";
+import map from "../assets/map.jpg";
+import { getPosition } from "@lib/stylus";
+import { Badge } from "@shared/components/Badge";
 
 const mapCoords = {
   tor: [45, 90],
@@ -20,25 +21,26 @@ const mapCoords = {
   rom: [390, 785],
   nap: [540, 815],
 };
-//
-
-const Dot = ({ x, y }: { x: number; y: number }) => {
-  return (
-    <div
-      class="absolute"
-      style={{ transform: "translate(-50%, -50%)", top: y, left: x }}
-    >
-      <div class="bg-red-500 border-solid border-black w-8 h-8 rounded-[50%]" />
-    </div>
-  );
-};
+//<div class="bg-red-500 border-solid border-black w-8 h-8 rounded-[50%]" />
 
 export const Map = () => (
-  <div>
+  <div class="w-full h-full">
     <div class="relative">
       {Object.entries(mapCoords).map(([id, coords]) => {
-        const [x, y] = coords;
-        return <Dot x={x} y={y} />;
+        const [left, top] = coords;
+        return (
+          <div
+            class="absolute"
+            style={getPosition({
+              top,
+              left,
+              x: "-50%",
+              y: "-50%",
+            })}
+          >
+            <Badge player={2} name={"ABR"} avatar={"🦊"} />
+          </div>
+        );
       })}
     </div>
     <img src={map} />

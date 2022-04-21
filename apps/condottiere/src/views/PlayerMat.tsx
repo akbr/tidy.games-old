@@ -45,7 +45,7 @@ export const PlayerMat = ({
 }: {
   player: number;
   line: Cards[];
-  isWinter?: boolean;
+  isWinter: boolean;
   avatar?: string;
 }) => {
   return (
@@ -57,7 +57,7 @@ export const PlayerMat = ({
               <Badge avatar={avatar} name={null} player={player} size={24} />
               <Total
                 colors={playerColors[player]}
-                num={getBattleStrength(line, !!isWinter)}
+                num={getBattleStrength(line, isWinter)}
               />
             </div>
             <Entry char={cardGlyphs["d"]} num={countOf("d", line)} />
