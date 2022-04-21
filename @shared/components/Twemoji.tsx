@@ -30,17 +30,21 @@ export const getCDNUrl = (emoji: string) =>
 export const Twemoji = ({
   char,
   size = 72,
+  align = "middle",
 }: {
   char: string;
   size?: number;
+  align?: string;
 }) => {
   return (
     <img
-      class="align-middle"
       src={getCDNUrl(char)}
       height={size}
       width={size}
       alt={char}
+      style={{
+        verticalAlign: align,
+      }}
     ></img>
   );
 };

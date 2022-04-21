@@ -1,9 +1,6 @@
 import { Spec } from "@lib/tabletop/";
-import {
-  createServer,
-  ServerApi,
-  ServerOptions,
-} from "@lib/tabletop/roomServer";
+import { ServerApi } from "@lib/tabletop/roomServer";
+
 import { createClient } from "@lib/tabletop/client";
 import attachHashListener from "@lib/tabletop/client/attachments/hashListener";
 import attachLocalStorageMemory from "@lib/tabletop/client/attachments/localStorageMeta";

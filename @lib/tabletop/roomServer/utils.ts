@@ -17,7 +17,7 @@ export function getSeatNumber(
 
   // If no seat requested, give first open seat.
   if (requestedSeat === undefined) {
-    let firstOpenSeat = seats.indexOf(false);
+    let firstOpenSeat = seats.indexOf(null);
     if (firstOpenSeat !== -1) return firstOpenSeat;
     // TO DO: Set a max player limit somehow
     const nextSeatIndex = numSeats;

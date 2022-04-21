@@ -4,11 +4,9 @@ import { initTabletop } from "@shared/initPrimaryClient";
 import cart from "./game/cart";
 import views from "./views";
 
-import isDev from "@shared/isDev";
+import { isDev, getWSURL } from "@shared/browser";
 
-const server = isDev()
-  ? createServer(cart, { seed: "test113" })
-  : location.origin.replace(/^http/, "ws") + location.pathname;
+const server = isDev() ? createServer(cart, { seed: "test" }) : getWSURL();
 
 const client = initTabletop(
   {

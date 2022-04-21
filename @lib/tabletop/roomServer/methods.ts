@@ -78,8 +78,10 @@ export const createMethods = <S extends Spec>(
 
   function broadcastRoomStatusFor(socket: ServerSocket<S>) {
     const room = getSocketRoom(socket);
-    if (!room) return;
+    if (room) broadcastRoomStatus(room);
+  }
 
+  function broadcastRoomStatus(room: Room<S>) {
     const seats = room.seats.map((socket) =>
       socket ? sockets.meta.get(socket) || ({} as SocketMeta) : null
     );
@@ -166,6 +168,8 @@ export const createMethods = <S extends Spec>(
     if (noHumans) {
       room.seats.forEach(clearSocket);
       rooms.delete(room.id);
+    } else {
+      broadcastRoomStatus(room);
     }
   }
 

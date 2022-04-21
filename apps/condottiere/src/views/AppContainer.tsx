@@ -6,7 +6,7 @@ export function AppContainer({ children }: { children: ComponentChildren }) {
       type="AppContainer"
       class="h-full w-full max-w-[650px]"
       style={{
-        background: "radial-gradient(circle,#c2b280 10%,#7d6d3c 100%)",
+        background: "radial-gradient(circle,#c2b280 20%,#62562f 100%)",
       }}
     >
       {children}

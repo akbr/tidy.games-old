@@ -3,12 +3,10 @@ import { createServer } from "@lib/tabletop/roomServer";
 import cart from "./game/cart";
 import views from "./views";
 
-import isDev from "@shared/isDev";
+import { isDev, getWSURL } from "@shared/browser";
 import createClient from "@lib/tabletop/client";
 
-const server = isDev()
-  ? createServer(cart, { seed: "test" })
-  : location.origin.replace(/^http/, "ws") + location.pathname;
+const server = isDev() ? createServer(cart, { seed: "test" }) : getWSURL();
 
 const client = initTabletop(
   {
@@ -34,7 +32,7 @@ isDev() &&
 
     c0.server.join({ id: "test" });
     c1.server.join({ id: "test" });
-    c0.server.start();
+    //c0.server.start();
     //c0.game.choose("anc");
     /**
      * 
