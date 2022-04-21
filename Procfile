@@ -1,1 +1,0 @@
-web: node ./dist/apps/$APP_NAME/index-express.js
