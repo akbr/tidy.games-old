@@ -8,9 +8,10 @@
     "build-apps": "npm run build-app --app-id=index && npm run build-app --app-id=wizard && npm run build-app --app-id=condottiere",
     "build-node": "tsc --project node/tsconfig.json && tsc-alias -p node/tsconfig.json && mv node/dist ./dist/node",
     "build-all": "rm -rf dist/ && mkdir dist && mkdir dist/client && npm run build-node && npm run build-apps",
-    "boot": "npm run build-all && node ./dist/node/node/index-web.js",
-    "heroku-postbuild": "npm run boot",
-    "heroku-deploy": "git push https://git.heroku.com/$npm_config_app_id-tidy-games.git HEAD:master --force",
+    "start-server": "node ./dist/node/node/index-web.js",
+    "local-deploy": "npm run build-all && npm run start-server",
+    "heroku-postbuild": "npm run build-all",
+    "heroku-deploy": "git push https://git.heroku.com/tidy-games.git HEAD:master --force",
     "test": "vitest",
     "test:ui": "vitest --ui"
   },
