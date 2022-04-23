@@ -1,10 +1,11 @@
+import { FunctionalComponent } from "preact";
 import { useState } from "preact/hooks";
 
 import { Twemoji } from "@shared/components/Twemoji";
 import { DialogOf } from "@shared/components/DialogOf";
 
 import { GameProps } from "./types";
-import { FunctionalComponent } from "preact";
+import { Map } from "./Map";
 
 const Options = ({ frame, cart, controls, room }: GameProps) => {
   return (
@@ -51,7 +52,7 @@ export const UiButtons = (props: GameProps) => {
           <div class="cursor-pointer" onClick={() => setDialog(() => Options)}>
             <Twemoji char={"⚙️"} size={36} />
           </div>
-          <div class="cursor-pointer">
+          <div class="cursor-pointer" onClick={() => setDialog(() => MapView)}>
             <Twemoji char={"🗺️"} size={36} />
           </div>
         </div>
@@ -65,3 +66,19 @@ export const UiButtons = (props: GameProps) => {
   );
 };
 export default UiButtons;
+
+function MapView({ frame, room, controls }: GameProps) {
+  const [phase, game] = frame.state;
+  const isTurn = frame.player === game.player;
+  const isChoosing = isTurn && phase === "choose";
+
+  return (
+    <Map
+      players={room.seats}
+      battleLocation={game.battleLocation}
+      map={game.map}
+      isChoosing={isChoosing}
+      choose={controls.game.choose}
+    />
+  );
+}

@@ -16,7 +16,7 @@ export const CenterDisplay = (props: GameProps) => {
     if (type === "choose") {
       if (!isTurn)
         return (
-          <div class="text-center">
+          <div class="text-center animate-pulse">
             Waiting for condottiere
             <br /> to choose battle city...
           </div>
@@ -71,9 +71,7 @@ function ChooseCity({
   cityList = cityList.filter((city) => map[city] === null);
 
   const [city, setCity] = useState(cityList[0]);
-  return (
-    <div class="flex flex-col items-center text-center gap-[16px] max-w-[175px]">
-      <h3>Choose city:</h3>
+  /**      <h3>Choose city:</h3>
       <select
         name="cities"
         style={{ maxWidth: "100px" }}
@@ -93,7 +91,11 @@ function ChooseCity({
       >
         Choose
       </button>
-    </div>
+   */
+  return (
+    <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px] animate-pulse">
+      Tap the map to choose a city.
+    </h3>
   );
 }
 

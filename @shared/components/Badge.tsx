@@ -22,7 +22,7 @@ export const Badge = (props: BadgeProps) => {
         <Twemoji char={avatar} size={size} />
       </div>
       {name ? (
-        <div class="">
+        <div class="text-center">
           <Name name={name} player={player} />
         </div>
       ) : null}
