@@ -1,6 +1,8 @@
 import map from "../assets/map.jpg";
 import { getPosition } from "@lib/stylus";
 import { Badge } from "@shared/components/Badge";
+import { Twemoji } from "@shared/components/Twemoji";
+import { DialogOf } from "@shared/components/DialogOf";
 
 const mapCoords = {
   tor: [45, 90],
@@ -22,27 +24,32 @@ const mapCoords = {
   nap: [540, 815],
 };
 //<div class="bg-red-500 border-solid border-black w-8 h-8 rounded-[50%]" />
+// <Badge player={2} name={"ABR"} avatar={"🦊"} />;
 
 export const Map = () => (
-  <div class="w-full h-full">
-    <div class="relative">
-      {Object.entries(mapCoords).map(([id, coords]) => {
-        const [left, top] = coords;
-        return (
-          <div
-            class="absolute"
-            style={getPosition({
-              top,
-              left,
-              x: "-50%",
-              y: "-50%",
-            })}
-          >
-            <Badge player={2} name={"ABR"} avatar={"🦊"} />
-          </div>
-        );
-      })}
+  <DialogOf>
+    <div class="w-full h-full">
+      <div class="relative">
+        {Object.entries(mapCoords).map(([id, coords]) => {
+          const [left, top] = coords;
+          return (
+            <div
+              class="absolute"
+              style={getPosition({
+                top,
+                left,
+                x: "-50%",
+                y: "-50%",
+              })}
+            >
+              <div class="animate-bounce cursor-pointer">
+                <Twemoji char={"⬇️"} size={24} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <img src={map} />
     </div>
-    <img src={map} />
-  </div>
+  </DialogOf>
 );

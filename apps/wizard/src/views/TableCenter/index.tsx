@@ -27,7 +27,7 @@ export const TableCenter = (props: GameProps) => {
 
     if (type === "select") {
       return !isMyTurn ? (
-        <h3 class={`animate-bounce text-center max-w-[150px]`}>
+        <h3 class={`animate-pulse text-center max-w-[150px]`}>
           Waiting for dealer to select trump...
         </h3>
       ) : (
@@ -44,7 +44,7 @@ export const TableCenter = (props: GameProps) => {
 
     if (type === "bid" || type === "bidded") {
       return !isMyTurn ? (
-        <div class="animate-bounce text-center">
+        <div class="animate-pulse text-center">
           <h3>
             Waiting for
             <br /> bids...
@@ -64,11 +64,7 @@ export const TableCenter = (props: GameProps) => {
     }
 
     if (type === "end") {
-      return (
-        <>
-          <div>Game over, man!</div>
-        </>
-      );
+      return <div>Game over, man!</div>;
     }
 
     return null;

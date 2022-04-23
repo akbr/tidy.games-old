@@ -6,7 +6,7 @@ import views from "./views";
 
 import { isDev, getWSURL } from "@shared/browser";
 
-const server = isDev() ? createServer(cart, { seed: "test" }) : getWSURL();
+const server = isDev() ? createServer(cart, { seed: "test123" }) : getWSURL();
 
 const client = initTabletop(
   {

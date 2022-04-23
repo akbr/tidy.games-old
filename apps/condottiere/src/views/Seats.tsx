@@ -12,12 +12,7 @@ export function Seats({ frame, room }: GameProps) {
     <PositionSeats>
       {room.seats.map((seat, idx) => (
         <div class="m-1">
-          <PlayerMat
-            player={idx}
-            avatar={seat ? seat.avatar : undefined}
-            line={game.lines[idx]}
-            isWinter={isWinter}
-          />
+          <PlayerMat player={idx} line={game.lines[idx]} isWinter={isWinter} />
         </div>
       ))}
     </PositionSeats>

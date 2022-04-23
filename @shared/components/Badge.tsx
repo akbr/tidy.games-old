@@ -8,19 +8,34 @@ export type BadgeProps = {
   size?: number;
 };
 
+export const getGlowStyle = (player: number) => {
+  const [glowColor] = playerColors[player];
+  return `drop-shadow(0px 0px 4px ${glowColor})`;
+};
+
 export const Badge = (props: BadgeProps) => {
   const { player, avatar = "👤", name = `PL${player}`, size = 36 } = props;
 
-  const [backgroundColor, color] = playerColors[player];
-  const vAvatar = (
-    <div style={{ filter: `drop-shadow(0px 0px 4px ${backgroundColor})` }}>
-      <Twemoji char={avatar} size={size} />
-    </div>
+  return (
+    <section data-type="badge" class="inline-flex flex-col">
+      <div style={{ filter: getGlowStyle(player) }}>
+        <Twemoji char={avatar} size={size} />
+      </div>
+      {name ? (
+        <div class="">
+          <Name name={name} player={player} />
+        </div>
+      ) : null}
+    </section>
   );
+};
 
-  const vName = name ? (
+export function Name({ name, player }: { name: string; player: number }) {
+  const [backgroundColor, color] = playerColors[player];
+
+  return (
     <div
-      class="-mt-[6px] text-sm inline text-center rounded-md"
+      class="text-sm inline text-center rounded-md p-1"
       style={{
         backgroundColor,
         color,
@@ -29,12 +44,5 @@ export const Badge = (props: BadgeProps) => {
     >
       {name}
     </div>
-  ) : null;
-
-  return (
-    <section data-type="badge" class="inline-flex flex-col">
-      {vAvatar}
-      {vName}
-    </section>
   );
-};
+}

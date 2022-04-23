@@ -8,22 +8,21 @@ import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async/task";
 
-export const MiniCard = ({
-  glyphs,
-  color,
-}: {
-  glyphs: (string | number)[];
-  color: string;
-}) => {
+type Glyph = (string | number)[];
+export const MiniCard = ({ glyphs }: { glyphs: Glyph[] }) => {
   return (
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
-        {glyphs.map((g) => {
+        {glyphs.map(([icon, color]) => {
           const Icon =
-            suits[g as keyof typeof suits] || values[g as keyof typeof values];
+            suits[icon as keyof typeof suits] ||
+            values[icon as keyof typeof values];
           if (!Icon) return null;
           return (
-            <div class="w-4 h-4" style={{ fill: color }}>
+            <div
+              class="w-4 h-4"
+              style={{ fill: color || colors[icon as keyof typeof colors] }}
+            >
               <Icon />
             </div>
           );
@@ -53,26 +52,21 @@ const TrumpCard = ({
   trumpCard: string;
   trumpSuit: string | null;
 }) => {
-  if (!trumpSuit)
-    return (
-      <div class="inline align-middle">
-        <Twemoji char="❌" size={16} />
-      </div>
-    );
+  if (!trumpSuit) return <Twemoji char="❌" size={16} align={"middle"} />;
 
   const [value, suit] = splitCard(trumpCard);
+
   const glyphs = (() => {
-    if (suit === "w") return ["w", value];
-    if (suit === "j") return ["j"];
-    return [value, trumpSuit];
-  })();
-  const color = (() => {
-    if (suit === "w") return colors["w"];
-    if (suit === "j") return colors["j"];
-    return colors[trumpSuit as keyof typeof colors];
+    if (suit === "w") return [["w"], [trumpSuit]];
+    if (suit === "j") return [["j"]];
+    return [[value, colors[trumpSuit as keyof typeof colors]], [trumpSuit]];
   })();
 
-  return <MiniCard glyphs={glyphs} color={color} />;
+  return (
+    <div class="inline align-middle">
+      <MiniCard glyphs={glyphs} />
+    </div>
+  );
 };
 
 export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
@@ -85,9 +79,9 @@ export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
 
   return shouldDisplay ? (
     <RunDOMEffect fn={delayedFade} props={type === "trumpReveal" ? "in" : null}>
-      <div>
+      <div class="align-middle">
         Trump:{" "}
-        <div class="inline align-middle">
+        <div class="inline">
           {trumpKnown ? (
             <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
           ) : (

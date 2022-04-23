@@ -26,7 +26,8 @@ const Total = ({
   num: number;
 }) => (
   <div
-    class="flex items-center p-[3px] rounded-md"
+    title="Total battle strength"
+    class="flex items-center p-[4px] rounded-md cursor-default"
     style={{ backgroundColor: colors[0], color: colors[1] }}
   >
     {num}
@@ -37,24 +38,19 @@ const Row = ({ children }: { children: ComponentChildren }) => (
   <div class="flex justify-around items-center p-[6px] ">{children}</div>
 );
 
-export const PlayerMat = ({
-  player,
-  line,
-  isWinter,
-  avatar,
-}: {
+export type PlayerMatProps = {
   player: number;
   line: Cards[];
   isWinter: boolean;
-  avatar?: string;
-}) => {
+};
+
+export const PlayerMat = ({ player, line, isWinter }: PlayerMatProps) => {
   return (
     <div class="w-[160px] bg-[#51361A]  border-black border-solid border-[1px] rounded">
       <div class="flex flex-col border border-white rounded">
         <div class="bg-black bg-opacity-20">
           <Row>
             <div class="mr-3 flex gap-2">
-              <Badge avatar={avatar} name={null} player={player} size={24} />
               <Total
                 colors={playerColors[player]}
                 num={getBattleStrength(line, isWinter)}

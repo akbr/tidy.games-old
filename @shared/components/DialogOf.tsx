@@ -1,3 +1,4 @@
+import { useRefreshOnResize } from "@lib/hooks";
 import { ComponentChildren } from "preact";
 
 export const DialogOf = ({
@@ -7,6 +8,8 @@ export const DialogOf = ({
   close: () => void;
   children: ComponentChildren;
 }) => {
+  useRefreshOnResize();
+
   return (
     <div class="absolute top-0 w-full h-full flex items-center justify-center">
       <div
@@ -37,7 +40,7 @@ export const DialogOf = ({
           </svg>
         </div>
         <div
-          class="relative overflow-y-auto overflow-x-hidden"
+          class="relative overflow-y-auto overflow-x-auto"
           style={{ maxHeight: window.innerHeight * 0.89 }}
         >
           <div class="rounded p-2">{children}</div>
