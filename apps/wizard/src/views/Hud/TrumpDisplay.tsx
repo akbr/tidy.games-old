@@ -4,9 +4,10 @@ import { Twemoji } from "@shared/components/Twemoji";
 import { splitCard } from "@shared/components/Card";
 import { suits, values, colors } from "@shared/components/Card/glyphs";
 
-import { DOMEffect, RunDOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async/task";
+import { createRef } from "preact";
+import { useLayoutEffect } from "preact/hooks";
 
 type Glyph = (string | number)[];
 export const MiniCard = ({ glyphs }: { glyphs: Glyph[] }) => {
@@ -32,7 +33,7 @@ export const MiniCard = ({ glyphs }: { glyphs: Glyph[] }) => {
   );
 };
 
-const delayedFade: DOMEffect<"in" | null> = ($el, prop) => {
+const delayedFade = ($el: HTMLElement, prop: "in" | null) => {
   if (prop !== "in") return;
 
   style($el, { display: "none", opacity: 0 });
@@ -74,21 +75,24 @@ export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
     state: [type, { trumpCard, trumpSuit }],
   } = frame;
 
+  const ref = createRef<HTMLDivElement>();
+  useLayoutEffect(() => {
+    delayedFade(ref.current!, type === "trumpReveal" ? "in" : null);
+  }, []);
+
   const shouldDisplay = trumpCard && type !== "deal";
   const trumpKnown = trumpSuit !== "w";
 
   return shouldDisplay ? (
-    <RunDOMEffect fn={delayedFade} props={type === "trumpReveal" ? "in" : null}>
-      <div class="align-middle">
-        Trump:{" "}
-        <div class="inline">
-          {trumpKnown ? (
-            <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
-          ) : (
-            <Twemoji char="⌛" size={16} />
-          )}
-        </div>
+    <div ref={ref} class="align-middle">
+      Trump:{" "}
+      <div class="inline">
+        {trumpKnown ? (
+          <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
+        ) : (
+          <Twemoji char="⌛" size={16} />
+        )}
       </div>
-    </RunDOMEffect>
+    </div>
   ) : null;
 };

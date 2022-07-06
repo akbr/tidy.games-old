@@ -28,7 +28,7 @@ type RoundStarProps = {
 };
 export const RoundStart = ({ num, waitFor }: RoundStarProps) => {
   return (
-    <RunDOMEffect fn={roundEffect} props={null} waitFor={waitFor}>
+    <RunDOMEffect fn={roundEffect} props={null} waitFor={waitFor} once={true}>
       <h2 class={`text-white`}>Round {num}</h2>
     </RunDOMEffect>
   );

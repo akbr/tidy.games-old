@@ -6,7 +6,9 @@ import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
 
-const revealEffect: DOMEffect<string> = ($card, suit) => {
+const revealEffect: DOMEffect<string> = ($card, suit, prev) => {
+  if (suit === prev) return;
+
   const { width, height } = getNearestDimensions($card.parentElement!);
   const $suit = $card.querySelector("#suit")!;
   const isWild = ["w", "j"].includes(suit);

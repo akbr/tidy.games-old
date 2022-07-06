@@ -1,4 +1,4 @@
-import { ComponentChildren, h } from "preact";
+import { ComponentChildren, FunctionalComponent, h } from "preact";
 import {
   useState,
   useEffect,
@@ -14,6 +14,27 @@ import { ClientState, GameProps, TitleProps } from "@lib/tabletop/client";
 import { Title as DefaultTitle } from "./Title";
 import { Lobby as DefaultLobby, LobbyViewProps } from "./Lobby";
 import { OptionsView } from "./OptionsView";
+import { DialogOf } from "../DialogOf";
+
+export type AppState<
+  S extends Spec,
+  C = ClientState<S>
+> = C extends ClientState<S>
+  ? [
+      C[0],
+      C[1] & {
+        view: {
+          Dialog: DialogI<S>;
+          close: () => void;
+          set: (d: DialogI<S>) => void;
+        };
+      }
+    ]
+  : never;
+
+type DialogI<S extends Spec> = FunctionalComponent<{
+  state: AppState<S>;
+}> | null;
 
 export type AppViews<S extends Spec> = {
   Backdrop?: (props: { clientState: ClientState<S> }) => JSX.Element;
@@ -34,7 +55,16 @@ export type AppProps<S extends Spec> = {
 };
 
 export function App<S extends Spec>({ state, views, cart }: AppProps<S>) {
-  const [type, props] = state;
+  const [Dialog, setDialog] = useState<DialogI<S>>(null);
+  const view = {
+    Dialog,
+    close: () => setDialog(null),
+    set: (d: DialogI<S>) => setDialog(() => d),
+  };
+
+  const appState = [state[0], { ...state[1], view }] as AppState<S>;
+  const [type, props] = appState;
+
   const {
     Backdrop = DefaultBackrop,
     AppContainer = DefaultAppContainer,
@@ -63,6 +93,11 @@ export function App<S extends Spec>({ state, views, cart }: AppProps<S>) {
             }
           })()}
         </NotificationsWrapper>
+        {Dialog && (
+          <DialogOf close={view.close}>
+            <Dialog state={appState} />
+          </DialogOf>
+        )}
       </AppContainer>
     </Backdrop>
   );
@@ -82,7 +117,7 @@ function DefaultAppContainer({ children }: { children: ComponentChildren }) {
   return (
     <section
       type="AppContainer"
-      class="h-full w-full max-w-[650px]"
+      class="relative h-full w-full max-w-[650px]"
       style={{
         background: "radial-gradient(circle,#00850b 20%,#005c09 100%)",
       }}

@@ -1,4 +1,4 @@
-import { GameProps } from "./types";
+import { AppState } from "./types";
 import { ComponentChildren } from "preact";
 import { rotateArray } from "@lib/array";
 import { getScore } from "../game/logic";
@@ -53,13 +53,15 @@ const PlayerRow = ({ columns }: { columns: number[][] }) => (
   <tr>{columns.map(PlayerCells)}</tr>
 );
 
-export const ScoreTable = ({
-  frame: {
+export const ScoreTable = ({ state }: AppState) => {
+  if (state[0] !== "game") return null;
+
+  const { frame, room } = state[1];
+  const {
     player,
     state: [type, { scores }],
-  },
-  room,
-}: GameProps) => {
+  } = frame;
+
   if (scores.length === 0) return null;
 
   let modSeats = rotateArray(room.seats, -player);

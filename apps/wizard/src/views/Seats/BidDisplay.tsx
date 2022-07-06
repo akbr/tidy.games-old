@@ -85,6 +85,7 @@ export function BidDisplay({
       fn={scorePopEffect}
       props={{ bid, actual, shouldPop }}
       waitFor={waitFor}
+      once={true}
     >
       <div />
     </RunDOMEffect>

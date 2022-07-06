@@ -22,6 +22,18 @@ export type Client<S extends Spec> = {
   reset: () => void;
 };
 
+/**
+type Brainstorm<S extends Spec> =
+  | ({ connected: boolean; err?: Err } & {
+      location: "title";
+      ctx: null;
+      state: null;
+    })
+  | { location: "lobby"; ctx: S["ctx"]; state: null }
+  | { location: "game"; ctx: S["ctx"]; state: S["states"] };
+
+ */
+
 export type ClientState<S extends Spec> =
   | ["title", TitleProps<S>]
   | ["lobby", LobbyProps<S>]

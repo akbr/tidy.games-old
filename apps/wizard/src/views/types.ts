@@ -1,4 +1,5 @@
-import type { GameProps as _GameProps } from "@lib/tabletop/client";
+import type { AppState as _AppState } from "@shared/components/Tabletop/App";
 import type { WizardSpec } from "../game/spec";
 
-export type GameProps = _GameProps<WizardSpec>;
+export type AppState = { state: _AppState<WizardSpec> };
+export type GameProps = Extract<_AppState<WizardSpec>, { 0: "game" }>[1];
