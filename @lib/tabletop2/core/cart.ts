@@ -6,7 +6,7 @@ export type Cart<S extends Spec> = {
     name: string;
     players: [number, number];
   };
-  setOptions: (numPlayers: number, options?: S["options"]) => S["options"];
+  getOptions: (numPlayers: number, options?: S["options"]) => S["options"];
   getInitialState: (ctx: Ctx<S>) => S["states"] | string;
   chart: Chart<S>;
   stripGame?: <State extends S["states"]>(

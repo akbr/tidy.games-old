@@ -68,13 +68,24 @@ export type Machine<S extends Spec> = {
   //getHistory: () => History<S>;
 };
 
-export function createMachine<S extends Spec>(cart: Cart<S>, ctx: Ctx<S>) {
-  if (!ctx.seed) ctx = { ...ctx, seed: `auto_${Date.now()}` };
+export function createMachine<S extends Spec>(
+  cart: Cart<S>,
+  ctx: {
+    numPlayers: number;
+    options?: Ctx<S>["options"];
+    seed?: Ctx<S>["seed"];
+  }
+) {
+  const modCtx = {
+    ...ctx,
+    seed: ctx.seed ? ctx.seed : `auto_${Date.now()}`,
+    options: ctx.options ? ctx.options : cart.getOptions(ctx.numPlayers),
+  };
 
-  const initState = cart.getInitialState(ctx);
+  const initState = cart.getInitialState(modCtx);
   if (is.string(initState)) return initState;
 
-  const initUpdate = getMachineUpdate(cart.chart, ctx, initState);
+  const initUpdate = getMachineUpdate(cart.chart, modCtx, initState);
   if (is.string(initUpdate)) return initUpdate;
   if (is.null(initUpdate)) return "Initial update was null.";
 
@@ -87,7 +98,7 @@ export function createMachine<S extends Spec>(cart: Cart<S>, ctx: Ctx<S>) {
       const latestState = currentUpdate.states.at(-1)!;
       const updateResult = getMachineUpdate(
         cart.chart,
-        ctx,
+        modCtx,
         latestState,
         authAction
       );

@@ -13,8 +13,7 @@ type NumberWarSpec = CreateSpec<{
     winner: number | null;
   };
   options: {
-    maxPlay: number;
-    maxScore: number;
+    targetScore: number;
   };
   actions: { type: "play"; data: number };
   transitions: {
@@ -27,7 +26,24 @@ type NumberWarSpec = CreateSpec<{
   };
 }>;
 
-// 2. Create some "game logic"
+// 2. Create cart components
+type NumberWarCart = Cart<NumberWarSpec>;
+
+// Metadata
+const meta: NumberWarCart["meta"] = {
+  name: "Number War!",
+  players: [2, 4],
+};
+
+// Options config
+const defaultOptions = { targetScore: 3 };
+const maxScore = 99;
+const getOptions: Cart<NumberWarSpec>["getOptions"] = (numPlayers, options) => {
+  if (!options) return defaultOptions;
+  const { targetScore } = options;
+  const isValid = targetScore > 0 && targetScore <= maxScore;
+  return isValid ? options : defaultOptions;
+};
 
 const getInitialState: Cart<NumberWarSpec>["getInitialState"] = ({
   numPlayers,
@@ -42,7 +58,7 @@ const getInitialState: Cart<NumberWarSpec>["getInitialState"] = ({
 ];
 
 const chart: Chart<NumberWarSpec> = {
-  start: (game) => ["waiting", { activePlayer: 0 }],
+  start: () => ["waiting", { activePlayer: 0 }],
   waiting: ({ field, activePlayer }, ctx, action) => {
     if (!action) return null;
     const nextField = field.map((v, i) =>
@@ -64,9 +80,9 @@ const chart: Chart<NumberWarSpec> = {
     if (isTie) return ["tie", {}];
     return ["victory", {}];
   },
-  victory: ({ scores }, { options: { maxScore } }) => {
+  victory: ({ scores }, { options: { targetScore } }) => {
     const max = Math.max(...scores);
-    if (max >= maxScore) return ["end", { winner: 0 }];
+    if (max === targetScore) return ["end", { winner: 0 }];
     return ["waiting", { activePlayer: 0 }];
   },
   tie: () => ["waiting", { activePlayer: 0 }],
@@ -76,17 +92,8 @@ const chart: Chart<NumberWarSpec> = {
 // 3. Put it all together in a cart
 
 export const numberWarCart: Cart<NumberWarSpec> = {
-  meta: {
-    name: "Number War!",
-    players: [2, 4],
-  },
-  setOptions: (numPlayers, options) => {
-    const defaultOptions = { maxPlay: 10, maxScore: 2 };
-    if (!options) return defaultOptions;
-    const { maxPlay } = options;
-    if (maxPlay <= 100 && maxPlay >= 10) return options;
-    return defaultOptions;
-  },
+  meta,
+  getOptions,
   getInitialState,
   chart,
 };
