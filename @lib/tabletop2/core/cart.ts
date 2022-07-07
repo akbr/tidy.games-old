@@ -13,7 +13,7 @@ export type Cart<S extends Spec> = {
     gameState: [State[0], Partial<State[1]>],
     player: number
   ) => Partial<State[1]>;
-  stripAction?: (action: S["actions"], player: number) => S["actions"] | null;
+  stripAction?: <A extends S["actions"]>(action: A, player: number) => A | null;
   botFn?: BotFn<S>;
 };
 

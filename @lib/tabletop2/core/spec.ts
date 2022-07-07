@@ -13,10 +13,9 @@ export type SpecInput = {
   game: Game;
   actions: Actions;
   options?: Options;
-  transitions?: Record<
-    SpecInput["phases"],
-    SpecInput["phases"] | NonStateReturns
-  >;
+  transitions: {
+    [Phase in SpecInput["phases"]]: SpecInput["phases"] | NonStateReturns;
+  };
   constraints?: Partial<Record<SpecInput["phases"], SpecInput["game"]>>;
 };
 
@@ -45,8 +44,7 @@ export type _CreateSpec<
           I["game"] & I["constraints"][Phase]
         >
       : I["game"];
-  },
-  Transitions = undefined extends I["transitions"] ? {} : I["transitions"]
+  }
 > = {
   phases: I["phases"];
   game: I["game"];
@@ -56,7 +54,11 @@ export type _CreateSpec<
   states: {
     [Key in keyof StateGlossary]: [Key, StateGlossary[Key]];
   }[keyof StateGlossary];
-  patchGlossary: CreatePatchGlossary<I["phases"], Transitions, StateGlossary>;
+  patchGlossary: CreatePatchGlossary<
+    I["phases"],
+    I["transitions"],
+    StateGlossary
+  >;
 };
 
 type CreatePatchGlossary<
@@ -66,7 +68,7 @@ type CreatePatchGlossary<
 > = {
   [ThisPhase in P]: InsertPatch<
     ThisPhase,
-    Fill<Edges[ThisPhase], ThisPhase | NoChange | FinalState>,
+    Fill<Edges[ThisPhase], "ERROR: Missing transitions">,
     GameGlossary
   >;
 };

@@ -1,5 +1,5 @@
 import type { Spec } from "./spec";
-import type { Chart, Ctx, StatePatch } from "./chart";
+import type { Chart, ChartUpdate, Ctx } from "./chart";
 import type { Cart } from "./cart";
 
 import { getChartUpdate } from "./chart";
@@ -13,11 +13,48 @@ export type AuthenticatedAction<S extends Spec> = S["actions"] & {
 export type MachineUpdate<S extends Spec> = {
   player: number;
   ctx: Ctx<S>;
-  state: S["states"];
+  prevState: S["states"];
   action: AuthenticatedAction<S> | null;
-  patches: StatePatch<S>[];
-  final: boolean;
-};
+} & ChartUpdate<S>;
+
+function getMachineUpdate<S extends Spec>(
+  chart: Chart<S>,
+  ctx: Ctx<S>,
+  prevState: S["states"],
+  action?: AuthenticatedAction<S>
+): MachineUpdate<S> | string | null {
+  const result = getChartUpdate(chart, ctx, prevState, action);
+  if (is.string(result) || is.null(result)) return result;
+  return {
+    ...result,
+    ctx,
+    prevState,
+    action: action || null,
+    player: -1,
+  };
+}
+
+function adaptUpdateForPlayer<S extends Spec>(
+  cart: Cart<S>,
+  update: MachineUpdate<S>,
+  player: number
+): MachineUpdate<S> {
+  if (player === -1) return update;
+  const { stripAction, stripGame } = cart;
+  const { ctx, action, patches, states } = update;
+  return {
+    ...update,
+    player,
+    ctx: { ...ctx, seed: undefined },
+    action: action && stripAction ? stripAction(action, player) : action,
+    patches: stripGame
+      ? patches.map((p) => [p[0], stripGame(p, player)])
+      : patches,
+    states: stripGame
+      ? states.map((s) => [s[0], stripGame(s, player)])
+      : states,
+  };
+}
 
 export type History<S extends Spec> = {
   ctx: Ctx<S>;
@@ -28,50 +65,40 @@ export type History<S extends Spec> = {
 export type Machine<S extends Spec> = {
   get: (player?: number) => MachineUpdate<S>;
   submit: (action: S["actions"], player: number) => string | void;
-  getHistory: () => History<S>;
+  //getHistory: () => History<S>;
 };
-
-function getMachineUpdate<S extends Spec>(
-  chart: Chart<S>,
-  ctx: Ctx<S>,
-  inputState: S["states"],
-  action?: AuthenticatedAction<S>
-): [MachineUpdate<S>, S["states"]] | string | null {
-  const result = getChartUpdate(chart, ctx, inputState, action);
-  if (is.string(result) || is.null(result)) return result;
-  let { states, patches, final } = result;
-  let state = states.shift()!; // take first new state
-  patches.shift(); // remove first patch
-  let lastState = states.length ? states.pop()! : state; // take most recent state
-  return [
-    {
-      ctx,
-      state,
-      patches,
-      final,
-      player: -1,
-      action: action || null,
-    },
-    lastState,
-  ];
-}
 
 export function createMachine<S extends Spec>(cart: Cart<S>, ctx: Ctx<S>) {
   if (!ctx.seed) ctx = { ...ctx, seed: `auto_${Date.now()}` };
 
   const initState = cart.getInitialState(ctx);
   if (is.string(initState)) return initState;
-  const initResult = getMachineUpdate(cart.chart, ctx, initState);
-  if (is.string(initResult)) return initResult;
-  if (is.null(initResult)) return "Initial update cannot be null.";
-  const [initUpdate, initCurrentState] = initResult;
 
-  let update = initUpdate;
-  let state = initCurrentState;
+  const initUpdate = getMachineUpdate(cart.chart, ctx, initState);
+  if (is.string(initUpdate)) return initUpdate;
+  if (is.null(initUpdate)) return "Initial update was null.";
+
+  let currentUpdate = initUpdate;
 
   const api: Machine<S> = {
-    get: (player) => {
-      if (is.undefined(player)) return update;
+    get: (player) => adaptUpdateForPlayer(cart, currentUpdate, player || -1),
+    submit: (action, player) => {
+      const authAction = { ...action, player, time: Date.now() };
+      const latestState = currentUpdate.states.at(-1)!;
+      const updateResult = getMachineUpdate(
+        cart.chart,
+        ctx,
+        latestState,
+        authAction
+      );
+
+      if (is.string(updateResult)) return updateResult;
+      if (is.null(updateResult))
+        return "Submission caused no state change and returned no error.";
+
+      currentUpdate = updateResult;
     },
   };
+
+  return api;
 }

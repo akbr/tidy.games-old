@@ -42,9 +42,9 @@ export function getChartUpdate<S extends Spec>(
   let final = false;
   let iterarting = true;
   while (iterarting) {
-    const prevState = inputState || states.at(-1)!;
+    const priorState = states.at(-1) || inputState;
 
-    const [phase, prevGameState] = prevState as [any, any];
+    const [phase, prevGameState] = priorState as [S["phases"], any];
     const result = chart[phase](prevGameState, ctx, action) as ChartReturn<S>;
 
     // Only run action on first iteration
@@ -65,7 +65,7 @@ export function getChartUpdate<S extends Spec>(
 
     const patch = result;
     patches.push(patch);
-    states.push(applyPatch(prevState, patch));
+    states.push(applyPatch(priorState, patch));
   }
 
   if (states.length === 0) return null;
