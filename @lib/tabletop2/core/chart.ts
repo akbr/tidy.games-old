@@ -24,18 +24,12 @@ export const applyPatch = <S extends Spec>(
   [nextState, patch]: StatePatch<S>
 ): S["states"] => [nextState, { ...game, ...patch }];
 
-export type ChartUpdate<S extends Spec> = {
-  patches: StatePatch<S>[];
-  states: S["states"][];
-  final: boolean;
-};
-
 export function getChartUpdate<S extends Spec>(
   chart: Chart<S>,
   ctx: Ctx<S>,
   inputState: S["states"],
   action?: S["actions"]
-): ChartUpdate<S> | string | null {
+) {
   const patches: StatePatch<S>[] = [];
   const states: S["states"][] = [];
 

@@ -1,8 +1,8 @@
 import type { Spec } from "./spec";
-import type { Chart, ChartUpdate, Ctx } from "./chart";
-import type { Cart } from "./cart";
+import type { Ctx } from "./chart";
+import type { StateUpdate, Cart } from "./cart";
 
-import { getChartUpdate } from "./chart";
+import { getStateUpdate } from "./cart";
 import { is } from "@lib/compare/is";
 
 export type AuthenticatedAction<S extends Spec> = S["actions"] & {
@@ -10,42 +10,21 @@ export type AuthenticatedAction<S extends Spec> = S["actions"] & {
   time?: number;
 };
 
-export type MachineUpdate<S extends Spec> = {
-  player: number;
+export type HostUpdate<S extends Spec> = StateUpdate<S> & {
   ctx: Ctx<S>;
-  prevState: S["states"];
   action: AuthenticatedAction<S> | null;
-} & ChartUpdate<S>;
-
-function getMachineUpdate<S extends Spec>(
-  chart: Chart<S>,
-  ctx: Ctx<S>,
-  prevState: S["states"],
-  action?: AuthenticatedAction<S>
-): MachineUpdate<S> | string | null {
-  const result = getChartUpdate(chart, ctx, prevState, action);
-  if (is.string(result) || is.null(result)) return result;
-  return {
-    ...result,
-    ctx,
-    prevState,
-    action: action || null,
-    player: -1,
-  };
-}
+};
 
 function adaptUpdateForPlayer<S extends Spec>(
   cart: Cart<S>,
-  update: MachineUpdate<S>,
+  update: HostUpdate<S>,
   player: number
-): MachineUpdate<S> {
+): HostUpdate<S> {
   if (player === -1) return update;
   const { stripAction, stripGame } = cart;
-  const { ctx, action, patches, states } = update;
+  const { action, patches, states } = update;
   return {
     ...update,
-    player,
-    ctx: { ...ctx, seed: undefined },
     action: action && stripAction ? stripAction(action, player) : action,
     patches: stripGame
       ? patches.map((p) => [p[0], stripGame(p, player)])
@@ -62,52 +41,62 @@ export type History<S extends Spec> = {
   actions: AuthenticatedAction<S>[];
 };
 
-export type Machine<S extends Spec> = {
-  get: (player?: number) => MachineUpdate<S>;
+export type Host<S extends Spec> = {
+  get: (player?: number) => HostUpdate<S>;
   submit: (action: S["actions"], player: number) => string | void;
-  //getHistory: () => History<S>;
 };
 
-export function createMachine<S extends Spec>(
+export function createHost<S extends Spec>(
   cart: Cart<S>,
-  ctx: {
+  initCtx: {
     numPlayers: number;
     options?: Ctx<S>["options"];
     seed?: Ctx<S>["seed"];
   }
 ) {
-  const modCtx = {
-    ...ctx,
-    seed: ctx.seed ? ctx.seed : `auto_${Date.now()}`,
-    options: ctx.options ? ctx.options : cart.getOptions(ctx.numPlayers),
+  const [min, max] = cart.meta.players;
+  const validNumPlayers =
+    initCtx.numPlayers >= min && initCtx.numPlayers <= max;
+  if (!validNumPlayers) return "Invalid number of players";
+
+  const options = initCtx.options || cart.getOptions(initCtx.numPlayers);
+  const validOptions = cart.getOptions(initCtx.numPlayers, options) === options;
+  if (!validOptions) return "Invalid options provided";
+
+  const ctx = {
+    ...initCtx,
+    seed: initCtx.seed ? initCtx.seed : `auto_${Date.now()}`,
+    options: initCtx.options
+      ? initCtx.options
+      : cart.getOptions(initCtx.numPlayers),
   };
 
-  const initState = cart.getInitialState(modCtx);
-  if (is.string(initState)) return initState;
-
-  const initUpdate = getMachineUpdate(cart.chart, modCtx, initState);
+  let initUpdate = getStateUpdate(cart, ctx);
   if (is.string(initUpdate)) return initUpdate;
   if (is.null(initUpdate)) return "Initial update was null.";
 
-  let currentUpdate = initUpdate;
+  let currentUpdate: HostUpdate<S> = {
+    ...initUpdate,
+    ctx,
+    action: null,
+  };
 
-  const api: Machine<S> = {
+  const api: Host<S> = {
     get: (player) => adaptUpdateForPlayer(cart, currentUpdate, player || -1),
     submit: (action, player) => {
       const authAction = { ...action, player, time: Date.now() };
       const latestState = currentUpdate.states.at(-1)!;
-      const updateResult = getMachineUpdate(
-        cart.chart,
-        modCtx,
-        latestState,
-        authAction
-      );
+      const updateResult = getStateUpdate(cart, ctx, latestState, authAction);
 
       if (is.string(updateResult)) return updateResult;
       if (is.null(updateResult))
         return "Submission caused no state change and returned no error.";
 
-      currentUpdate = updateResult;
+      currentUpdate = {
+        ...updateResult,
+        ctx,
+        action: authAction,
+      };
     },
   };
 
