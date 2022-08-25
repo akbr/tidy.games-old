@@ -1,189 +1,131 @@
-import type { Spec, Cart } from "../";
-import type { ActionStubs } from "../cart";
-import { Segment, Frame, getFrames } from "../machine";
-import {
-  ServerApi,
-  RoomData,
-  ServerActions,
-  actionStubs as serverActionStubs,
-} from "../roomServer";
-
+import { createSubscription, Subscription } from "@lib/store";
+import { Meter, createMeter } from "@lib/store/meter";
 import { createSocketManager } from "@lib/socket";
-import { createSubscription, Subscribe } from "@lib/state/subscription";
-import { createMeter, Meter } from "@lib/state/meter";
-import { shallowPatchWithDeep } from "@lib/compare/patch";
 
-export type Client<S extends Spec> = {
-  subscribe: Subscribe<ClientState<S>>;
-  get: () => ClientState<S>;
-  meter: Meter<Frame<S>>;
-  controls: Controls<S>;
-  update: () => void;
-  reset: () => void;
-};
+import { Spec } from "../core/spec";
+import { AuthenticatedAction, Ctx } from "../core/chart";
+import { Cart } from "../core/cart";
+import { expandStates } from "../core/utils";
 
-/**
-type Brainstorm<S extends Spec> =
-  | ({ connected: boolean; err?: Err } & {
-      location: "title";
-      ctx: null;
-      state: null;
-    })
-  | { location: "lobby"; ctx: S["ctx"]; state: null }
-  | { location: "game"; ctx: S["ctx"]; state: S["states"] };
+import { ServerActions, actionKeys, ServerApi } from "../server/server";
+import { RoomData } from "../server/routines";
 
- */
-
-export type ClientState<S extends Spec> =
-  | ["title", TitleProps<S>]
-  | ["lobby", LobbyProps<S>]
-  | ["game", GameProps<S>];
-
-export type TitleProps<S extends Spec> = {
-  cart: Cart<S>;
+type ClientUpdate<S extends Spec> = {
   connected: boolean;
-  controls: Controls<S>;
-  err?: Err;
+  room: RoomData | null;
+  state: S["states"] | null;
+  ctx: Ctx<S> | null;
+  action: AuthenticatedAction<S["actions"]> | null;
+  err: { type: "serverErr" | "cartErr"; msg: string } | null;
 };
 
-export type LobbyProps<S extends Spec> = {
-  room: RoomData;
-} & TitleProps<S>;
-
-export type GameProps<S extends Spec> = {
-  frame: Frame<S>;
-} & LobbyProps<S>;
-
-export type FinalProps<S extends Spec> = GameProps<S>;
-
-export type Controls<S extends Spec> = {
-  game: ConnectedActions<S["actions"]>;
-  server: ConnectedActions<ServerActions<S>>;
-  meter: Meter<Frame<S>>;
+type Client<S extends Spec> = {
+  subscribe: Subscription<ClientUpdate<S>>["subscribe"];
+  get: Subscription<ClientUpdate<S>>["get"];
+  actions: {
+    server: ActionFns<ServerActions<S>>;
+    cart: ActionFns<S["actions"]>;
+  };
+  meter: Meter<ClientUpdate<S>["state"]>;
+  cart: Cart<S>;
 };
 
-export type Err = {
-  type: "serverErr" | "machineErr";
-  data: string;
-};
-
-export default createClient;
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
-  cart: Cart<S>,
-  history = false
+  cart: Cart<S>
 ): Client<S> {
-  let connected = false;
-  let segment: Segment<S> | null;
-  let room: RoomData | null = null;
-  let frame: Frame<S> | null;
-  let err: Err | undefined;
+  let status: ClientUpdate<S> = {
+    connected: false,
+    room: null,
+    state: null,
+    ctx: null,
+    action: null,
+    err: null,
+  };
+  function set(update: Partial<ClientUpdate<S>>) {
+    status = { ...status, ...update };
+  }
+
+  const store = createSubscription(status);
+  const meter = createMeter<ClientUpdate<S>["state"]>(null);
+
+  function update() {
+    store.next(status);
+  }
 
   const socket = createSocketManager(server, {
     onopen: () => {
-      connected = true;
+      set({ connected: true });
       update();
     },
     onclose: () => {
-      connected = false;
+      set({ connected: false });
+      update();
+    },
+    onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
+      if (room) set({ room });
+      if (cartErr) set({ err: { type: "cartErr", msg: cartErr } });
+      if (serverErr) set({ err: { type: "serverErr", msg: serverErr } });
+
+      if (cartUpdate) {
+        const { ctx, prev, patches, action, final } = cartUpdate;
+        const states: S["states"][] = [];
+
+        if (!status.ctx) set({ ctx });
+        if (action) set({ action });
+        if (!status.state) states.push(prev);
+        if (patches.length > 0) states.push(...expandStates(cartUpdate));
+
+        if (states.length > 0) {
+          meter.actions.pushStates(...states);
+        } else {
+          update();
+        }
+
+        return;
+      }
+
       update();
     },
   });
 
-  const meter = createMeter<Frame<S>>({ history });
-
-  const controls = {
-    ...{
-      game: createActions<S["actions"]>(cart.actionStubs, (action) => {
-        socket.send(["machine", action]);
-      }),
-      server: createActions<ServerActions<S>>(serverActionStubs, (action) => {
-        socket.send(["server", action]);
-      }),
-    },
-    meter,
-  };
-
-  const sub = createSubscription<ClientState<S>>([
-    "title",
-    { connected, cart, controls },
-  ]);
-
-  function update() {
-    const nextProps: ClientState<S> = (() => {
-      if (!room) return ["title", { connected, cart, controls, err }];
-      if (!frame) return ["lobby", { connected, cart, controls, err, room }];
-      return ["game", { connected, cart, controls, err, room, frame }];
-    })();
-
-    sub.push(nextProps);
-  }
-
-  function reset() {
-    room = null;
-    frame = null;
-    segment = null;
-    meter.reset();
-    controls.server.leave();
-  }
-
-  socket.onmessage = ([type, payload]) => {
-    if (type === "server") {
-      room = payload;
-      if (room === null) reset();
-      update();
-    } else if (type === "machine") {
-      const nextSegment = payload;
-      if (segment) {
-        payload.prev[1] = shallowPatchWithDeep(
-          segment.prev[1],
-          nextSegment.prev[1]
-        );
-      }
-      segment = nextSegment;
-      meter.push(...getFrames(segment));
-    } else if (type === "serverErr" || type === "machineErr") {
-      err = { type, data: payload };
-      update();
-      err = undefined;
-      update();
-    }
-  };
-
-  socket.open();
-
-  meter.subscribe(({ state: nextFrame }, { state: prevFrame }) => {
-    if (nextFrame === prevFrame) return;
-    frame = nextFrame || null;
+  meter.subscribe(({ state }) => {
+    set({ state });
     update();
   });
 
+  const actions = {
+    server: createActionFns(actionKeys, "server", socket),
+    cart: createActionFns(cart.actionKeys, "cart", socket),
+  } as Client<S>["actions"];
+
+  socket.open();
+
   return {
+    subscribe: store.subscribe,
+    get: store.get,
+    actions,
     meter,
-    subscribe: sub.subscribe,
-    get: sub.get,
-    controls,
-    update,
-    reset,
+    cart,
   };
 }
 
-// ---
-
-export type ConnectedActions<Actions extends Spec["actions"]> = {
-  [Action in Actions as Action["type"]]: undefined extends Action["data"]
-    ? (input?: Action["data"]) => void
-    : (input: Action["data"]) => void;
+type ActionFns<A extends { type: string; data?: any }> = {
+  [T in A as T["type"]]: undefined extends T["data"]
+    ? (data?: T["data"]) => void
+    : (data: T["data"]) => void;
 };
 
-export const createActions = <A extends Spec["actions"]>(
-  stubs: ActionStubs<A>,
-  submit: (action: A) => void
-) => {
-  const fns = {} as ConnectedActions<A>;
-  for (let k in stubs) {
-    const key = k as keyof ConnectedActions<A>;
-    fns[key] = (input: any) => submit({ type: key, data: input } as A);
-  }
-  return fns;
-};
+function createActionFns(
+  actionKeys: Record<string, any>,
+  to: "server" | "cart",
+  socket: { send: Function }
+) {
+  const actions: Record<string, any> = {};
+  Object.keys(actionKeys).forEach((type) => {
+    actions[type] = (data: any) => {
+      socket.send({ to, msg: { type, data } });
+    };
+  });
+  return actions;
+}

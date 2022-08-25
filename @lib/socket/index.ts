@@ -4,7 +4,6 @@ export interface Socket<Input, Output> {
   onmessage?: (output: Output) => void;
   onopen?: () => void;
   onclose?: () => void;
-  meta?: Record<string, any>;
 }
 
 export interface SocketManager<Input, Output> extends Socket<Input, Output> {
