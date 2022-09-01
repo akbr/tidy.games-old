@@ -1,8 +1,10 @@
-import { AppState } from "./types";
 import { ComponentChildren } from "preact";
 import { rotateArray } from "@lib/array";
-import { getScore } from "../game/logic";
 import { Twemoji } from "@shared/components/Twemoji";
+import { getScore } from "../game/logic";
+import { GameProps, RoomData } from "@lib/tabletop";
+import { WizardSpec } from "src/game/spec";
+import { memo } from "preact/compat";
 
 export const convert = (scores: number[][]) => {
   let rows: number[][][] = [];
@@ -53,40 +55,34 @@ const PlayerRow = ({ columns }: { columns: number[][] }) => (
   <tr>{columns.map(PlayerCells)}</tr>
 );
 
-export const ScoreTable = ({ state }: AppState) => {
-  if (state[0] !== "game") return null;
+export const ScoreTable = memo(
+  ({ scores, room }: { scores: number[][]; room: RoomData }) => {
+    if (scores.length === 0) return null;
 
-  const { frame, room } = state[1];
-  const {
-    player,
-    state: [type, { scores }],
-  } = frame;
+    let modSeats = rotateArray(room.seats, -room.player);
 
-  if (scores.length === 0) return null;
+    let table = convert(scores.map((row) => rotateArray(row, -room.player)));
 
-  let modSeats = rotateArray(room.seats, -player);
-
-  let table = convert(scores.map((row) => rotateArray(row, -player)));
-
-  return (
-    <div class="text-center">
-      <h2 class="mb-2">Scores</h2>
-      {/** @ts-ignore  */}
-      <table border={"1"} class="bg-white text-black rounded pb-0.5">
-        <tr>
-          {modSeats.map((player) => {
-            const avatar = player?.avatar || "👤";
-            return (
-              <PlayerHead>
-                <Twemoji char={avatar} size={24} />
-              </PlayerHead>
-            );
-          })}
-        </tr>
-        {table.map((columns) => (
-          <PlayerRow columns={columns} />
-        ))}
-      </table>
-    </div>
-  );
-};
+    return (
+      <div class="text-center">
+        <h2 class="mb-2">Scores</h2>
+        {/** @ts-ignore  */}
+        <table border={"1"} class="bg-white text-black rounded pb-0.5">
+          <tr>
+            {modSeats.map((player) => {
+              const avatar = player?.avatar || "👤";
+              return (
+                <PlayerHead>
+                  <Twemoji char={avatar} size={24} />
+                </PlayerHead>
+              );
+            })}
+          </tr>
+          {table.map((columns) => (
+            <PlayerRow columns={columns} />
+          ))}
+        </table>
+      </div>
+    );
+  }
+);

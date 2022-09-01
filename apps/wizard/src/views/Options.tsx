@@ -1,4 +1,3 @@
-import { OptionsView } from "@shared/components/Tabletop/OptionsView";
 import { WizardSpec } from "../game/spec";
 
 export const BidsDescript = () => (
@@ -23,7 +22,9 @@ export const OptionsDisplay = ({
     </div>
   );
 };
+/**
 
+import { OptionsView } from "@shared/components/Tabletop/OptionsView";
 export const Options: OptionsView<WizardSpec> = ({
   numPlayers,
   options,
@@ -74,3 +75,5 @@ export const Options: OptionsView<WizardSpec> = ({
     </table>
   );
 };
+
+ */

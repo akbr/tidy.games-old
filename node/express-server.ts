@@ -24,10 +24,6 @@ export function createExpressServer(servePath = distPath) {
       .use(requireHeorkuHTTPS)
       .use(express.static(servePath))
       //@ts-ignore
-      .get("/", function (_, res) {
-        res.redirect("/index/");
-      })
-      //@ts-ignore
       .get("*", function (_, res) {
         console.log("Express heard", `${_.url}/index.html`, distPath);
         res.sendFile(`${_.url}/index.html`, { root: distPath });

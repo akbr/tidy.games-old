@@ -6,24 +6,15 @@ import { DialogOf } from "@shared/components/DialogOf";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 import { getRoomURL } from "@shared/browser";
-import { is } from "@lib/compare/is";
 
 import type { Spec } from "../core";
 import type { SocketMeta } from "../server";
 import { avatars } from "../server/";
-
-import type { LobbyProps } from "./types";
+import { LobbyProps } from "./types";
 
 export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
   const { cart, room, actions } = props;
   const { addBot } = actions;
-  const numPlayers = room.seats.length;
-
-  const [options, setOptionsState] = useState(
-    cart.getOptions(numPlayers, undefined)
-  );
-  const set = (options: S["options"]) =>
-    setOptionsState(cart.getOptions(numPlayers, options));
 
   const isAdmin = room.player === 0;
   const gameReady = room.seats.length >= cart.meta.players[0];
@@ -35,7 +26,7 @@ export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
       <PlayerDisplay {...props} />
       {isAdmin ? (
         <>
-          <button onClick={() => actions.start(options)} disabled={!gameReady}>
+          <button onClick={() => actions.start()} disabled={!gameReady}>
             {gameReady ? "Start game" : "Waiting for players..."}
           </button>
           {addBot && <button onClick={() => addBot()}>Add bot</button>}
@@ -105,14 +96,7 @@ function PlayerDisplay<S extends Spec>({ room, cart, actions }: LobbyProps<S>) {
               >
                 <Badge {...{ ...player, player: idx }}></Badge>
                 {isPlayer && (
-                  <>
-                    <div class="text-center text-base mt-1 -mb-1">YOU</div>
-                    {is.undefined(player.avatar) && (
-                      <div class={`animate-ping`}>
-                        <Twemoji char={"⚙️"} size={18} />
-                      </div>
-                    )}
-                  </>
+                  <div class="text-center text-base mt-1 -mb-1">YOU</div>
                 )}
               </div>
             );

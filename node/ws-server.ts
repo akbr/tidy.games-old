@@ -1,6 +1,6 @@
 import { Server } from "ws";
 import type { Socket } from "@lib/socket";
-import type { ServerApi } from "@lib/tabletop/roomServer";
+import type { ServerApi } from "@lib/tabletop/server";
 
 export const mountWSServer = (
   expressServer: any,

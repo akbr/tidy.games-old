@@ -24,7 +24,6 @@ const roundEffect: DOMEffect<null> = ($el) =>
 export const RoundStart = ({ num }: { num: number }) => {
   const ref = useRef(null);
   useDOMEffect(roundEffect, ref, null);
-
   return (
     <h2 ref={ref} class={`text-white`}>
       Round {num}

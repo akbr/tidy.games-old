@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
+    "jsx": "react",
     "esModuleInterop": true,
     "sourceMap": true,
     "lib": ["es2020", "dom"],

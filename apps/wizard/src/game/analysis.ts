@@ -1,3 +1,6 @@
+export default "deprcated";
+
+/**
 import { Cart } from "@lib/tabletop";
 import { AuthenticatedAction } from "@lib/tabletop/cart";
 import { getScore } from "./logic";
@@ -91,3 +94,5 @@ export const createAnalysis: Cart<WizardSpec>["createAnalysis"] = (
     runningScore: getRunningScore(finalScores),
   };
 };
+
+ */

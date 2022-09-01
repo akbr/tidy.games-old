@@ -3,7 +3,7 @@ import { Spec } from "../core/spec";
 import { BotFn } from "../core/cart";
 import { CartStore } from "../core/store";
 import { expandStates } from "../core/utils";
-import { ServerSocket, ServerApi } from "./server";
+import { ServerSocket, ServerApi } from "./createServer";
 
 export interface CartHost<S extends Spec> {
   submit: (player: number, action: S["actions"]) => string | void;

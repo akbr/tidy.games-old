@@ -4,7 +4,7 @@ import type { Spec } from "../core/spec";
 import type { Cart } from "../core/cart";
 import { CartStore, createCartStore } from "../core/store";
 
-import type { ServerSocket, ServerApi, ServerActions } from "./server";
+import type { ServerSocket, ServerApi, ServerActions } from "./createServer";
 import { getRandomRoomID, getSeatNumber } from "./utils";
 import { CartHost, createBotSocket, createCartHost } from "./wrappers";
 

@@ -1,5 +1,5 @@
 import { Spec } from "@lib/tabletop/core/spec";
-import { Client, ClientUpdate } from "@lib/tabletop/client/client";
+import { Client, ClientUpdate } from "@lib/tabletop/client/";
 
 export type TitleProps<S extends Spec> = {
   meta: Client<S>["cart"]["meta"];

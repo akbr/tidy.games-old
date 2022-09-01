@@ -1,7 +1,7 @@
 import { ComponentChildren, h } from "preact";
 
 import { Spec } from "@lib/tabletop/core/spec";
-import { Client } from "@lib/tabletop/client/client";
+import { Client } from "@lib/tabletop/client/";
 import useSubscribe from "@lib/store/useSubscribe";
 
 import type { TitleProps, LobbyProps, GameProps } from "./types";

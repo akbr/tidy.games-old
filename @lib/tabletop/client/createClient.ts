@@ -7,9 +7,10 @@ import { AuthenticatedAction, Ctx } from "../core/chart";
 import { Cart } from "../core/cart";
 import { expandStates } from "../core/utils";
 
-import { ServerActions, actionKeys, ServerApi } from "../server/server";
+import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
 import { RoomData } from "../server/routines";
 import { is } from "@lib/compare/is";
+import { CartUpdate } from "../core/store";
 
 export type ClientUpdate<S extends Spec> = {
   connected: boolean;
@@ -54,6 +55,7 @@ export function createClient<S extends Spec>(
     store.next(status);
   }
 
+  let lastUpdate: CartUpdate<S> | null = null;
   const socket = createSocketManager(server, {
     onopen: () => {
       set({ connected: true });
@@ -64,7 +66,14 @@ export function createClient<S extends Spec>(
       update();
     },
     onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
-      if (is.defined(room)) set({ room });
+      if (is.defined(room)) {
+        if (room === null) {
+          lastUpdate = null;
+          set({ room, state: null, ctx: null, action: null });
+        } else {
+          set({ room });
+        }
+      }
       if (cartErr) set({ err: { type: "cartErr", msg: cartErr } });
       if (serverErr) set({ err: { type: "serverErr", msg: serverErr } });
 
@@ -74,7 +83,7 @@ export function createClient<S extends Spec>(
 
         if (!status.ctx) set({ ctx });
         if (action) set({ action });
-        if (!status.state) states.push(prev);
+        if (!lastUpdate) states.push(prev);
         if (patches.length > 0) states.push(...expandStates(cartUpdate));
 
         if (states.length > 0) {
@@ -83,6 +92,7 @@ export function createClient<S extends Spec>(
           update();
         }
 
+        lastUpdate = cartUpdate;
         return;
       }
 
