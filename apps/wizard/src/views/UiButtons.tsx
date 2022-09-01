@@ -1,14 +1,14 @@
 import { Twemoji } from "@shared/components/Twemoji";
 
-import { GameProps, AppState } from "./types";
 import { ScoreTable } from "./ScoreTable";
 import { OptionsDisplay } from "./Options";
+import { GameProps } from "@lib/tabletop";
+import { WizardSpec } from "src/game/spec";
 
-const Options = ({ state }: AppState) => {
-  const [type, props] = state;
+/*
+const Options = ({ state }: GameProps<WizardSpec>) => {
 
-  if (type !== "game") return null;
-  const { frame, cart, controls, room } = props;
+
 
   return (
     <>
@@ -36,33 +36,28 @@ const Options = ({ state }: AppState) => {
     </>
   );
 };
+**/
 
-const Analysis = ({ state }: AppState) => {
-  if (state[0] !== "game") return null;
-  const { frame } = state[1];
-
-  if (!frame.analysis) return <div>Error: No analysis data.</div>;
-  return <div class="text-sm font-mono">{JSON.stringify(frame.analysis)}</div>;
-};
-
-export const UiButtons = ({ frame, view }: GameProps) => {
-  const { state, analysis } = frame;
-  const [, game] = state;
-
+export const UiButtons = ({ state }: GameProps<WizardSpec>) => {
   return (
     <div class="absolute top-0 left-0 m-1">
       <div class="flex gap-2 p-2">
-        <div class="cursor-pointer" onClick={() => view.set(Options)}>
+        <div
+          class="cursor-pointer"
+          onClick={() => {
+            //view.set(Options)
+          }}
+        >
           <Twemoji char={"⚙️"} size={36} />
         </div>
-        {game.scores.length > 0 && (
-          <div class="cursor-pointer" onClick={() => view.set(ScoreTable)}>
+        {state.scores.length > 0 && (
+          <div
+            class="cursor-pointer"
+            onClick={() => {
+              //view.set(ScoreTable)
+            }}
+          >
             <Twemoji char={"🗒️"} size={36} />
-          </div>
-        )}
-        {analysis && (
-          <div class="cursor-pointer" onClick={() => view.set(Analysis)}>
-            <Twemoji char={"📊"} size={36} />
           </div>
         )}
       </div>

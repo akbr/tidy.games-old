@@ -1,7 +1,7 @@
-import { GameProps } from "../types";
+import { GameProps } from "@lib/tabletop/preact/types";
+import { WizardSpec } from "src/game/spec";
 
 import { rotateArray, rotateIndex } from "@lib/array";
-import { WaitFor } from "@lib/state/meter";
 
 import { Badge, BadgeProps } from "@shared/components/Badge";
 import { SpeechBubble, getBubblePos } from "@shared/components/SpeechBubble";
@@ -11,6 +11,7 @@ import { getSeatCSSDirection } from "@shared/components/PositionSeats/seatsLayou
 import { BidDisplay } from "./BidDisplay";
 import { Twemoji } from "@shared/components/Twemoji";
 import { getPosition } from "@lib/stylus";
+import { setDelay } from "@lib/globalUi";
 
 type SeatProps = {
   dir: "left" | "right" | "bottom" | "top";
@@ -21,7 +22,6 @@ type SeatProps = {
   shouldPop: boolean;
   bid: number | null;
   actual: number | null;
-  waitFor: WaitFor;
 } & BadgeProps;
 
 export const Seat = ({
@@ -36,7 +36,6 @@ export const Seat = ({
   shouldPop,
   isLeadPlayer,
   isWaiting,
-  waitFor,
 }: SeatProps) => {
   return (
     <div class="flex flex-col gap-[5px] text-center m-4">
@@ -72,12 +71,7 @@ export const Seat = ({
       </div>
       {showBidDisplay ? (
         <div class="-z-10 animate-fadeIn">
-          <BidDisplay
-            bid={bid!}
-            actual={actual!}
-            waitFor={waitFor}
-            shouldPop={shouldPop}
-          />
+          <BidDisplay bid={bid!} actual={actual!} shouldPop={shouldPop} />
         </div>
       ) : (
         <div class="invisible">_</div>
@@ -86,13 +80,14 @@ export const Seat = ({
   );
 };
 
-export const Seats = ({ frame, room, controls }: GameProps) => {
-  const { player, ctx } = frame;
-  const [type, game] = frame.state;
-  const { bids, actuals } = game;
+export const Seats = ({ state, room, ctx }: GameProps<WizardSpec>) => {
+  const { player } = room;
+  const { phase, bids, actuals, trickLeader } = state;
+
+  if (phase === "bidded") setDelay(1000);
 
   const biddingActive =
-    type === "bid" || type === "bidded" || type == "bidsEnd";
+    phase === "bid" || phase === "bidded" || phase == "bidsEnd";
 
   let seats = room.seats.map((info, playerIdx) => {
     const { name, avatar } = info || {};
@@ -109,10 +104,9 @@ export const Seats = ({ frame, room, controls }: GameProps) => {
         actual={actuals[playerIdx]}
         showBidBubble={biddingActive && bid !== null}
         showBidDisplay={!biddingActive && bid !== null}
-        shouldPop={type === "roundEnd"}
-        waitFor={controls.meter.waitFor}
-        isLeadPlayer={game.trickLeader === playerIdx}
-        isWaiting={game.player === playerIdx}
+        shouldPop={phase === "roundEnd"}
+        isLeadPlayer={trickLeader === playerIdx}
+        isWaiting={state.player === playerIdx}
       />
     );
   });

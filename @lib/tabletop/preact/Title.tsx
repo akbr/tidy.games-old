@@ -1,20 +1,20 @@
 import { useState } from "preact/hooks";
 
-import type { Spec } from "@lib/tabletop/spec";
-import { TitleProps } from "@lib/tabletop/client";
-import { Field } from "../Field";
+import type { Spec } from "@lib/tabletop/core/spec";
+import type { TitleProps } from "./types";
+import { Field } from "./Utils";
 
-export const Title = <S extends Spec>({
-  controls,
+export default function Title<S extends Spec>({
   connected,
-  cart,
-}: TitleProps<S>) => {
+  meta,
+  actions,
+}: TitleProps<S>) {
   const [code, setCode] = useState("");
-  const { join } = controls.server;
+  const { join } = actions;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-14 ">
-      <div class="text-center font-bold text-[64px]">{cart.meta.name}</div>
+      <div class="text-center font-bold text-[64px]">{meta.name}</div>
       <div class="flex flex-col items-center gap-4">
         <Field legend="✨ New game">
           <div class="text-center">
@@ -49,4 +49,4 @@ export const Title = <S extends Spec>({
       </div>
     </div>
   );
-};
+}

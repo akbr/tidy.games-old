@@ -1,41 +1,33 @@
-import { GameProps } from "./types";
-
 import { PositionTrick } from "@shared/components/PositionTrick";
 import { Card } from "@shared/components/Card";
+import { GameProps } from "@lib/tabletop";
+import { WizardSpec } from "src/game/spec";
 
-export const Trick = ({ frame, controls }: GameProps) => {
-  const [phase, game] = frame.state;
-  const { trickLeader, trick } = game;
-
-  const {
-    action,
-    ctx: { numPlayers },
-    player,
-  } = frame;
+export const Trick = ({ state, room, ctx }: GameProps<WizardSpec>) => {
+  const { phase, trickLeader, trickWinner, trick } = state;
 
   const effect = (() => {
     if (phase === "played") {
       return {
         type: "played",
-        player: action!.player,
+        player: state.player!,
       } as const;
     }
 
     if (phase === "trickWon") {
       return {
         type: "won",
-        player: game.trickWinner,
+        player: trickWinner!,
       } as const;
     }
   })();
 
   return (
     <PositionTrick
-      numPlayers={numPlayers}
+      numPlayers={ctx.numPlayers}
       leadPlayer={trickLeader}
-      perspective={player}
+      perspective={room.player}
       effect={effect}
-      waitFor={controls.meter.waitFor}
     >
       {trick.map((cardId) => (
         <div key={cardId} class="absolute">

@@ -36,39 +36,52 @@ export function createCartStore<S extends Spec>(
   const initialUpdate = getChartUpdate(cart.chart, ctx, initialState);
   if (is.string(initialUpdate)) return initialUpdate;
 
-  let currentChart: ChartUpdate<S> = initialUpdate;
-
-  let currentUpdate: CartUpdate<S> = {
-    prev: initialState,
-    ctx,
-    player: -1,
-    ...currentChart,
-  };
+  let actions: AuthenticatedAction<S["actions"]>[] = [];
+  let prevState = initialState;
+  let prevChartUpdate: ChartUpdate<S> = initialUpdate;
 
   return {
-    get: (player) =>
-      adaptUpdateForPlayer(
-        cart,
-        currentUpdate,
-        is.undefined(player) ? -1 : player
-      ),
+    get: (player = -1) => {
+      const { adjustState, adjustAction } = cart;
+      const { patches, states, final } = prevChartUpdate;
+      const lastAction = actions.at(-1);
+
+      const nextPatches = adjustState
+        ? prevChartUpdate.patches.map((patch, idx) => {
+            const result = adjustState(states[idx], player, patch);
+            return result ? { ...patch, ...result } : patch;
+          })
+        : patches;
+
+      const nextAction =
+        adjustAction && lastAction
+          ? (() => {
+              const result = adjustAction(lastAction, player);
+              return result ? { ...lastAction, ...result } : lastAction;
+            })()
+          : lastAction;
+
+      return {
+        player,
+        prev: prevState,
+        action: nextAction,
+        patches: nextPatches,
+        final,
+        ctx,
+      };
+    },
     submit: (inputAction, player) => {
       const action = { ...inputAction, player, time: Date.now() };
-      const prev = currentChart.states.at(-1) || currentUpdate.prev;
+      const prev = prevChartUpdate.states.at(-1)!;
       const update = getChartUpdate(cart.chart, ctx, prev, action);
 
       if (is.string(update)) return update;
       if (update.states.length === 0)
         return "Action returned no error but caused no state change.";
 
-      currentChart = update;
-      currentUpdate = {
-        prev,
-        action,
-        ctx,
-        player: -1,
-        ...currentChart,
-      };
+      actions.push(action);
+      prevState = prev;
+      prevChartUpdate = update;
     },
   };
 }
@@ -80,38 +93,10 @@ function validateContext<S extends Spec>(
   const [min, max] = cart.meta.players;
   const validNumPlayers = ctx.numPlayers >= min && ctx.numPlayers <= max;
   if (!validNumPlayers) return "Invalid number of players";
-  const options = ctx.options || cart.getOptions(ctx.numPlayers);
-  const validOptions = cart.getOptions(ctx.numPlayers, options) === options;
-  if (!validOptions) return "Invalid options";
+  const options = cart.getOptions(ctx.numPlayers, ctx.options);
   return {
     ...ctx,
     seed: ctx.seed ? ctx.seed : `auto_${Date.now()}`,
-    options: ctx.options ? ctx.options : cart.getOptions(ctx.numPlayers),
+    options,
   };
 }
-
-function adaptUpdateForPlayer<S extends Spec>(
-  cart: Cart<S>,
-  update: CartUpdate<S>,
-  player: number
-): CartUpdate<S> {
-  if (player === -1) return update;
-  const { stripAction, stripState } = cart;
-  const { action, patches } = update;
-
-  return {
-    ...update,
-    action: action && stripAction ? stripAction(action, player) : action,
-    patches: stripState ? patches.map((p) => stripState(p, player)) : patches,
-    player,
-  };
-}
-
-/**
-export type History<S extends Spec> = {
-  ctx: Ctx<S>;
-  initialState: S["states"];
-  actions: AuthenticatedAction<S>[];
-};
-
- */

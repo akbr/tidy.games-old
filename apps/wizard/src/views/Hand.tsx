@@ -7,7 +7,6 @@ import { getPlayedPosition } from "@shared/components/PositionTrick/trickLayout"
 import { getNearestDimensions } from "@lib/dom";
 
 import { PositionHand } from "@shared/components/PositionHand";
-import { GameProps } from "./types";
 
 const initCardEvents = (
   $el: HTMLElement,
@@ -39,7 +38,7 @@ type HandCardProps = {
   play: (cardId: string) => void;
   err?: any;
 };
-export const HandCard = ({ card, play, err }: HandCardProps) => {
+export const HandCard = ({ card, play }: HandCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [playAttempt, setPlayAttempt] = useState<string | null>(null);
 
@@ -52,11 +51,7 @@ export const HandCard = ({ card, play, err }: HandCardProps) => {
         play(playAttempt);
       });
     }
-
-    if (err) {
-      style(ref.current!, { x: 0, y: 0 });
-    }
-  }, [err, playAttempt]);
+  }, [playAttempt]);
 
   return (
     <div ref={ref} data-card={card} class="absolute">
@@ -65,21 +60,17 @@ export const HandCard = ({ card, play, err }: HandCardProps) => {
   );
 };
 
-export const Hand = ({ frame, controls, err }: GameProps) => {
-  const {
-    state: [type, game],
-    player,
-  } = frame;
-  const hand = game.hands[player];
+export const Hand = ({
+  hand,
+  play,
+}: {
+  hand: string[];
+  play: (card: string) => void;
+}) => {
   return (
-    <PositionHand justDealt={type === "deal"} waitFor={controls.meter.waitFor}>
+    <PositionHand>
       {hand.map((id) => (
-        <HandCard
-          key={id}
-          err={err}
-          card={id}
-          play={(s) => controls.game.play(s)}
-        />
+        <HandCard key={id} card={id} play={(s) => play(s)} />
       ))}
     </PositionHand>
   );

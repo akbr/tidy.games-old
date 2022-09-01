@@ -3,11 +3,14 @@ import { shallow } from "@lib/compare/shallow";
 export type Listener<T> = (curr: T, prev: T) => void;
 export type Selector<T, U> = (curr: T) => U;
 
-export interface Subscription<T> {
+export interface Subscribable<T> {
   subscribe: (listener: Listener<T>) => () => void;
-  next: (state: T) => void;
   get: () => T;
 }
+
+export type Subscription<T> = Subscribable<T> & {
+  next: (state: T) => void;
+};
 
 export function createSubscription<T>(initial: T): Subscription<T> {
   const listeners: Set<Listener<T>> = new Set();
@@ -29,7 +32,7 @@ export function createSubscription<T>(initial: T): Subscription<T> {
 }
 
 export function withSelector<T, U>(
-  { subscribe }: { subscribe: Subscription<T>["subscribe"] },
+  { subscribe }: Subscribable<T>,
   selector: Selector<T, U>,
   listener: Listener<U>,
   isEqual = shallow

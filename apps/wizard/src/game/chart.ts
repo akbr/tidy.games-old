@@ -1,59 +1,65 @@
-import type { Chart } from "@lib/tabletop/cart";
+import type { Chart } from "@lib/tabletop";
+import { rotateIndex } from "@lib/array";
 
 import { WizardSpec } from "./spec";
-import { rotateIndex } from "@lib/array";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
-
-type RoundStart = Extract<WizardSpec["states"], { 0: "roundStart" }>;
 
 export const getNextRound = (
   { numPlayers }: { numPlayers: number },
-  game = {} as WizardSpec["game"]
-): RoundStart => {
+  state = {} as WizardSpec["states"]
+) => {
   const dealer =
-    game.dealer !== undefined ? rotateIndex(numPlayers, game.dealer, 1) : 0;
-  const scores = game.scores
-    ? ([...game.scores, game.bids, game.actuals] as number[][])
+    state.dealer !== undefined ? rotateIndex(numPlayers, state.dealer, 1) : 0;
+  const scores = state.scores
+    ? ([...state.scores, state.bids, state.actuals] as number[][])
     : [];
 
-  return [
-    "roundStart",
-    {
-      player: null,
-      round: game.round ? game.round + 1 : 1,
-      dealer,
-      hands: Array.from({ length: numPlayers }, () => []),
-      trumpCard: null,
-      trumpSuit: null,
-      trick: [],
-      trickLeader: rotateIndex(numPlayers, dealer, 1),
-      trickWinner: null,
-      bids: Array.from({ length: numPlayers }, () => null),
-      actuals: Array.from({ length: numPlayers }, () => 0),
-      scores,
-    },
-  ];
+  const nextRound: WizardSpec["states"] = {
+    phase: "roundStart",
+    player: null,
+    round: state.round ? state.round + 1 : 1,
+    dealer,
+    hands: Array.from({ length: numPlayers }, () => []),
+    trumpCard: null,
+    trumpSuit: null,
+    trick: [],
+    trickLeader: rotateIndex(numPlayers, dealer, 1),
+    trickWinner: null,
+    bids: Array.from({ length: numPlayers }, () => null),
+    actuals: Array.from({ length: numPlayers }, () => 0),
+    scores,
+  };
+
+  return nextRound;
 };
 
 export const wizardChart: Chart<WizardSpec> = {
   roundStart: ({ round }, { numPlayers, seed }) =>
-    seed ? ["deal", getDeal(numPlayers, round, seed + round)] : null,
-  deal: () => ["trumpReveal", {}],
+    seed
+      ? { phase: "deal", ...getDeal(numPlayers, round, seed + round) }
+      : null,
+
+  deal: () => ({ phase: "trumpReveal" }),
+
   trumpReveal: ({ trumpSuit, dealer }, { numPlayers }) =>
     trumpSuit === "w"
-      ? ["select", { player: dealer }]
-      : ["bid", { player: rotateIndex(numPlayers, dealer, 1) }],
+      ? { phase: "select", player: dealer }
+      : { phase: "bid", player: rotateIndex(numPlayers, dealer, 1) },
+
   select: ({ player, dealer }, { numPlayers }, action) => {
     if (!action) return null;
     if (action.type !== "select" || action.player !== player)
       return "Action mismatch.";
     if (!["c", "d", "h", "s"].includes(action.data)) return "Invalid suit.";
-    return [
-      "selected",
-      { trumpSuit: action.data, player: rotateIndex(numPlayers, dealer, 1) },
-    ];
+    return {
+      phase: "selected",
+      trumpSuit: action.data,
+      player: rotateIndex(numPlayers, dealer, 1),
+    };
   },
-  selected: () => ["bid", {}],
+
+  selected: () => ({ phase: "bid" }),
+
   bid: (game, { options }, action) => {
     if (!action) return null;
     if (action.type !== "bid" || action.player !== game.player)
@@ -65,16 +71,19 @@ export const wizardChart: Chart<WizardSpec> = {
       i === action.player ? action.data : bid
     );
 
-    return ["bidded", { bids }];
+    return { phase: "bidded", bids };
   },
+
   bidded: ({ bids, player }, { numPlayers }) =>
     bids.includes(null)
-      ? ["bid", { player: rotateIndex(numPlayers, player, 1) }]
-      : ["bidsEnd", { player: null }],
-  bidsEnd: ({ dealer }, { numPlayers }) => [
-    "play",
-    { player: rotateIndex(numPlayers, dealer, 1) },
-  ],
+      ? { phase: "bid", player: rotateIndex(numPlayers, player!, 1) }
+      : { phase: "bidsEnd", player: null },
+
+  bidsEnd: ({ dealer }, { numPlayers }) => ({
+    phase: "play",
+    player: rotateIndex(numPlayers, dealer, 1),
+  }),
+
   play: ({ player, hands, trick }, _, action) => {
     if (!action) return null;
     if (action.type !== "play" || action.player !== player)
@@ -89,27 +98,25 @@ export const wizardChart: Chart<WizardSpec> = {
     );
     const nextTrick = [...trick, action.data];
 
-    return ["played", { hands: nextHands, trick: nextTrick }];
+    return { phase: "played", hands: nextHands, trick: nextTrick };
   },
+
   played: ({ trick, player, trumpSuit, trickLeader }, { numPlayers }) =>
     trick.length < numPlayers
-      ? [
-          "play",
-          {
-            player: rotateIndex(numPlayers, player, 1),
-          },
-        ]
-      : [
-          "trickWon",
-          {
-            player: null,
-            trickWinner: rotateIndex(
-              numPlayers,
-              getWinningIndex(trick, trumpSuit),
-              trickLeader
-            ),
-          },
-        ],
+      ? {
+          phase: "play",
+          player: rotateIndex(numPlayers, player!, 1),
+        }
+      : {
+          phase: "trickWon",
+          player: null,
+          trickWinner: rotateIndex(
+            numPlayers,
+            getWinningIndex(trick, trumpSuit),
+            trickLeader
+          ),
+        },
+
   trickWon: ({ hands, trickWinner, actuals }) => {
     const roundContinues = hands[0].length > 0;
     const nextActuals = actuals.map((n, idx) =>
@@ -117,20 +124,24 @@ export const wizardChart: Chart<WizardSpec> = {
     );
 
     if (roundContinues) {
-      return [
-        "play",
-        {
-          actuals: nextActuals,
-          trick: [],
-          trickLeader: trickWinner,
-          trickWinner: null,
-          player: trickWinner,
-        },
-      ];
+      return {
+        phase: "play",
+        actuals: nextActuals,
+        trick: [],
+        trickLeader: trickWinner!,
+        trickWinner: null,
+        player: trickWinner,
+      };
     }
 
-    return ["roundEnd", { actuals: nextActuals, trick: [], trickWinner: null }];
+    return {
+      phase: "roundEnd",
+      actuals: nextActuals,
+      trick: [],
+      trickWinner: null,
+    };
   },
+
   roundEnd: (game, ctx) => {
     const { round } = game;
     const gameContinues = ctx.options.numRounds !== round;
@@ -138,12 +149,10 @@ export const wizardChart: Chart<WizardSpec> = {
 
     const { scores, bids, actuals } = game;
     const nextScores = [...scores, bids, actuals] as number[][];
-    return [
-      "end",
-      {
-        scores: nextScores,
-      },
-    ];
+    return {
+      phase: "end",
+      scores: nextScores,
+    };
   },
   end: () => true,
 };

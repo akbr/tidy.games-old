@@ -1,28 +1,26 @@
-import { GameProps } from "../types";
 import { getTotalBids } from "../../game/logic";
 import { Twemoji } from "@shared/components/Twemoji";
 
 export const BidDisplay = ({
-  frame: {
-    state: [type, game],
-  },
+  round,
+  bids,
+  waiting,
 }: {
-  frame: GameProps["frame"];
+  round: number;
+  bids: (null | number)[];
+  waiting: boolean;
 }) => {
-  const numBids = game.bids.filter((x) => x !== null).length;
-  if (numBids === 0 && type !== "bid") return null;
-
-  const total = getTotalBids(game.bids);
-  const diff = game.round - total;
+  const total = getTotalBids(bids);
+  const diff = round - total;
   const sign = diff > 0 ? "-" : "+";
   const str = diff !== 0 ? `${sign + Math.abs(diff)}` : "=";
 
   return (
-    <div>
-      Bids:{" "}
-      {type === "bid" || type === "bidded" ? (
-        <div class="inline align-middle">
-          <Twemoji char="⌛" size={16} />
+    <div class="flex flex-row items-center gap-1">
+      Bids:
+      {waiting ? (
+        <div>
+          <Twemoji char="⌛" size={24} />
         </div>
       ) : (
         <span>{str}</span>

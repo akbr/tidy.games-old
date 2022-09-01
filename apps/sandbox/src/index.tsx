@@ -1,41 +1,10 @@
-import { createServer } from "@lib/tabletop/server/server";
-import { warCart } from "@lib/tabletop/core/sample/war.cart";
-import { createClient } from "@lib/tabletop/client/client";
-import { withSelector } from "@lib/store";
-import { delay } from "@lib/async/task";
+import "@shared/base.css";
 
-const server = createServer(warCart);
-const client = createClient(server, warCart);
-const client2 = createClient(server, warCart);
+import { createServer, createClient, createView } from "@lib/tabletop";
+import { wizardCart } from "../../wizard/src/game/cart";
+import Game from "../../wizard/src/views/Game";
 
-withSelector(
-  client,
-  (x) => x.room,
-  (room) => {
-    if (room) console.log("Room update:", room);
-  }
-);
+const server = createServer(wizardCart);
+const client = createClient(server, wizardCart);
 
-withSelector(
-  client,
-  (x) => x.state,
-  (state) => {
-    if (state) {
-      console.log("State update:", state);
-    }
-  }
-);
-
-withSelector(
-  client,
-  (x) => x.err,
-  (err) => {
-    if (err) console.log("Err:", err);
-  }
-);
-
-console.log(client);
-
-client.actions.server.join({ id: "test" });
-client2.actions.server.join({ id: "test" });
-client.actions.server.start();
+createView(client, document.body, { Game }, { dev: true });

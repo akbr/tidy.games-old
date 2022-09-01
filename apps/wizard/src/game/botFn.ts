@@ -1,28 +1,24 @@
-import type { BotFn } from "@lib/tabletop/cart";
+import type { BotFn } from "@lib/tabletop/";
 import type { WizardSpec } from "./spec";
 
 import { checkBid, getPlayableCards } from "./logic";
 import { randomFromArray } from "@lib/random";
 
-export const wizardBotFn: BotFn<WizardSpec> = (
-  { state: [type, game], player, ctx },
-  send
-) => {
-  const isMyTurn = player === game.player;
-
+export const wizardBotFn: BotFn<WizardSpec> = (state, ctx, player) => {
+  const isMyTurn = player === state.player;
   if (!isMyTurn) return;
 
-  if (type === "select") {
-    send({ type: "select", data: randomFromArray(["c", "d", "h", "s"]) });
+  if (state.phase === "select") {
+    return { type: "select", data: randomFromArray(["c", "d", "h", "s"]) };
   }
 
-  if (type === "bid") {
-    const lowestPossibleBid = !!checkBid(0, game, ctx.options) ? 1 : 0;
-    send({ type: "bid", data: lowestPossibleBid });
+  if (state.phase === "bid") {
+    const lowestPossibleBid = !!checkBid(0, state, ctx.options) ? 1 : 0;
+    return { type: "bid", data: lowestPossibleBid };
   }
 
-  if (type === "play") {
-    const playable = getPlayableCards(game.hands[player], game.trick);
-    send({ type: "play", data: randomFromArray(playable) });
+  if (state.phase === "play") {
+    const playable = getPlayableCards(state.hands[player], state.trick);
+    return { type: "play", data: randomFromArray(playable) };
   }
 };

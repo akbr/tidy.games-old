@@ -3,14 +3,13 @@ import type { Cart } from "@lib/tabletop";
 import { WizardSpec } from "./spec";
 import { wizardChart, getNextRound } from "./chart";
 import { wizardBotFn } from "./botFn";
-import { createAnalysis } from "./analysis";
 
 export const wizardCart: Cart<WizardSpec> = {
   meta: {
     name: "Wizard",
     players: [2, 6],
   },
-  setOptions: (
+  getOptions: (
     numPlayers,
     options = { canadian: true, numRounds: 60 / numPlayers }
   ) => {
@@ -23,24 +22,26 @@ export const wizardCart: Cart<WizardSpec> = {
       numRounds,
     };
   },
-  setup: (ctx) => {
+  getInitialState: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
   },
   chart: wizardChart,
-  actionStubs: {
+  actionKeys: {
     bid: null,
     play: null,
     select: null,
   },
-  stripGame: ([, game], player) => {
-    if (!game.hands) return game;
-    return {
-      ...game,
-      hands: game.hands.map((hand, idx) => (idx === player ? hand : [])),
-    };
+  adjustState: (state, player, patch) => {
+    if (patch.hands) {
+      const hands = patch.hands.map((hand, idx) =>
+        idx === player ? hand : []
+      );
+      return {
+        hands,
+      };
+    }
   },
   botFn: wizardBotFn,
-  createAnalysis,
 };
 export default wizardCart;

@@ -1,69 +1,59 @@
-import { GameProps } from "../types";
+import { GameProps } from "@lib/tabletop/preact";
+import { WizardSpec } from "src/game/spec";
+
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
 import { BidInput } from "./BidInput";
 import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
 
-export const TableCenter = (props: GameProps) => {
-  const { frame, controls } = props;
-  const {
-    state: [type, game],
-  } = frame;
-  const { waitFor } = controls.meter;
+export const TableCenter = (props: GameProps<WizardSpec>) => {
+  const { state, room, actions } = props;
 
   const vnode = (() => {
-    const isMyTurn = frame.player === game.player;
+    const isMyTurn = room.player === state.player;
 
-    if (type === "roundStart") {
-      return <RoundStart num={game.round} waitFor={waitFor} />;
+    if (state.phase === "roundStart") {
+      return <RoundStart num={state.round} />;
     }
 
-    if (type === "trumpReveal") {
-      return game.trumpCard ? (
-        <TrumpReveal cardId={game.trumpCard} waitFor={waitFor} />
-      ) : null;
+    if (state.phase === "trumpReveal") {
+      return state.trumpCard ? <TrumpReveal cardId={state.trumpCard} /> : null;
     }
 
-    if (type === "select") {
+    if (state.phase === "select") {
       return !isMyTurn ? (
         <h3 class={`animate-pulse text-center max-w-[150px]`}>
           Waiting for dealer to select trump...
         </h3>
       ) : (
-        <SelectInput
-          select={controls.game.select}
-          waitFor={controls.meter.waitFor}
-        />
+        <SelectInput select={actions.cart.select} />
       );
     }
 
-    if (type === "bid" && !isMyTurn) {
-      controls.meter.waitFor(1000);
-    }
-
-    if (type === "bid" || type === "bidded") {
+    if (state.phase === "bid" || state.phase === "bidded") {
       return !isMyTurn ? (
-        <div class="animate-pulse text-center">
-          <h3>
-            Waiting for
-            <br /> bids...
-          </h3>
+        <div class="animate-fadeIn">
+          <div class="animate-pulse text-center">
+            <h3>
+              Waiting for
+              <br /> bids...
+            </h3>
+          </div>
         </div>
-      ) : type !== "bidded" ? (
+      ) : state.phase !== "bidded" ? (
         <BidInput {...props} />
       ) : null;
     }
 
-    if (type === "bidsEnd") {
-      waitFor(2500);
-      return <BidsEnd frame={frame} />;
+    if (state.phase === "bidsEnd") {
+      return <BidsEnd bids={state.bids} round={state.round} />;
     }
 
-    if (type === "roundEnd") {
+    if (state.phase === "roundEnd") {
     }
 
-    if (type === "end") {
+    if (state.phase === "end") {
       return <div>Game over, man!</div>;
     }
 

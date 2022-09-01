@@ -34,7 +34,7 @@ export type ServerActions<S extends Spec> =
     }
   | { type: "leave" }
   | { type: "addBot" }
-  | { type: "start"; data?: S["options"] };
+  | { type: "start"; data?: { options?: S["options"]; seed?: string } };
 
 export type ServerOutputs<S extends Spec> = Partial<{
   cartErr: string;

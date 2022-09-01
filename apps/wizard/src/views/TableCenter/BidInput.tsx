@@ -1,54 +1,41 @@
+import { GameProps } from "@lib/tabletop/preact/types";
 import { useState } from "preact/hooks";
-import { RunDOMEffect } from "@lib/hooks";
-import { vFadeInOut } from "@lib/hooks/domEffects";
-
-import { GameProps } from "../types";
+import { WizardSpec } from "../../game/spec";
 import { checkBid } from "../../game/logic";
 
-export function BidInput({ frame, controls }: GameProps) {
-  const [, game] = frame.state;
-
+export function BidInput({ state, ctx, actions }: GameProps<WizardSpec>) {
   const [bid, setBid] = useState(0);
-  const [visibleState, setVisibleState] = useState<"in" | "out">("in");
-
-  const bidErr = checkBid(bid, game, frame.ctx.options);
+  const bidErr = checkBid(bid, state, ctx.options);
 
   return (
-    <RunDOMEffect
-      fn={vFadeInOut}
-      props={visibleState}
-      waitFor={controls.meter.waitFor}
-    >
-      <div class={`flex flex-col gap-[16px] text-center`}>
-        <h3>Enter bid:</h3>
-        <div class="flex justify-center items-center gap-[12px]">
-          <button
-            style={{ minWidth: "36px", minHeight: "36px" }}
-            onClick={() => setBid(bid - 1)}
-            disabled={bid === 0}
-          >
-            -
-          </button>
-          <div class="inline">{bid}</div>
-          <button
-            style={{ minWidth: "36px", minHeight: "36px" }}
-            onClick={() => setBid(bid + 1)}
-            disabled={bid === game.round}
-          >
-            +
-          </button>
-        </div>
+    <div class="flex flex-col gap-[16px] text-center animate-fadeIn">
+      <h3>Enter bid:</h3>
+      <div class="flex justify-center items-center gap-[12px]">
         <button
-          style={{ minWidth: "100px" }}
-          disabled={visibleState === "out" || !!bidErr}
-          onClick={() => {
-            setVisibleState("out");
-            setTimeout(() => controls.game.bid(bid), 0);
-          }}
+          style={{ minWidth: "36px", minHeight: "36px" }}
+          onClick={() => setBid(bid - 1)}
+          disabled={bid === 0}
         >
-          Bid
+          -
+        </button>
+        <div class="inline">{bid}</div>
+        <button
+          style={{ minWidth: "36px", minHeight: "36px" }}
+          onClick={() => setBid(bid + 1)}
+          disabled={bid === state.round}
+        >
+          +
         </button>
       </div>
-    </RunDOMEffect>
+      <button
+        style={{ minWidth: "100px" }}
+        disabled={!!bidErr}
+        onClick={() => {
+          actions.cart.bid(bid);
+        }}
+      >
+        Bid
+      </button>
+    </div>
   );
 }

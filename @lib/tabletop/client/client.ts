@@ -1,5 +1,5 @@
 import { createSubscription, Subscription } from "@lib/store";
-import { Meter, createMeter } from "@lib/store/meter";
+import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 
 import { Spec } from "../core/spec";
@@ -9,8 +9,9 @@ import { expandStates } from "../core/utils";
 
 import { ServerActions, actionKeys, ServerApi } from "../server/server";
 import { RoomData } from "../server/routines";
+import { is } from "@lib/compare/is";
 
-type ClientUpdate<S extends Spec> = {
+export type ClientUpdate<S extends Spec> = {
   connected: boolean;
   room: RoomData | null;
   state: S["states"] | null;
@@ -19,7 +20,7 @@ type ClientUpdate<S extends Spec> = {
   err: { type: "serverErr" | "cartErr"; msg: string } | null;
 };
 
-type Client<S extends Spec> = {
+export type Client<S extends Spec> = {
   subscribe: Subscription<ClientUpdate<S>>["subscribe"];
   get: Subscription<ClientUpdate<S>>["get"];
   actions: {
@@ -63,7 +64,7 @@ export function createClient<S extends Spec>(
       update();
     },
     onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
-      if (room) set({ room });
+      if (is.defined(room)) set({ room });
       if (cartErr) set({ err: { type: "cartErr", msg: cartErr } });
       if (serverErr) set({ err: { type: "serverErr", msg: serverErr } });
 

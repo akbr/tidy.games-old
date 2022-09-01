@@ -42,7 +42,7 @@ export const delay = (ms: number, fn = noop): Task => {
   });
 };
 
-export const all = (tasks: Task[]): Task<null> => {
+export const all = (tasks: Task[]): Task<any> => {
   const { promise, resolve } = getPromiseParts();
 
   Promise.all(tasks.map((t) => t.finished)).then(() => {

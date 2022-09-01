@@ -126,6 +126,7 @@ export const _checkBid = (
     }
   }
 };
+
 export const checkBid = (
   bid: number,
   { round, bids, player, dealer }: WizardSpec["game"],

@@ -1,11 +1,12 @@
-import { GameProps } from "../types";
 import { getTotalBids } from "../../game/logic";
 
-export function BidsEnd({ frame }: { frame: GameProps["frame"] }) {
-  const {
-    state: [, { bids, round }],
-  } = frame;
-
+export function BidsEnd({
+  bids,
+  round,
+}: {
+  bids: (number | null)[];
+  round: number;
+}) {
   const diff = round - getTotalBids(bids);
 
   return (

@@ -34,37 +34,4 @@ export type WizardSpec = CreateSpec<{
     | { type: "bid"; data: number }
     | { type: "play"; data: string };
   options: { canadian: boolean; numRounds: number };
-  transitions: {
-    roundStart: null | "deal";
-    deal: "trumpReveal";
-    trumpReveal: "select" | "bid";
-    select: null | "selected";
-    selected: "bid";
-    bid: null | "bidded";
-    bidded: "bid" | "bidsEnd";
-    bidsEnd: "play";
-    play: null | "played";
-    played: "play" | "trickWon";
-    trickWon: "play" | "roundEnd";
-    roundEnd: "roundStart" | "end";
-    end: true;
-  };
-  constraints: {
-    roundStart: { player: null };
-    deal: { player: null };
-    select: { player: number };
-    selected: { player: number };
-    bid: { player: number };
-    bidded: { player: number };
-    play: { player: number };
-    played: { player: number };
-    trickWon: { player: null; trickWinner: number };
-    roundEnd: { player: null };
-    end: { player: null };
-  };
-  analysis: {
-    runningScore: number[][];
-    numWizards: number[];
-    numJesters: number[];
-  };
 }>;

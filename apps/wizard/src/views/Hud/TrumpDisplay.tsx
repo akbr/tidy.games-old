@@ -1,4 +1,4 @@
-import type { GameProps } from "../types";
+import { WizardSpec } from "src/game/spec";
 
 import { Twemoji } from "@shared/components/Twemoji";
 import { splitCard } from "@shared/components/Card";
@@ -70,29 +70,25 @@ const TrumpCard = ({
   );
 };
 
-export const TrumpDisplay = ({ frame }: { frame: GameProps["frame"] }) => {
-  const {
-    state: [type, { trumpCard, trumpSuit }],
-  } = frame;
-
-  const ref = createRef<HTMLDivElement>();
-  useLayoutEffect(() => {
-    delayedFade(ref.current!, type === "trumpReveal" ? "in" : null);
-  }, []);
-
-  const shouldDisplay = trumpCard && type !== "deal";
-  const trumpKnown = trumpSuit !== "w";
-
-  return shouldDisplay ? (
-    <div ref={ref} class="align-middle">
+export const TrumpDisplay = ({
+  phase,
+  trumpSuit,
+  trumpCard,
+}: {
+  phase: WizardSpec["phases"];
+  trumpSuit: WizardSpec["game"]["trumpSuit"];
+  trumpCard: WizardSpec["game"]["trumpCard"];
+}) => {
+  return (
+    <div class="align-middle">
       Trump:{" "}
       <div class="inline">
-        {trumpKnown ? (
+        {phase !== "select" ? (
           <TrumpCard trumpCard={trumpCard!} trumpSuit={trumpSuit} />
         ) : (
           <Twemoji char="⌛" size={16} />
         )}
       </div>
     </div>
-  ) : null;
+  );
 };

@@ -4,7 +4,7 @@ import type { Spec } from "../core/spec";
 import type { Cart } from "../core/cart";
 import { CartStore, createCartStore } from "../core/store";
 
-import type { ServerSocket, ServerApi } from "./server";
+import type { ServerSocket, ServerApi, ServerActions } from "./server";
 import { getRandomRoomID, getSeatNumber } from "./utils";
 import { CartHost, createBotSocket, createCartHost } from "./wrappers";
 
@@ -102,7 +102,10 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     });
   }
 
-  function startGame(socket: ServerSocket<S>, options?: S["options"]) {
+  function startGame(
+    socket: ServerSocket<S>,
+    msg?: Extract<ServerActions<S>, { type: "start" }>["data"]
+  ) {
     const room = getRoomOf(socket);
     if (!room) return "You're not in a room!";
 
@@ -110,11 +113,13 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
       return "You must be the first player to start the game.";
 
     const numPlayers = room.seats.length;
+    const { seed, options } = msg || {};
+
     const ctx = {
       numPlayers,
       options: cart.getOptions(numPlayers, options),
+      seed,
     };
-
     const store = createCartStore(cart, ctx);
     if (is.string(store)) return store;
     room.host = createCartHost(store);

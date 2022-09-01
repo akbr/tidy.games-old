@@ -1,9 +1,9 @@
-import { RunDOMEffect, DOMEffect } from "@lib/hooks";
-import { WaitFor } from "@lib/state/meter";
+import { useShallowRef, useDOMEffect, DOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { delay, seq } from "@lib/async/task";
 
 import { getScore } from "../../game/logic";
+import { useRef } from "preact/hooks";
 
 const scorePopEffect: DOMEffect<{
   bid: number;
@@ -71,23 +71,11 @@ type BidsDisplayProps = {
   bid: number;
   actual: number;
   shouldPop: boolean;
-  waitFor: WaitFor;
 };
 
-export function BidDisplay({
-  bid,
-  actual,
-  shouldPop,
-  waitFor,
-}: BidsDisplayProps) {
-  return (
-    <RunDOMEffect
-      fn={scorePopEffect}
-      props={{ bid, actual, shouldPop }}
-      waitFor={waitFor}
-      once={true}
-    >
-      <div />
-    </RunDOMEffect>
-  );
+export function BidDisplay({ bid, actual, shouldPop }: BidsDisplayProps) {
+  const ref = useRef(null);
+  useDOMEffect(scorePopEffect, ref, useShallowRef({ bid, actual, shouldPop }));
+
+  return <div ref={ref} />;
 }

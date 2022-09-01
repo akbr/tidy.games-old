@@ -1,30 +1,29 @@
 import { ComponentChildren } from "preact";
 
 import { deep } from "@lib/compare/deep";
-import { useRefreshOnResize, RunDOMEffect } from "@lib/hooks";
+import { useRefreshOnResize, useDOMEffect, useShallowRef } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
-
-import { WaitFor } from "@lib/state/meter";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
 import { seq, delay } from "@lib/async/task";
 
 import { getHeldPosition, getPlayedPosition, getWaggle } from "./trickLayout";
+import { useRef } from "preact/hooks";
 
 export const PositionTrick = ({
   children,
-  waitFor,
   ...props
 }: TrickProps & { children: ComponentChildren }) => {
   useRefreshOnResize();
+  const ref = useRef(null);
+  const effectProps = useShallowRef(props);
+  useDOMEffect(applyTrickStyles, ref, effectProps);
 
   return (
-    <RunDOMEffect fn={applyTrickStyles} props={props} waitFor={waitFor}>
-      <section id="trick" class="absolute top-0 left-0">
-        {children}
-      </section>
-    </RunDOMEffect>
+    <section ref={ref} id="trick" class="absolute top-0 left-0">
+      {children}
+    </section>
   );
 };
 export default PositionTrick;
@@ -33,7 +32,6 @@ export type TrickProps = {
   numPlayers: number;
   leadPlayer: number;
   perspective?: number;
-  waitFor?: WaitFor;
   effect?:
     | { type: "none" }
     | { type: "played"; player: number }

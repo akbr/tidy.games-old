@@ -1,5 +1,5 @@
 import type { Task } from "@lib/async/task";
-import { createSubscription, Subscription } from "./subscription";
+import { createSubscription, Subscribable } from "../store/subscription";
 
 export type MeterStatus<T> = {
   state: T;
@@ -9,7 +9,7 @@ export type MeterStatus<T> = {
   playing: boolean;
 };
 
-export type Meter<T> = Subscription<MeterStatus<T>> & {
+export type Meter<T> = Subscribable<MeterStatus<T>> & {
   actions: {
     pushStates: (...states: T[]) => void;
     waitFor: (task: Task<any>) => void;
@@ -37,10 +37,12 @@ export const createMeter = <T>(
     };
   }
 
-  const subscribable = createSubscription<MeterStatus<T>>(getStatus());
+  const { subscribe, get, next } = createSubscription<MeterStatus<T>>(
+    getStatus()
+  );
 
   function update() {
-    subscribable.next(getStatus());
+    next(getStatus());
   }
 
   function updateIdx(nextIdx: number) {
@@ -58,14 +60,18 @@ export const createMeter = <T>(
       update();
       return;
     }
-
     updateIdx(idx + 1);
     update();
-    iterate();
+    asyncIterate();
+  }
+
+  function asyncIterate() {
+    setTimeout(iterate, 0);
   }
 
   return {
-    ...subscribable,
+    subscribe,
+    get,
     actions: {
       pushStates: (...incoming) => {
         states = [...states, ...incoming];
@@ -77,7 +83,7 @@ export const createMeter = <T>(
           iterate();
         });
         waitingFor = [...waitingFor, task];
-        iterate();
+        asyncIterate();
       },
       setPlay: (toggle) => {
         typeof toggle === "function"
@@ -106,3 +112,5 @@ export const createMeter = <T>(
     },
   };
 };
+
+export default createMeter;

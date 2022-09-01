@@ -13,11 +13,11 @@ export type AuthenticatedAction<A extends {}> = A & {
 };
 
 export type Chart<S extends Spec> = {
-  [Phase in keyof S["patchGlossary"]]: (
-    game: S["stateGlossary"][Phase],
+  [Phase in S["phases"]]: (
+    state: S["states"],
     ctx: Ctx<S>,
     action?: AuthenticatedAction<S["actions"]>
-  ) => S["patchGlossary"][Phase] | string;
+  ) => Partial<S["states"]> | NonStateReturns;
 };
 
 export type StatePatch<S extends Spec> = { phase: S["phases"] } & Partial<
@@ -45,7 +45,10 @@ export function getChartUpdate<S extends Spec>(
   while (iterarting) {
     const priorState = states.at(-1) || inputState;
 
-    const result = chart[priorState.phase](priorState as any, ctx, action) as
+    //@ts-ignore
+    const chartFn = chart[priorState.phase];
+
+    const result = chartFn(priorState, ctx, action) as
       | StatePatch<S>
       | NonStateReturns;
 

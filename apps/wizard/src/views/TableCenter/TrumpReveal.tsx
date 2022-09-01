@@ -1,14 +1,12 @@
 import { Card, splitCard } from "@shared/components/Card";
-import { RunDOMEffect, DOMEffect } from "@lib/hooks";
-import { WaitFor } from "@lib/state/meter";
+import { useDOMEffect, DOMEffect } from "@lib/hooks";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
+import { useRef } from "preact/hooks";
 
-const revealEffect: DOMEffect<string> = ($card, suit, prev) => {
-  if (suit === prev) return;
-
+const revealEffect: DOMEffect<string> = ($card, suit) => {
   const { width, height } = getNearestDimensions($card.parentElement!);
   const $suit = $card.querySelector("#suit")!;
   const isWild = ["w", "j"].includes(suit);
@@ -59,20 +57,14 @@ const revealEffect: DOMEffect<string> = ($card, suit, prev) => {
   ]);
 };
 
-export const TrumpReveal = ({
-  cardId,
-  waitFor,
-}: {
-  cardId: string;
-  waitFor?: WaitFor;
-}) => {
+export const TrumpReveal = ({ cardId }: { cardId: string }) => {
   const [, suit] = splitCard(cardId);
+  const ref = useRef(null);
+  useDOMEffect(revealEffect, ref, splitCard(cardId)[1]);
 
   return (
-    <RunDOMEffect fn={revealEffect} props={suit} waitFor={waitFor}>
-      <div>
-        <Card card={cardId} />
-      </div>
-    </RunDOMEffect>
+    <div ref={ref}>
+      <Card card={cardId} />
+    </div>
   );
 };
