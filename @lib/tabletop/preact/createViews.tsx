@@ -17,7 +17,21 @@ export function createViews<S extends Spec>(
   // Optionally configure dev environment.
   if (options.dev) client.meter.actions.setHistory(true);
   const vdom = options.dev ? (
-    <DevWrapper meter={client.meter}>{app}</DevWrapper>
+    <DevWrapper
+      meter={client.meter}
+      stateDisplay={(s) => {
+        return (
+          <div>
+            {s?.action && (
+              <div class="font-bold">{JSON.stringify(s.action)}</div>
+            )}
+            {s?.state && <div>{JSON.stringify(s.state)}</div>}
+          </div>
+        );
+      }}
+    >
+      {app}
+    </DevWrapper>
   ) : (
     app
   );

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
-import { DOMEffect, RunDOMEffect } from "@lib/hooks";
+import { DOMEffect, useDOMEffect } from "@lib/hooks";
 import { dragify } from "@lib/dom/dragify";
 import { style } from "@lib/stylus";
 import { getNearestDimensions } from "@lib/dom";
@@ -12,9 +12,10 @@ import { Cards, cardGlyphs } from "../game/glossary";
 import { xPeek, yPeek } from "./uiVars";
 import { Card } from "./Card";
 
-const initCardDrag: DOMEffect<{
-  setPlayAttempt: (cardId: string | number) => void;
-}> = ($el, { setPlayAttempt }) => {
+const initCardDrag: DOMEffect<(cardId: Cards) => void> = (
+  $el,
+  setPlayAttempt
+) => {
   dragify($el, {
     onStart: ($el) => {},
     onDrag: ($el, x, y) => {
@@ -25,7 +26,8 @@ const initCardDrag: DOMEffect<{
       if (played) {
         const card = $el.dataset.card!;
         const parsed = parseInt(card);
-        setPlayAttempt(isNaN(parsed) ? card : parsed);
+        const submission = isNaN(parsed) ? card : (parsed as any);
+        setPlayAttempt(submission);
       } else {
         style($el, { x: 0, y: 0 }, { duration: 200 });
       }
@@ -39,55 +41,46 @@ const applyPlayAnimation = ($card: HTMLElement) => {
   return style($card, { x: 0, y: 0, left: x, top: y }, { duration: 200 });
 };
 
-type PlayAttempt = string | number | null;
-
 function HandCard({
   card,
-  err,
   play,
 }: {
   card: Cards;
-  play: (card: string | number) => void;
-  err?: { type: string; data: string };
+  play: (card: Cards | false) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [playAttempt, setPlayAttempt] = useState<PlayAttempt>(null);
+  const [playAttempt, setPlayAttempt] = useState<Cards | null>(null);
 
   useLayoutEffect(() => {
     if (playAttempt) {
       applyPlayAnimation(ref.current!)?.finished.then(() => {
-        setPlayAttempt(null);
+        setPlayAttempt(playAttempt);
         play(playAttempt);
+        setPlayAttempt(null);
       });
     }
+  }, [playAttempt]);
 
-    if (err) {
-      style(ref.current!, { x: 0, y: 0 });
-    }
-  }, [err, playAttempt]);
+  useDOMEffect(initCardDrag, ref, setPlayAttempt);
 
   return (
-    <RunDOMEffect fn={initCardDrag} props={{ setPlayAttempt }}>
-      <div class="absolute" data-card={card} ref={ref}>
-        <Card glyph={cardGlyphs[card]} />
-      </div>
-    </RunDOMEffect>
+    <div ref={ref} class="absolute" data-card={card}>
+      <Card glyph={cardGlyphs[card]} />
+    </div>
   );
 }
 
 export function Hand({
   cards,
   play,
-  err,
 }: {
   cards: Cards[];
-  play: (card: string | number) => void;
-  err?: { type: string; data: string };
+  play: (card: Cards | false) => void;
 }) {
   return (
-    <PositionHand justDealt={false} xPeek={xPeek} yPeek={yPeek}>
+    <PositionHand xPeek={xPeek} yPeek={yPeek}>
       {cards.map((card) => (
-        <HandCard card={card} play={play} err={err} />
+        <HandCard card={card} play={play} />
       ))}
     </PositionHand>
   );

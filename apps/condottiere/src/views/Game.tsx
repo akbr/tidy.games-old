@@ -1,5 +1,7 @@
-import type { GameProps } from "./types";
+import { GameProps } from "@lib/tabletop";
 import { getHandHeight } from "@shared/components/PositionHand/handLayout";
+
+import { CondottiereSpec } from "../game/spec";
 
 import { xPeek, yPeek } from "./uiVars";
 
@@ -8,12 +10,11 @@ import Hand from "./Hand";
 import Seats from "./Seats";
 import CenterDisplay from "./CenterDisplay";
 
-export const Game = (props: GameProps) => {
-  const { frame, controls } = props;
-  const { player } = frame;
-  const [, game] = frame.state;
+export const Game = (props: GameProps<CondottiereSpec>) => {
+  const { state, room, actions } = props;
+  const hand = state.hands[room.player];
 
-  const numCards = game.hands[frame.player].length || 1;
+  const numCards = hand.length || 1;
   const handMargin = 4;
   const tableHeight = getHandHeight(
     numCards,
@@ -30,12 +31,8 @@ export const Game = (props: GameProps) => {
         style={{ height: `calc(100% - ${tableHeight}px)` }}
       >
         <Seats {...props} />
+        <Hand cards={hand} play={actions.cart.play} />
         <CenterDisplay {...props} />
-        <Hand
-          cards={game.hands[player]}
-          err={props.err}
-          play={controls.game.play as any}
-        />
       </section>
       <UiButtons {...props} />
     </div>

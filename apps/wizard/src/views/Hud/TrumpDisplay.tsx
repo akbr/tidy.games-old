@@ -58,7 +58,8 @@ const TrumpCard = ({
   const [value, suit] = splitCard(trumpCard);
 
   const glyphs = (() => {
-    if (suit === "w") return [["w"], [trumpSuit]];
+    if (suit === "w" && trumpSuit !== "w") return [["w"], [trumpSuit]];
+    if (suit === "w" && trumpSuit === "w") return [["w"]];
     if (suit === "j") return [["j"]];
     return [[value, colors[trumpSuit as keyof typeof colors]], [trumpSuit]];
   })();

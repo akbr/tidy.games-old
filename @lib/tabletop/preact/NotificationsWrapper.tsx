@@ -8,20 +8,27 @@ import {
 } from "preact/hooks";
 
 import { Spec } from "@lib/tabletop/core/spec";
+import { Client, ClientUpdate } from "../client";
+import { useSubscribe } from "@lib/store";
 
 export default function NotificationsWrapper<S extends Spec>({
   children,
+  client,
 }: {
   children: ComponentChildren;
+  client: Client<S>;
 }) {
-  /**
-   * 
+  const [err, connected] = useSubscribe(client, (x) => [x.err, x.connected]);
+
+  return (
+    <>
+      {children}
       <div class="absolute bottom-2 left-2 z-50">
-        <ErrorReciever err={err || null} />
+        <ErrorReciever err={err} />
         <ConnectionWarning connected={connected} />
       </div>
-   */
-  return <>{children}</>;
+    </>
+  );
 }
 
 function ConnectionWarning({ connected }: { connected: boolean }) {
@@ -41,7 +48,7 @@ function ConnectionWarning({ connected }: { connected: boolean }) {
 
   return show ? (
     <div class="inline-block bg-yellow-600 p-2 rounded-lg text-white">
-      WebSocket not connected.{" "}
+      WebSocket not connected.
       <button onClick={() => location.reload()}>Reload 🔄</button>
     </div>
   ) : null;
@@ -49,12 +56,12 @@ function ConnectionWarning({ connected }: { connected: boolean }) {
 
 type Err = { type: string; data: string };
 
-const TimedError = ({
+const TimedError = <S extends Spec>({
   err,
   remove,
 }: {
-  err: Err;
-  remove: (err: Err) => void;
+  err: NonNullable<ClientUpdate<S>["err"]>;
+  remove: (err: ClientUpdate<S>["err"]) => void;
 }) => {
   useLayoutEffect(() => {
     let timeout = setTimeout(() => {
@@ -65,23 +72,31 @@ const TimedError = ({
 
   return (
     <div class="inline-block bg-red-600 p-2 rounded-lg text-white">
-      {err.data}
+      {err.msg}
     </div>
   );
 };
 
-export const ErrorReciever = ({ err }: { err: Err | null }) => {
-  const [errors, setErrors] = useState<Err[]>([]);
+export const ErrorReciever = <S extends Spec>({
+  err,
+}: {
+  err: ClientUpdate<S>["err"];
+}) => {
+  const errRef = useRef<ClientUpdate<S>["err"]>(null);
+  const [errors, setErrors] = useState<NonNullable<ClientUpdate<S>["err"]>[]>(
+    []
+  );
 
   const remove = useCallback(
-    (err: Err) => setErrors((errs) => errs.filter((x) => x !== err)),
+    (err: ClientUpdate<S>["err"]) =>
+      setErrors((errs) => errs.filter((x) => x !== err)),
     [setErrors]
   );
 
-  if (err !== null) {
+  if (err && err !== errRef.current) {
+    errRef.current = err;
     setErrors((errs) => [...errs, err]);
   }
-
   return (
     <div class="flex flex-col gap-4">
       {errors.map((err) => (

@@ -11,9 +11,8 @@ export type Cart<S extends Spec> = {
   chart: Chart<S>;
   actionKeys: ActionKeys<S["actions"]>;
   adjustState?: (
-    state: S["states"],
-    player: number,
-    patch: StatePatch<S>
+    patch: StatePatch<S>,
+    player: number
   ) => Partial<S["game"]> | void;
   adjustAction?: (
     action: AuthenticatedAction<S["actions"]>,

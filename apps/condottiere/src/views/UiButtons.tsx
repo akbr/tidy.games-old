@@ -4,55 +4,29 @@ import { useState } from "preact/hooks";
 import { Twemoji } from "@shared/components/Twemoji";
 import { DialogOf } from "@shared/components/DialogOf";
 
-import { GameProps } from "./types";
 import { Map } from "./Map";
+import { GameProps } from "@lib/tabletop";
+import CondottiereSpec from "src/game/spec";
 
-const Options = ({ frame, cart, controls, room }: GameProps) => {
-  return (
-    <>
-      <div class="flex flex-col gap-2">
-        <h2>{cart.meta.name}</h2>
-        <div>
-          <span class="font-bold">Room:</span> {room.id}
-        </div>
-        <div>
-          <span class="font-bold">Player:</span> {room.player}
-        </div>
-        <div class="flex flex-col max-w-xs gap-0.5">
-          <div class="font-bold">Ruleset</div>
-          <div class="text-sm pl-2"></div>
-        </div>
-      </div>
-      <br />
-      <div class="text-center">
-        <button onClick={() => controls.server.leave(null)}>
-          🛑 Leave game
-        </button>
-      </div>
-    </>
-  );
-};
-
-export const UiButtons = (props: GameProps) => {
-  const {
-    frame: {
-      state: [, game],
-      analysis,
-    },
-  } = props;
-
-  const [Dialog, setDialog] = useState<FunctionalComponent<GameProps> | null>(
-    null
-  );
+export const UiButtons = (props: GameProps<CondottiereSpec>) => {
+  const [Dialog, setDialog] = useState<FunctionalComponent<
+    GameProps<CondottiereSpec>
+  > | null>(null);
 
   return (
     <>
       <div class="absolute top-0 left-0 m-1">
-        <div class="flex gap-2 p-2">
-          <div class="cursor-pointer" onClick={() => setDialog(() => Options)}>
+        <div class="flex gap-3 p-2">
+          <div
+            class="cursor-pointer"
+            onClick={() => setDialog(() => OptionsDialog)}
+          >
             <Twemoji char={"⚙️"} size={36} />
           </div>
-          <div class="cursor-pointer" onClick={() => setDialog(() => MapView)}>
+          <div
+            class="cursor-pointer"
+            onClick={() => setDialog(() => MapDialog)}
+          >
             <Twemoji char={"🗺️"} size={36} />
           </div>
         </div>
@@ -67,18 +41,25 @@ export const UiButtons = (props: GameProps) => {
 };
 export default UiButtons;
 
-function MapView({ frame, room, controls }: GameProps) {
-  const [phase, game] = frame.state;
-  const isTurn = frame.player === game.player;
-  const isChoosing = isTurn && phase === "choose";
+function MapDialog({ state, room, actions }: GameProps<CondottiereSpec>) {
+  const isTurn = room.player === state.player;
+  const isChoosing = isTurn && state.phase === "choose";
 
   return (
     <Map
       players={room.seats}
-      battleLocation={game.battleLocation}
-      map={game.map}
+      battleLocation={state.battleLocation}
+      map={state.map}
       isChoosing={isChoosing}
-      choose={controls.game.choose}
+      choose={actions.cart.choose}
     />
   );
 }
+
+const OptionsDialog = ({ actions }: GameProps<CondottiereSpec>) => {
+  return (
+    <div class="text-center">
+      <button onClick={() => actions.server.leave(null)}>🛑 Leave game</button>
+    </div>
+  );
+};

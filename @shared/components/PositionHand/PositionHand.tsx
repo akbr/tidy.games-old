@@ -49,7 +49,6 @@ export const applyHandStyles: DOMEffect<{
       xPeek,
       yPeek
     );
-
     style($card, { zIndex, left: x, top: y });
   });
 };

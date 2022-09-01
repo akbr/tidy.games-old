@@ -2,9 +2,16 @@ import { ComponentChildren } from "preact";
 import useStore from "@lib/store/useSubscribe";
 import type { Meter } from "../meter";
 
-function StateList<T>({ meter }: { meter: Meter<T> }) {
+function StateList<T>({
+  meter,
+  stateDisplay,
+}: {
+  meter: Meter<T>;
+  stateDisplay?: (input: T) => JSX.Element;
+}) {
   const { states, idx } = useStore(meter, (x) => x);
   const { setIdx } = meter.actions;
+  const sd = stateDisplay || ((x) => <div>{JSON.stringify(x)}</div>);
 
   return (
     <div class="overflow-y-auto">
@@ -14,14 +21,21 @@ function StateList<T>({ meter }: { meter: Meter<T> }) {
           style={{ backgroundColor: idx === i ? "orange" : "" }}
           onClick={() => setIdx(i)}
         >
-          {i + " " + JSON.stringify(state)}
+          {i + " "}
+          {sd(state)}
         </div>
       ))}
     </div>
   );
 }
 
-function MeterConsole<T>({ meter }: { meter: Meter<T> }) {
+function MeterConsole<T>({
+  meter,
+  stateDisplay,
+}: {
+  meter: Meter<T>;
+  stateDisplay?: (input: T) => JSX.Element;
+}) {
   const { playing, waitingFor } = useStore(meter, (x) => x);
 
   return (
@@ -36,7 +50,7 @@ function MeterConsole<T>({ meter }: { meter: Meter<T> }) {
         <div>Waiting: {waitingFor.length}</div>
       </div>
 
-      <StateList meter={meter} />
+      <StateList meter={meter} stateDisplay={stateDisplay} />
     </section>
   );
 }
@@ -44,13 +58,15 @@ function MeterConsole<T>({ meter }: { meter: Meter<T> }) {
 export function DevWrapper<T>({
   meter,
   children,
+  stateDisplay,
 }: {
   meter: Meter<T>;
   children: ComponentChildren;
+  stateDisplay?: (input: T) => JSX.Element;
 }) {
   return (
     <div class="h-full flex flex-row">
-      <MeterConsole meter={meter} />
+      <MeterConsole meter={meter} stateDisplay={stateDisplay} />
       {children}
     </div>
   );

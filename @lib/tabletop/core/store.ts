@@ -43,12 +43,19 @@ export function createCartStore<S extends Spec>(
   return {
     get: (player = -1) => {
       const { adjustState, adjustAction } = cart;
-      const { patches, states, final } = prevChartUpdate;
+      const { patches, final } = prevChartUpdate;
       const lastAction = actions.at(-1);
 
+      const nextPrev = adjustState
+        ? (() => {
+            const patch = adjustState(prevState, player);
+            return patch ? { ...prevState, ...patch } : prevState;
+          })()
+        : prevState;
+
       const nextPatches = adjustState
-        ? prevChartUpdate.patches.map((patch, idx) => {
-            const result = adjustState(states[idx], player, patch);
+        ? prevChartUpdate.patches.map((patch) => {
+            const result = adjustState(patch, player);
             return result ? { ...patch, ...result } : patch;
           })
         : patches;
@@ -63,7 +70,7 @@ export function createCartStore<S extends Spec>(
 
       return {
         player,
-        prev: prevState,
+        prev: nextPrev,
         action: nextAction,
         patches: nextPatches,
         final,

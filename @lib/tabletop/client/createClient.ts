@@ -21,6 +21,11 @@ export type ClientUpdate<S extends Spec> = {
   err: { type: "serverErr" | "cartErr"; msg: string } | null;
 };
 
+type MeterState<S extends Spec> = {
+  state: ClientUpdate<S>["state"];
+  action: ClientUpdate<S>["action"];
+} | null;
+
 export type Client<S extends Spec> = {
   subscribe: Subscription<ClientUpdate<S>>["subscribe"];
   get: Subscription<ClientUpdate<S>>["get"];
@@ -28,7 +33,7 @@ export type Client<S extends Spec> = {
     server: ActionFns<ServerActions<S>>;
     cart: ActionFns<S["actions"]>;
   };
-  meter: Meter<ClientUpdate<S>["state"]>;
+  meter: Meter<MeterState<S>>;
   cart: Cart<S>;
 };
 
@@ -49,7 +54,8 @@ export function createClient<S extends Spec>(
   }
 
   const store = createSubscription(status);
-  const meter = createMeter<ClientUpdate<S>["state"]>(null);
+
+  const meter = createMeter<MeterState<S>>(null);
 
   function update() {
     store.next(status);
@@ -79,15 +85,20 @@ export function createClient<S extends Spec>(
 
       if (cartUpdate) {
         const { ctx, prev, patches, action, final } = cartUpdate;
-        const states: S["states"][] = [];
+        const meterStates: MeterState<S>[] = [];
 
         if (!status.ctx) set({ ctx });
-        if (action) set({ action });
-        if (!lastUpdate) states.push(prev);
-        if (patches.length > 0) states.push(...expandStates(cartUpdate));
+        if (!lastUpdate) meterStates.push({ state: prev, action: null });
+        if (patches.length > 0) {
+          const meterUpdates = expandStates(cartUpdate).map((state, idx) => {
+            if (idx === 0 && action) return { state, action };
+            return { state, action: null };
+          });
+          meterStates.push(...meterUpdates);
+        }
 
-        if (states.length > 0) {
-          meter.actions.pushStates(...states);
+        if (meterStates.length > 0) {
+          meter.actions.pushStates(...meterStates);
         } else {
           update();
         }
@@ -101,7 +112,7 @@ export function createClient<S extends Spec>(
   });
 
   meter.subscribe(({ state }) => {
-    set({ state });
+    set({ action: state?.action, state: state?.state });
     update();
   });
 

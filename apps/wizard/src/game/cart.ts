@@ -32,7 +32,7 @@ export const wizardCart: Cart<WizardSpec> = {
     play: null,
     select: null,
   },
-  adjustState: (state, player, patch) => {
+  adjustState: (patch, player) => {
     if (patch.hands) {
       const hands = patch.hands.map((hand, idx) =>
         idx === player ? hand : []

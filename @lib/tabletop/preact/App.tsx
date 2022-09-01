@@ -38,7 +38,7 @@ export function App<S extends Spec>({
   return (
     <Backdrop>
       <AppContainer>
-        <NotificationsWrapper>
+        <NotificationsWrapper client={client}>
           <TitleFeeder client={client} View={Title} />
           <LobbyFeeder client={client} View={Lobby} />
           <GameFeeder client={client} View={Game} />

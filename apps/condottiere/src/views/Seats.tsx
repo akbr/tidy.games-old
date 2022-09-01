@@ -1,5 +1,3 @@
-import { GameProps } from "./types";
-
 import { is } from "@lib/compare/is";
 
 import { PositionSeats } from "@shared/components/PositionSeats";
@@ -7,6 +5,8 @@ import { Badge, getGlowStyle } from "@shared/components/Badge";
 import { Twemoji } from "@shared/components/Twemoji";
 
 import { PlayerMat, PlayerMatProps } from "./PlayerMat";
+import { GameProps } from "@lib/tabletop";
+import CondottiereSpec from "src/game/spec";
 
 type SeatProps = PlayerMatProps & PlayerInfoProps;
 
@@ -80,24 +80,24 @@ function WaitingMarker() {
   );
 }
 
-export function Seats({ frame, room }: GameProps) {
-  const [, game] = frame.state;
-
-  const isWinter = is.defined(game.lines.flat().find((x) => x === "w"));
+export function Seats({ state, room }: GameProps<CondottiereSpec>) {
+  const isWinter = is.defined(state.lines.flat().find((x) => x === "w"));
   return (
     <PositionSeats>
       {room.seats.map((seat, idx) => {
         const isWaiting =
-          game.player === -1 ? !game.discardStatus[idx] : idx === game.player;
+          state.player === -1
+            ? !state.discardStatus[idx]
+            : idx === state.player;
         return (
           <div class="m-1.5">
             <Seat
               avatar={seat?.avatar}
               name={seat?.name || `PL${idx}`}
               player={idx}
-              line={game.lines[idx]}
+              line={state.lines[idx]}
               isWinter={isWinter}
-              isCondottiere={idx === game.condottiere}
+              isCondottiere={idx === state.condottiere}
               isWaiting={isWaiting as boolean}
             />
           </div>

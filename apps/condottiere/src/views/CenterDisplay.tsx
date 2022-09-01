@@ -1,19 +1,18 @@
 import { is } from "@lib/compare/is";
 import { useState } from "preact/hooks";
 import { canDiscard } from "../game/logic";
-import { Cities, Cards, Mercenaries, cityAdjacencies } from "../game/glossary";
-import { Game } from "../game/spec";
-import { GameProps } from "./types";
+import { Cards, Mercenaries } from "../game/glossary";
+import CondottiereSpec from "../game/spec";
+import { GameProps } from "@lib/tabletop";
 
-export const CenterDisplay = (props: GameProps) => {
-  const { frame, controls } = props;
-  const [type, game] = frame.state;
-  const { waitFor } = controls.meter;
+export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
+  const { state, room, actions } = props;
+  const { phase } = state;
 
   const vnode = (() => {
-    const isTurn = frame.player === game.player;
+    const isTurn = state.player === room.player;
 
-    if (type === "choose") {
+    if (phase === "choose") {
       if (!isTurn)
         return (
           <div class="text-center animate-pulse">
@@ -22,28 +21,42 @@ export const CenterDisplay = (props: GameProps) => {
           </div>
         );
 
-      return <ChooseCity map={game.map} choose={controls.game.choose} />;
+      return (
+        <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px] animate-pulse">
+          Choose a city <br />
+          on the map.
+        </h3>
+      );
     }
 
-    if (type === "retreat") {
+    if (phase === "chosen") {
+      return (
+        <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px] ">
+          Battle location: <br />
+          {state.battleLocation}
+        </h3>
+      );
+    }
+
+    if (phase === "retreat") {
       if (!isTurn) return <div>Waiting for scarecrow...</div>;
 
       return (
         <ChooseRetreat
-          line={game.lines[frame.player]}
-          retreat={controls.game.retreat}
+          line={state.lines[state.player!]}
+          retreat={actions.cart.retreat}
         />
       );
     }
 
-    if (type === "discard") {
-      if (game.discardStatus[frame.player])
+    if (phase === "discard") {
+      if (state.discardStatus[room.player])
         return <div>Waiting for other players...</div>;
 
       return (
         <ChooseDiscard
-          hand={game.hands[frame.player]}
-          discard={controls.game.discard}
+          hand={state.hands[room.player]}
+          discard={actions.cart.discard}
         />
       );
     }
@@ -59,45 +72,6 @@ export const CenterDisplay = (props: GameProps) => {
 };
 
 export default CenterDisplay;
-
-function ChooseCity({
-  map,
-  choose,
-}: {
-  map: Game["map"];
-  choose: (c: Cities) => void;
-}) {
-  let cityList = Object.keys(map).sort() as Cities[];
-  cityList = cityList.filter((city) => map[city] === null);
-
-  const [city, setCity] = useState(cityList[0]);
-  /**      <h3>Choose city:</h3>
-      <select
-        name="cities"
-        style={{ maxWidth: "100px" }}
-        onChange={(e) => {
-          //@ts-ignore
-          setCity(e.target.value);
-        }}
-      >
-        {cityList.map((city) => (
-          <option value={city}>{city}</option>
-        ))}
-      </select>
-      <button
-        onClick={() => {
-          choose(city);
-        }}
-      >
-        Choose
-      </button>
-   */
-  return (
-    <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px] animate-pulse">
-      Tap the map to choose a city.
-    </h3>
-  );
-}
 
 function ChooseRetreat({
   line,
@@ -170,3 +144,30 @@ function ChooseDiscard({
     </div>
   );
 }
+
+/**     
+   *   let cityList = Object.keys(map).sort() as Cities[];
+  cityList = cityList.filter((city) => map[city] === null);
+ 
+   * const [city, setCity] = useState(cityList[0]);
+   * <h3>Choose city:</h3>
+      <select
+        name="cities"
+        style={{ maxWidth: "100px" }}
+        onChange={(e) => {
+          //@ts-ignore
+          setCity(e.target.value);
+        }}
+      >
+        {cityList.map((city) => (
+          <option value={city}>{city}</option>
+        ))}
+      </select>
+      <button
+        onClick={() => {
+          choose(city);
+        }}
+      >
+        Choose
+      </button>
+   */
