@@ -80,14 +80,20 @@ export const condottiereChart: Chart<CondottiereSpec> = {
       idx === game.player ? [...line, card] : line
     );
 
-    return {
-      phase: "played",
-      hands: nextHands,
-      lines: nextLines,
-    };
+    return [
+      {
+        phase: "played",
+        hands: nextHands,
+      },
+      {
+        phase: "placed",
+        lines: nextLines,
+      },
+    ];
   },
   passed: (game, ctx) => forkOnBattleStatus(game, ctx),
-  played: (game, ctx) => {
+  played: () => "This state is never on the edge.",
+  placed: (game, ctx) => {
     const justPlayed = game.lines[game.player!].at(-1);
 
     if (justPlayed === "s") {

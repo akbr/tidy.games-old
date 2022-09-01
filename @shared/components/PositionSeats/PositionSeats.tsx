@@ -1,5 +1,6 @@
 import { getSeatRatio } from "./seatsLayout";
 import { ComponentChildren, toChildArray } from "preact";
+import { rotateArray } from "@lib/array";
 
 const getTranslateAdjustment = (ratio: number) =>
   ratio === 0 ? 0 : ratio === 1 ? -100 : -50;
@@ -15,10 +16,12 @@ const getStyle = ([xRatio, yRatio]: number[]) => ({
 
 export const PositionSeats = ({
   children,
+  perspective,
 }: {
   children: ComponentChildren;
+  perspective: number;
 }) => {
-  const childArray = toChildArray(children);
+  const childArray = rotateArray(toChildArray(children), -perspective);
   const numSeats = childArray.length;
 
   return (

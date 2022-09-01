@@ -18,6 +18,7 @@ function Seat({
   isWinter,
   isWaiting,
   isCondottiere,
+  isActive,
 }: SeatProps) {
   return (
     <div class="relative flex flex-col gap-1.5">
@@ -28,6 +29,7 @@ function Seat({
         name={name}
         isWaiting={isWaiting}
         isCondottiere={isCondottiere}
+        isActive={isActive}
       />
     </div>
   );
@@ -39,6 +41,7 @@ type PlayerInfoProps = {
   name?: string;
   isWaiting?: boolean;
   isCondottiere?: boolean;
+  isActive: boolean;
 };
 
 function PlayerInfo({
@@ -74,7 +77,7 @@ function CondottiereMarker() {
 
 function WaitingMarker() {
   return (
-    <div title="Waiting for player">
+    <div title="Waiting for player" class="animate-bounce">
       <Twemoji char={"⏳"} size={24} />
     </div>
   );
@@ -83,7 +86,7 @@ function WaitingMarker() {
 export function Seats({ state, room }: GameProps<CondottiereSpec>) {
   const isWinter = is.defined(state.lines.flat().find((x) => x === "w"));
   return (
-    <PositionSeats>
+    <PositionSeats perspective={room.player}>
       {room.seats.map((seat, idx) => {
         const isWaiting =
           state.player === -1
@@ -98,7 +101,8 @@ export function Seats({ state, room }: GameProps<CondottiereSpec>) {
               line={state.lines[idx]}
               isWinter={isWinter}
               isCondottiere={idx === state.condottiere}
-              isWaiting={isWaiting as boolean}
+              isWaiting={isWaiting}
+              isActive={state.playStatus[idx]}
             />
           </div>
         );

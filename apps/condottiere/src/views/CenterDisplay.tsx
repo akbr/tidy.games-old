@@ -39,7 +39,7 @@ export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
     }
 
     if (phase === "retreat") {
-      if (!isTurn) return <div>Waiting for scarecrow...</div>;
+      if (!isTurn) return <div>Waiting on scarecrow...</div>;
 
       return (
         <ChooseRetreat

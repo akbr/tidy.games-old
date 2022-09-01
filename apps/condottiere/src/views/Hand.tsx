@@ -11,6 +11,8 @@ import { PositionHand } from "@shared/components/PositionHand";
 import { Cards, cardGlyphs } from "../game/glossary";
 import { xPeek, yPeek } from "./uiVars";
 import { Card } from "./Card";
+import { delay, seq } from "@lib/async/task";
+import { randomBetween } from "@lib/random";
 
 const initCardDrag: DOMEffect<(cardId: Cards) => void> = (
   $el,
@@ -38,7 +40,16 @@ const initCardDrag: DOMEffect<(cardId: Cards) => void> = (
 const applyPlayAnimation = ($card: HTMLElement) => {
   const rect = getNearestDimensions($card);
   const { x, y } = getCenterPlayedPosition(rect);
-  return style($card, { x: 0, y: 0, left: x, top: y }, { duration: 200 });
+  return seq([
+    () =>
+      style(
+        $card,
+        { x: 0, y: 0, left: x, top: y, rotate: randomBetween(-14, 14) },
+        { duration: 500 }
+      ),
+    () => delay(300),
+    () => style($card, { opacity: 0 }, { duration: 500 }),
+  ]);
 };
 
 function HandCard({

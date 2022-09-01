@@ -1,7 +1,7 @@
 import { GameProps } from "@lib/tabletop/preact/types";
 import { WizardSpec } from "src/game/spec";
 
-import { rotateArray, rotateIndex } from "@lib/array";
+import { rotateIndex } from "@lib/array";
 
 import { Badge, BadgeProps } from "@shared/components/Badge";
 import { SpeechBubble, getBubblePos } from "@shared/components/SpeechBubble";
@@ -111,11 +111,9 @@ export const Seats = ({ state, room, ctx }: GameProps<WizardSpec>) => {
     );
   });
 
-  seats = rotateArray(seats, -player);
-
   return (
     <section id="seats" class="relative h-full">
-      <PositionSeats>{seats}</PositionSeats>
+      <PositionSeats perspective={player}>{seats}</PositionSeats>
     </section>
   );
 };

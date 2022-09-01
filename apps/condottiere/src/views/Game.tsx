@@ -9,6 +9,7 @@ import UiButtons from "./UiButtons";
 import Hand from "./Hand";
 import Seats from "./Seats";
 import CenterDisplay from "./CenterDisplay";
+import PlayedCard from "./PlayedCard";
 
 export const Game = (props: GameProps<CondottiereSpec>) => {
   const { state, room, actions } = props;
@@ -33,6 +34,7 @@ export const Game = (props: GameProps<CondottiereSpec>) => {
         <Seats {...props} />
         <Hand cards={hand} play={actions.cart.play} />
         <CenterDisplay {...props} />
+        <PlayedCard {...props} />
       </section>
       <UiButtons {...props} />
     </div>

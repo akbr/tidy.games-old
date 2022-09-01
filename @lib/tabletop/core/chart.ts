@@ -17,7 +17,7 @@ export type Chart<S extends Spec> = {
     state: S["states"],
     ctx: Ctx<S>,
     action?: AuthenticatedAction<S["actions"]>
-  ) => Partial<S["states"]> | NonStateReturns;
+  ) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
 };
 
 export type StatePatch<S extends Spec> = { phase: S["phases"] } & Partial<
@@ -25,7 +25,7 @@ export type StatePatch<S extends Spec> = { phase: S["phases"] } & Partial<
 >;
 
 export type ChartUpdate<S extends Spec> = {
-  patches: StatePatch<S>[];
+  patches: Partial<S["states"]>[];
   states: S["states"][];
   final: boolean;
 };
@@ -36,7 +36,7 @@ export function getChartUpdate<S extends Spec>(
   inputState: S["states"],
   action?: AuthenticatedAction<S["actions"]>
 ): ChartUpdate<S> | string {
-  const patches: StatePatch<S>[] = [];
+  const patches: Partial<S["states"]>[] = [];
   const states: S["states"][] = [];
 
   let final = false;
@@ -49,7 +49,8 @@ export function getChartUpdate<S extends Spec>(
     const chartFn = chart[priorState.phase];
 
     const result = chartFn(priorState, ctx, action) as
-      | StatePatch<S>
+      | Partial<S["states"]>
+      | Partial<S["states"]>[]
       | NonStateReturns;
 
     // Only run action on first iteration
@@ -69,8 +70,12 @@ export function getChartUpdate<S extends Spec>(
     }
 
     const patch = result;
-    patches.push(patch);
-    states.push({ ...priorState, ...patch });
+    const patchez = Array.isArray(patch) ? patch : [patch];
+    patchez.forEach((patch) => {
+      let prev = states.at(-1) || inputState;
+      patches.push(patch);
+      states.push({ ...prev, ...patch });
+    });
   }
 
   return {

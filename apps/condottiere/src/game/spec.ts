@@ -8,6 +8,7 @@ export type CondottiereSpec = CreateSpec<{
     | "chosen"
     | "play"
     | "played"
+    | "placed"
     | "passed"
     | "retreat"
     | "retreated"
