@@ -24,7 +24,7 @@ export type ClientUpdate<S extends Spec> = {
 type MeterState<S extends Spec> = {
   state: ClientUpdate<S>["state"];
   action: ClientUpdate<S>["action"];
-} | null;
+};
 
 export type Client<S extends Spec> = {
   subscribe: Subscription<ClientUpdate<S>>["subscribe"];
@@ -55,7 +55,7 @@ export function createClient<S extends Spec>(
 
   const store = createSubscription(status);
 
-  const meter = createMeter<MeterState<S>>(null);
+  const meter = createMeter<MeterState<S>>({ state: null, action: null });
 
   function update() {
     store.next(status);
@@ -72,23 +72,36 @@ export function createClient<S extends Spec>(
       update();
     },
     onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
+      const mod: Partial<ClientUpdate<S>> = {};
+      let meterActions: Function[] = [];
+
       if (is.defined(room)) {
+        mod.room = room;
+
         if (room === null) {
           lastUpdate = null;
-          set({ room, state: null, ctx: null, action: null });
-        } else {
-          set({ room });
+          mod.ctx = null;
+          meterActions.push(meter.actions.reset);
         }
       }
-      if (cartErr) set({ err: { type: "cartErr", msg: cartErr } });
-      if (serverErr) set({ err: { type: "serverErr", msg: serverErr } });
+
+      if (cartErr) {
+        mod.err = { type: "cartErr", msg: cartErr };
+      }
+      if (serverErr) {
+        mod.err = { type: "serverErr", msg: serverErr };
+      }
 
       if (cartUpdate) {
         const { ctx, prev, patches, action, final } = cartUpdate;
         const meterStates: MeterState<S>[] = [];
 
-        if (!status.ctx) set({ ctx });
+        if (!status.ctx) {
+          mod.ctx = ctx;
+        }
+
         if (!lastUpdate) meterStates.push({ state: prev, action: null });
+
         if (patches.length > 0) {
           const meterUpdates = expandStates(cartUpdate).map((state, idx) => {
             if (idx === 0 && action) return { state, action };
@@ -98,21 +111,27 @@ export function createClient<S extends Spec>(
         }
 
         if (meterStates.length > 0) {
-          meter.actions.pushStates(...meterStates);
-        } else {
-          update();
+          meterActions.push(() => meter.actions.pushStates(...meterStates));
         }
 
         lastUpdate = cartUpdate;
-        return;
       }
 
-      update();
+      status = {
+        ...status,
+        ...mod,
+      };
+
+      if (meterActions.length > 0) {
+        meterActions.forEach((fn) => fn());
+      } else {
+        update();
+      }
     },
   });
 
   meter.subscribe(({ state }) => {
-    set({ action: state?.action, state: state?.state });
+    set({ ...state });
     update();
   });
 

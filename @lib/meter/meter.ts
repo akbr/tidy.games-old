@@ -16,6 +16,7 @@ export type Meter<T> = Subscribable<MeterStatus<T>> & {
     setPlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
     setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
     setHistory: (val: boolean) => void;
+    reset: () => void;
   };
 };
 
@@ -70,10 +71,24 @@ export const createMeter = <T>(
     setTimeout(iterate, 0);
   }
 
+  function clearWaiting() {
+    if (waitingFor.length > 0) {
+      waitingFor.forEach((task) => {
+        task.skip();
+      });
+      waitingFor = [];
+    }
+  }
   return {
     subscribe,
     get,
     actions: {
+      reset: () => {
+        clearWaiting();
+        states = [initial];
+        updateIdx(0);
+        update();
+      },
       pushStates: (...incoming) => {
         states = [...states, ...incoming];
         asyncIterate();
@@ -103,12 +118,7 @@ export const createMeter = <T>(
 
         playing = false;
 
-        if (waitingFor.length > 0) {
-          waitingFor.forEach((task) => {
-            task.skip();
-          });
-          waitingFor = [];
-        }
+        clearWaiting();
 
         updateIdx(nextIdx);
         update();
