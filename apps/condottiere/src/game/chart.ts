@@ -196,30 +196,31 @@ export const condottiereChart: Chart<CondottiereSpec> = {
     };
   },
   discarded: (s) => {
-    return s.discardStatus.includes(null)
-      ? { phase: "discard" }
-      : { phase: "discardsComplete" };
-  },
-  discardsComplete: (game, ctx) => {
-    const nextHands = game.hands.map((hand, idx) =>
-      game.discardResults[idx] ? [] : hand
+    if (s.discardStatus.includes(null)) return { phase: "discard" };
+
+    const nextHands = s.hands.map((hand, idx) =>
+      s.discardResults[idx] ? [] : hand
     );
-    const numPlayersRemaining = nextHands
-      .map((hand) => (hand.length > 0 ? 1 : 0) as number)
-      .reduce((a, b) => a + b, 0);
+
+    return {
+      phase: "discardsComplete",
+      hands: nextHands,
+      playStatus: nextHands.map((hand) => hand.length > 0),
+    };
+  },
+  discardsComplete: (s, ctx) => {
+    const numPlayersRemaining = s.playStatus.filter((s) => s).length;
 
     if (numPlayersRemaining > 1) {
       return {
         phase: "choose",
-        player: game.condottiere,
-        hands: nextHands,
-        playStatus: nextHands.map((hand) => hand.length > 0),
+        player: s.condottiere,
         discardStatus: [],
         discardResults: [],
       };
     }
 
-    return nextRound(ctx, game);
+    return nextRound(ctx, s);
   },
   end: () => true,
 };
