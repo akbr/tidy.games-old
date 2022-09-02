@@ -26,6 +26,7 @@ export type CondottiereSpec = CreateSpec<{
     discardResults: (null | boolean)[];
     map: Record<Cities, null | number>;
     battleLocation: Cities | null;
+    battleStatus: number | null;
     hands: Cards[][];
     lines: Cards[][];
     winner: null | number;

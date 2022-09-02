@@ -8,7 +8,8 @@ import { PlayerMat, PlayerMatProps } from "./PlayerMat";
 import { GameProps } from "@lib/tabletop";
 import CondottiereSpec from "src/game/spec";
 
-type SeatProps = PlayerMatProps & PlayerInfoProps;
+type SeatProps = PlayerMatProps &
+  PlayerInfoProps & { isPlaying: boolean; pass: Function };
 
 function Seat({
   player,
@@ -19,9 +20,15 @@ function Seat({
   isWaiting,
   isCondottiere,
   isActive,
+  isPlaying,
+  pass,
 }: SeatProps) {
   return (
-    <div class="relative flex flex-col gap-1.5">
+    <div
+      class="relative flex flex-col gap-1.5"
+      style={{ opacity: isActive ? 1 : 0.6 }}
+    >
+      {isPlaying && <button onClick={() => pass()}>Pass</button>}
       <PlayerMat player={player} line={line} isWinter={isWinter} />
       <PlayerInfo
         player={player}
@@ -83,7 +90,7 @@ function WaitingMarker() {
   );
 }
 
-export function Seats({ state, room }: GameProps<CondottiereSpec>) {
+export function Seats({ state, room, actions }: GameProps<CondottiereSpec>) {
   const isWinter = is.defined(state.lines.flat().find((x) => x === "w"));
   return (
     <PositionSeats perspective={room.player}>
@@ -103,6 +110,12 @@ export function Seats({ state, room }: GameProps<CondottiereSpec>) {
               isCondottiere={idx === state.condottiere}
               isWaiting={isWaiting}
               isActive={state.playStatus[idx]}
+              isPlaying={
+                idx === room.player &&
+                idx === state.player &&
+                state.phase === "play"
+              }
+              pass={() => actions.cart.play(false)}
             />
           </div>
         );

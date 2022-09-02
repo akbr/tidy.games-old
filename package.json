@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite apps/$npm_config_app_id",
     "build-app": "tsc -p ./apps/$npm_config_app_id && vite build apps/$npm_config_app_id && mv apps/$npm_config_app_id/dist ./dist/client/$npm_config_app_id",
-    "build-apps": "npm run build-app --app-id=index && npm run build-app --app-id=wizard",
+    "build-apps": "npm run build-app --app-id=index && npm run build-app --app-id=wizard && npm run build-app --app-id=condottiere",
     "build-node": "tsc --project node/tsconfig.json && tsc-alias -p node/tsconfig.json && mv node/dist ./dist/node",
     "build-all": "rm -rf dist/ && mkdir dist && mkdir dist/client && npm run build-node && npm run build-apps",
     "start-server": "node ./dist/node/node/index-web.js",

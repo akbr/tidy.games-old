@@ -9,8 +9,11 @@ import { Seats } from "./Seats/Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
+import { useRefreshOnResize } from "@lib/hooks";
 
 export const Game = (props: GameProps<WizardSpec>) => {
+  useRefreshOnResize();
+
   const { state, room, actions } = props;
   const numCards = state.player ? state.hands[state.player].length || 1 : 1;
 

@@ -1,14 +1,11 @@
-import { Game } from "../game/spec";
-import { GameProps } from "./types";
-
 import { getPosition } from "@lib/stylus";
 
 import { Badge } from "@shared/components/Badge";
 import { Twemoji } from "@shared/components/Twemoji";
-import { DialogOf } from "@shared/components/DialogOf";
 
 import mapImg from "../assets/map.jpg";
-import { is } from "@lib/compare/is";
+import { GameProps } from "@lib/tabletop";
+import CondottiereSpec from "src/game/spec";
 
 const mapCoords = {
   tor: [45, 90],
@@ -31,11 +28,11 @@ const mapCoords = {
 };
 
 type MapProps = {
-  players: GameProps["room"]["seats"];
-  map: Game["map"];
+  players: GameProps<CondottiereSpec>["room"]["seats"];
+  map: CondottiereSpec["game"]["map"];
   isChoosing: boolean;
-  choose: GameProps["controls"]["game"]["choose"];
-  battleLocation: Game["battleLocation"];
+  choose: GameProps<CondottiereSpec>["actions"]["cart"]["choose"];
+  battleLocation: CondottiereSpec["game"]["battleLocation"];
 };
 
 export const Map = ({
@@ -46,7 +43,7 @@ export const Map = ({
   battleLocation,
 }: MapProps) => (
   <div>
-    <div>
+    <div class="relative">
       {(Object.keys(map) as Array<keyof typeof map>).map((city) => {
         const status = map[city];
         const [left, top] = mapCoords[city];
@@ -84,8 +81,8 @@ function ChooseIcon({
   city,
   choose,
 }: {
-  city: keyof Game["map"];
-  choose: GameProps["controls"]["game"]["choose"];
+  city: keyof CondottiereSpec["game"]["map"];
+  choose: GameProps<CondottiereSpec>["actions"]["cart"]["choose"];
 }) {
   return (
     <div
@@ -104,5 +101,24 @@ function BattleIcon() {
     <div class="animate-spin">
       <Twemoji char={"⚔️"} size={32} />
     </div>
+  );
+}
+
+export function MapDialog({
+  state,
+  room,
+  actions,
+}: GameProps<CondottiereSpec>) {
+  const isTurn = room.player === state.player;
+  const isChoosing = isTurn && state.phase === "choose";
+
+  return (
+    <Map
+      players={room.seats}
+      battleLocation={state.battleLocation}
+      map={state.map}
+      isChoosing={isChoosing}
+      choose={actions.cart.choose}
+    />
   );
 }

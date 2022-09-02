@@ -1,12 +1,11 @@
 import type { Spec } from "./spec";
-import type { StatePatch } from "./chart";
 
 export function expandStates<S extends Spec>({
   prev,
   patches,
 }: {
   prev: S["states"];
-  patches: StatePatch<S>[];
+  patches: Partial<S["states"]>[];
 }) {
   const states: S["states"][] = [];
   patches.forEach((patch, idx) => {

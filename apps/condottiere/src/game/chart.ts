@@ -29,6 +29,7 @@ export const nextRound = (
     player: null,
     map,
     battleLocation: null,
+    battleStatus: null,
     hands: createHands(
       numPlayers,
       map,
@@ -53,9 +54,16 @@ export const condottiereChart: Chart<CondottiereSpec> = {
     if (is.undefined(game.map[city])) return "Invalid city.";
     if (is.number(game.map[city])) return "City has already been conquered.";
 
-    return { phase: "chosen", battleLocation: city };
+    return { phase: "chosen", battleLocation: city, player: null };
   },
-  chosen: (game) => ({ phase: "play", player: game.condottiere }),
+  chosen: (s) => {
+    const condottiereIsActive = s.playStatus[s.condottiere];
+    const nextPlayer = condottiereIsActive
+      ? s.condottiere
+      : getNextPlayer(s.condottiere, s.playStatus);
+
+    return { phase: "play", player: nextPlayer };
+  },
   play: (game, ctx, action) => {
     if (!action) return null;
     if (action.type !== "play" || action.player !== game.player)
@@ -91,16 +99,18 @@ export const condottiereChart: Chart<CondottiereSpec> = {
       },
     ];
   },
-  passed: (game, ctx) => forkOnBattleStatus(game, ctx),
+  passed: (game, ctx) => forkOnBattleStatus(game),
   played: () => "This state is never on the edge.",
-  placed: (game, ctx) => {
-    const justPlayed = game.lines[game.player!].at(-1);
+  placed: (s, ctx) => {
+    const justPlayed = s.lines[s.player!].at(-1);
 
     if (justPlayed === "s") {
-      return { phase: "retreat" };
+      const mercsInLine =
+        s.lines[s.player!].filter((x) => is.number(x)).length > 0;
+      if (mercsInLine) return { phase: "retreat" };
     }
 
-    return forkOnBattleStatus(game, ctx);
+    return forkOnBattleStatus(s);
   },
   retreat: (game, ctx, action) => {
     if (!action) return null;
@@ -130,44 +140,54 @@ export const condottiereChart: Chart<CondottiereSpec> = {
       hands: nextHands,
     };
   },
-  retreated: (game, ctx) => forkOnBattleStatus(game, ctx),
-  battleEnd: (game, ctx) => {
-    const winner = getWinner(game.map, ctx.numPlayers);
+  retreated: (s) => forkOnBattleStatus(s),
+  battleEnd: (s, ctx) => {
+    const nextMap = {
+      ...s.map,
+      [s.battleLocation!]: s.battleStatus === -1 ? null : s.battleStatus,
+    };
+    const winner = getWinner(nextMap, ctx.numPlayers);
+
+    const next = {
+      lines: s.lines.map(() => []),
+      battleLocation: null,
+      battleStatus: null,
+      map: nextMap,
+    };
 
     if (winner === null) {
+      const nextCondottiere =
+        s.battleStatus === -1
+          ? rotateIndex(ctx.numPlayers, s.condottiere, 1)
+          : s.battleStatus!;
       return {
         phase: "discard",
         player: -1,
-        lines: game.lines.map(() => []),
         discardStatus: Array.from({ length: ctx.numPlayers }).map(() => null),
         discardResults: Array.from({ length: ctx.numPlayers }).map(() => null),
+        condottiere: nextCondottiere,
+        ...next,
       };
     }
 
     return {
       phase: "end",
-      player: null,
-      lines: game.lines.map(() => []),
       winner,
+      ...next,
     };
   },
-  discard: (game, ctx, action) => {
-    if (!action) return null;
+  discard: (s, ctx, a) => {
+    if (!a) return null;
 
-    if (action.type !== "discard") return "Action mistmatch";
-    if (!is.boolean(action.data)) return "Invalid discard order.";
-    if (game.discardStatus[action.player] !== null)
-      return "You've already chosen.";
-    if (action.data === true && !canDiscard(game.hands[action.player])) {
+    if (a.type !== "discard") return "Action mistmatch";
+    if (!is.boolean(a.data)) return "Invalid discard order.";
+    if (s.discardStatus[a.player] !== null) return "You've already chosen.";
+    if (a.data === true && !canDiscard(s.hands[a.player])) {
       return "You're not eligible to discard.";
     }
 
-    const nextDiscardStatus = setIndex(game.discardStatus, action.player, true);
-    const nextDiscardResults = setIndex(
-      game.discardResults,
-      action.player,
-      action.data
-    );
+    const nextDiscardStatus = setIndex(s.discardStatus, a.player, true);
+    const nextDiscardResults = setIndex(s.discardResults, a.player, a.data);
 
     return {
       phase: "discarded",
@@ -175,36 +195,28 @@ export const condottiereChart: Chart<CondottiereSpec> = {
       discardResults: nextDiscardResults,
     };
   },
-  discarded: (game, ctx, action) => {
-    const discardsRemain = is.defined(
-      game.discardStatus.find((x) => x === null)
-    );
-
-    if (discardsRemain) {
-      return { phase: "discard" };
-    }
-
-    return { phase: "discardsComplete" };
+  discarded: (s) => {
+    return s.discardStatus.includes(null)
+      ? { phase: "discard" }
+      : { phase: "discardsComplete" };
   },
   discardsComplete: (game, ctx) => {
     const nextHands = game.hands.map((hand, idx) =>
       game.discardResults[idx] ? [] : hand
     );
-    const numPlayersRemaining = game.hands
+    const numPlayersRemaining = nextHands
       .map((hand) => (hand.length > 0 ? 1 : 0) as number)
       .reduce((a, b) => a + b, 0);
 
     if (numPlayersRemaining > 1) {
-      [
-        "choose",
-        {
-          player: game.condottiere,
-          hands: nextHands,
-          playStatus: nextHands.map((hand) => hand.length > 0),
-          discardStatus: [],
-          discardResults: [],
-        },
-      ];
+      return {
+        phase: "choose",
+        player: game.condottiere,
+        hands: nextHands,
+        playStatus: nextHands.map((hand) => hand.length > 0),
+        discardStatus: [],
+        discardResults: [],
+      };
     }
 
     return nextRound(ctx, game);
@@ -213,35 +225,25 @@ export const condottiereChart: Chart<CondottiereSpec> = {
 };
 
 function forkOnBattleStatus(
-  state: CondottiereSpec["states"],
-  ctx: Ctx<CondottiereSpec>
+  s: CondottiereSpec["states"]
 ): StatePatch<CondottiereSpec> {
-  const battleStatus = getBattleStatus(state.lines, state.playStatus);
+  const nextPlayStatus = s.playStatus.map((x, idx) =>
+    x === false ? x : s.hands[idx].length > 0
+  );
+  const battleStatus = getBattleStatus(s.lines, s.playStatus);
+  const nextPlayer = getNextPlayer(s.player!, s.playStatus);
 
-  if (battleStatus === null) {
-    return {
-      phase: "play",
-      player: getNextPlayer(state.player!, state.playStatus),
-    };
-  }
-
-  if (battleStatus === -1) {
-    const nextCondottiere = rotateIndex(ctx.numPlayers, state.condottiere, 1);
-    return {
-      phase: "battleEnd",
-      condottiere: nextCondottiere,
-      battleLocation: null,
-      player: null,
-    };
-  }
-
-  const nextCondottiere = battleStatus;
-  const nextMap = { ...state.map, [state.battleLocation!]: battleStatus };
-  return {
-    phase: "battleEnd",
-    condottiere: nextCondottiere,
-    map: nextMap,
-    battleLocation: null,
-    player: null,
-  };
+  return battleStatus === null && nextPlayer !== null
+    ? {
+        phase: "play",
+        player: nextPlayer,
+        playStatus: nextPlayStatus,
+        battleStatus,
+      }
+    : {
+        phase: "battleEnd",
+        player: null,
+        playStatus: nextPlayStatus,
+        battleStatus,
+      };
 }

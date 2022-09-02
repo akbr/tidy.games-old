@@ -4,7 +4,7 @@ import { useState } from "preact/hooks";
 import { Twemoji } from "@shared/components/Twemoji";
 import { DialogOf } from "@shared/components/DialogOf";
 
-import { Map } from "./Map";
+import { MapDialog } from "./Map";
 import { GameProps } from "@lib/tabletop";
 import CondottiereSpec from "src/game/spec";
 
@@ -40,21 +40,6 @@ export const UiButtons = (props: GameProps<CondottiereSpec>) => {
   );
 };
 export default UiButtons;
-
-function MapDialog({ state, room, actions }: GameProps<CondottiereSpec>) {
-  const isTurn = room.player === state.player;
-  const isChoosing = isTurn && state.phase === "choose";
-
-  return (
-    <Map
-      players={room.seats}
-      battleLocation={state.battleLocation}
-      map={state.map}
-      isChoosing={isChoosing}
-      choose={actions.cart.choose}
-    />
-  );
-}
 
 const OptionsDialog = ({ actions }: GameProps<CondottiereSpec>) => {
   return (

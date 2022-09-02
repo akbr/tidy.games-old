@@ -1,5 +1,5 @@
 import { Camera, panCamera } from "@lib/camera";
-import { DOMEffect, RunDOMEffect } from "@lib/hooks";
+import { DOMEffect } from "@lib/hooks";
 import { ComponentChildren } from "preact";
 import { StateUpdater, useEffect, useRef, useState } from "preact/hooks";
 

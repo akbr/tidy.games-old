@@ -4,6 +4,7 @@ import { canDiscard } from "../game/logic";
 import { Cards, Mercenaries } from "../game/glossary";
 import CondottiereSpec from "../game/spec";
 import { GameProps } from "@lib/tabletop";
+import { setDelay } from "@lib/globalUi";
 
 export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
   const { state, room, actions } = props;
@@ -30,8 +31,9 @@ export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
     }
 
     if (phase === "chosen") {
+      setDelay(2000);
       return (
-        <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px] ">
+        <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px]">
           Battle location: <br />
           {state.battleLocation}
         </h3>
@@ -49,6 +51,18 @@ export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
       );
     }
 
+    if (phase === "battleEnd") {
+      setDelay(2000);
+      return (
+        <h3 class="flex flex-col items-center text-center gap-[16px] max-w-[175px]">
+          Battle complete.
+          <br />
+          {state.battleStatus === -1 && `Tie in ${state.battleLocation}`}
+          {state.battleStatus! > -1 && `P${state.battleStatus} wins.`}
+        </h3>
+      );
+    }
+
     if (phase === "discard") {
       if (state.discardStatus[room.player])
         return <div>Waiting for other players...</div>;
@@ -59,6 +73,12 @@ export const CenterDisplay = (props: GameProps<CondottiereSpec>) => {
           discard={actions.cart.discard}
         />
       );
+    }
+
+    if (phase === "discardsComplete") {
+      setDelay(2000);
+      const turnContinues = state.playStatus.filter((x) => x).length > 1;
+      return turnContinues ? "Round continues!" : "Round is over.";
     }
 
     return null;
@@ -144,30 +164,3 @@ function ChooseDiscard({
     </div>
   );
 }
-
-/**     
-   *   let cityList = Object.keys(map).sort() as Cities[];
-  cityList = cityList.filter((city) => map[city] === null);
- 
-   * const [city, setCity] = useState(cityList[0]);
-   * <h3>Choose city:</h3>
-      <select
-        name="cities"
-        style={{ maxWidth: "100px" }}
-        onChange={(e) => {
-          //@ts-ignore
-          setCity(e.target.value);
-        }}
-      >
-        {cityList.map((city) => (
-          <option value={city}>{city}</option>
-        ))}
-      </select>
-      <button
-        onClick={() => {
-          choose(city);
-        }}
-      >
-        Choose
-      </button>
-   */

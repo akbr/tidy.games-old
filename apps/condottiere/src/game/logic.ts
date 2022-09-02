@@ -149,6 +149,7 @@ export const getNextPlayer = (
   activePlayer: number,
   playerStatuses: boolean[]
 ) => {
+  if (!playerStatuses.includes(true)) return null;
   let nextPlayer = null;
   let lastTried = activePlayer;
   while (nextPlayer === null) {

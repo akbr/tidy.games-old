@@ -11,6 +11,7 @@ import NotificationsWrapper from "./NotificationsWrapper";
 import DefaultTitle from "./Title";
 import DefaultLobby from "./Lobby";
 import DefaultGame from "./Game";
+import { useRefreshOnResize } from "@lib/hooks";
 
 export type AppViews<S extends Spec> = {
   Backdrop?: (props: { children: ComponentChildren }) => JSX.Element;
@@ -18,6 +19,7 @@ export type AppViews<S extends Spec> = {
   Title?: (props: TitleProps<S>) => JSX.Element;
   Lobby?: (props: LobbyProps<S>) => JSX.Element;
   Game?: (props: GameProps<S>) => JSX.Element;
+  Side?: (props: GameProps<S>) => JSX.Element;
 };
 
 export function App<S extends Spec>({
@@ -44,6 +46,7 @@ export function App<S extends Spec>({
           <GameFeeder client={client} View={Game} />
         </NotificationsWrapper>
       </AppContainer>
+      {views.Side && <SideFeeder client={client} View={views.Side} />}
     </Backdrop>
   );
 }
@@ -108,6 +111,22 @@ function GameFeeder<S extends Spec>({
       actions={client.actions}
     />
   );
+}
+
+function SideFeeder<S extends Spec>({
+  client,
+  View,
+}: {
+  client: Client<S>;
+  View: NonNullable<AppViews<S>["Side"]>;
+}) {
+  useRefreshOnResize();
+  const { width } = document.body.getBoundingClientRect();
+  return width > 1200 ? (
+    <div class="flex justify-center items-center p-6">
+      <GameFeeder client={client} View={View} />
+    </div>
+  ) : null;
 }
 
 export default App;
