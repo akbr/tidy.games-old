@@ -98,9 +98,9 @@ export const getBattleStatus = (
   // If bishop, battle is tie
   if (cards.has("b")) return -1;
 
-  // Battle should be scored if mayor has been played, or less than two active players
+  // Battle should be scored if mayor has been played, or less than one active player
   const battleIsOver =
-    cards.has("m") || playerStatuses.filter((x) => x === true).length < 2;
+    cards.has("m") || playerStatuses.filter((x) => x === true).length < 1;
 
   if (!battleIsOver) return null;
 
