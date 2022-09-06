@@ -27,4 +27,5 @@ export type GameProps<S extends Spec> = {
   state: S["states"];
   action: ClientUpdate<S>["action"];
   actions: Client<S>["actions"];
+  err: ClientUpdate<S>["err"];
 };

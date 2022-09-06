@@ -3,7 +3,7 @@ import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 
 import { Spec } from "../core/spec";
-import { AuthenticatedAction, Ctx } from "../core/chart";
+import { AuthenticatedAction, Ctx, getChartUpdate } from "../core/chart";
 import { Cart } from "../core/cart";
 import { expandStates } from "../core/utils";
 
@@ -17,7 +17,7 @@ export type ClientUpdate<S extends Spec> = {
   room: RoomData | null;
   state: S["states"] | null;
   ctx: Ctx<S> | null;
-  action: AuthenticatedAction<S["actions"]> | null;
+  action: AuthenticatedAction<S> | null;
   err: { type: "serverErr" | "cartErr"; msg: string } | null;
 };
 
@@ -49,8 +49,10 @@ export function createClient<S extends Spec>(
     action: null,
     err: null,
   };
+  let statusRef = { current: status };
   function set(update: Partial<ClientUpdate<S>>) {
     status = { ...status, ...update };
+    statusRef.current = status;
   }
 
   const store = createSubscription(status);
@@ -117,10 +119,7 @@ export function createClient<S extends Spec>(
         lastUpdate = cartUpdate;
       }
 
-      status = {
-        ...status,
-        ...mod,
-      };
+      set(mod);
 
       if (meterActions.length > 0) {
         meterActions.forEach((fn) => fn());
@@ -136,8 +135,11 @@ export function createClient<S extends Spec>(
   });
 
   const actions = {
-    server: createActionFns(actionKeys, "server", socket),
-    cart: createActionFns(cart.actionKeys, "cart", socket),
+    server: createServerActionFns(actionKeys, socket),
+    cart: createCartActionFns(cart, socket, statusRef, (msg) => {
+      set({ err: { type: "cartErr", msg: `Client submission error: ${msg}` } });
+      update();
+    }),
   } as Client<S>["actions"];
 
   socket.open();
@@ -153,19 +155,50 @@ export function createClient<S extends Spec>(
 
 type ActionFns<A extends { type: string; data?: any }> = {
   [T in A as T["type"]]: undefined extends T["data"]
-    ? (data?: T["data"]) => void
-    : (data: T["data"]) => void;
+    ? (data?: T["data"]) => boolean
+    : (data: T["data"]) => boolean;
 };
 
-function createActionFns(
+function createCartActionFns<S extends Spec>(
+  cart: Cart<S>,
+  socket: { send: Function },
+  statusRef: { current: ClientUpdate<S> },
+  onErr: (err: string) => void
+) {
+  const actions: Record<string, any> = {};
+  Object.keys(cart.actionKeys).forEach((type) => {
+    actions[type] = (data: any) => {
+      const { ctx, state, room } = statusRef.current;
+      if (!ctx || !state || !room) {
+        onErr("Client cannot submit action: no ctx or state");
+        return false;
+      }
+      const action = {
+        type,
+        data,
+        player: room.player,
+      };
+      const chartUpdate = getChartUpdate(cart.chart, ctx, state, action);
+      if (is.string(chartUpdate)) {
+        onErr(chartUpdate);
+        return false;
+      }
+      socket.send({ to: "cart", msg: action });
+      return true;
+    };
+  });
+  return actions;
+}
+
+function createServerActionFns(
   actionKeys: Record<string, any>,
-  to: "server" | "cart",
   socket: { send: Function }
 ) {
   const actions: Record<string, any> = {};
   Object.keys(actionKeys).forEach((type) => {
     actions[type] = (data: any) => {
-      socket.send({ to, msg: { type, data } });
+      socket.send({ to: "server", msg: { type, data } });
+      return true;
     };
   });
   return actions;

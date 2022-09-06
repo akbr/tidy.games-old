@@ -3,6 +3,7 @@ import { rotateIndex } from "@lib/array";
 
 import { WizardSpec } from "./spec";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
+import { withAction } from "@lib/tabletop/core/chart";
 
 export const getNextRound = (
   { numPlayers }: { numPlayers: number },
@@ -34,45 +35,44 @@ export const getNextRound = (
 };
 
 export const wizardChart: Chart<WizardSpec> = {
-  roundStart: ({ round }, { numPlayers, seed }) =>
-    seed
-      ? { phase: "deal", ...getDeal(numPlayers, round, seed + round) }
-      : null,
+  roundStart: (s, c) => [
+    {
+      phase: "deal",
+      ...getDeal(c.numPlayers, s.round, c.seed + s.round),
+    },
+    { phase: "trumpReveal" },
+    s.trumpSuit === "w"
+      ? { phase: "select", player: s.dealer }
+      : { phase: "bid", player: rotateIndex(c.numPlayers, s.dealer, 1) },
+  ],
 
-  deal: () => ({ phase: "trumpReveal" }),
+  select: withAction(
+    (a, s) => {
+      if (a.type !== "select" || a.player !== s.player)
+        return "Action mismatch.";
+      if (!["c", "d", "h", "s"].includes(a.data)) return "Invalid suit.";
+      return a;
+    },
+    (s, c, a) => [
+      {
+        phase: "selected",
+        trumpSuit: a.data,
+        player: rotateIndex(c.numPlayers, s.dealer, 1),
+      },
+      { phase: "bid" },
+    ]
+  ),
 
-  trumpReveal: ({ trumpSuit, dealer }, { numPlayers }) =>
-    trumpSuit === "w"
-      ? { phase: "select", player: dealer }
-      : { phase: "bid", player: rotateIndex(numPlayers, dealer, 1) },
-
-  select: ({ player, dealer }, { numPlayers }, action) => {
-    if (!action) return null;
-    if (action.type !== "select" || action.player !== player)
-      return "Action mismatch.";
-    if (!["c", "d", "h", "s"].includes(action.data)) return "Invalid suit.";
-    return {
-      phase: "selected",
-      trumpSuit: action.data,
-      player: rotateIndex(numPlayers, dealer, 1),
-    };
-  },
-
-  selected: () => ({ phase: "bid" }),
-
-  bid: (game, { options }, action) => {
-    if (!action) return null;
-    if (action.type !== "bid" || action.player !== game.player)
-      return "Action mismatch.";
-    const bidErr = checkBid(action.data, game, options);
-    if (bidErr) return bidErr;
-
-    const bids = game.bids.map((bid, i) =>
-      i === action.player ? action.data : bid
-    );
-
-    return { phase: "bidded", bids };
-  },
+  bid: withAction(
+    (a, s) =>
+      a.type !== "bid" || a.player !== s.player ? "Action mismatch." : a,
+    (s, c, a) => {
+      const bidErr = checkBid(a.data, s, c.options);
+      if (bidErr) return bidErr;
+      const nextBids = s.bids.map((bid, i) => (i === a.player ? a.data : bid));
+      return { phase: "bidded", bids: nextBids };
+    }
+  ),
 
   bidded: ({ bids, player }, { numPlayers }) =>
     bids.includes(null)
@@ -84,22 +84,25 @@ export const wizardChart: Chart<WizardSpec> = {
     player: rotateIndex(numPlayers, dealer, 1),
   }),
 
-  play: ({ player, hands, trick }, _, action) => {
-    if (!action) return null;
-    if (action.type !== "play" || action.player !== player)
-      return "Action mismatch.";
-    const hand = hands[action.player];
-    if (!hand.includes(action.data)) return "You don't have that card.";
-    if (!getPlayableCards(hand, trick).includes(action.data))
-      return "Illegal play.";
+  play: withAction(
+    (a, s) =>
+      a.type !== "play" || a.player !== s.player
+        ? "You don't have that card."
+        : a,
+    (s, _, a) => {
+      const hand = s.hands[a.player];
+      if (!hand.includes(a.data)) return "You don't have that card.";
+      if (!getPlayableCards(hand, s.trick).includes(a.data))
+        return "Illegal play.";
 
-    const nextHands = hands.map((hand, i) =>
-      i === action.player! ? hand.filter((card) => card !== action.data) : hand
-    );
-    const nextTrick = [...trick, action.data];
+      const nextHands = s.hands.map((hand, i) =>
+        i === a.player! ? hand.filter((card) => card !== a.data) : hand
+      );
+      const nextTrick = [...s.trick, a.data];
 
-    return { phase: "played", hands: nextHands, trick: nextTrick };
-  },
+      return { phase: "played", hands: nextHands, trick: nextTrick };
+    }
+  ),
 
   played: ({ trick, player, trumpSuit, trickLeader }, { numPlayers }) =>
     trick.length < numPlayers

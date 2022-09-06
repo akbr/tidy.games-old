@@ -5,7 +5,7 @@ import type { Cart } from "./cart";
 
 export type CartUpdate<S extends Spec> = {
   prev: S["states"];
-  action?: AuthenticatedAction<S["actions"]>;
+  action?: AuthenticatedAction<S>;
   patches: ChartUpdate<S>["patches"];
   final: ChartUpdate<S>["final"];
   ctx: Ctx<S>;
@@ -34,9 +34,10 @@ export function createCartStore<S extends Spec>(
   if (is.string(initialState)) return initialState;
 
   const initialUpdate = getChartUpdate(cart.chart, ctx, initialState);
-  if (is.string(initialUpdate)) return initialUpdate;
+  if (is.string(initialUpdate))
+    return `Error on initialUpdate: ${initialUpdate}`;
 
-  let actions: AuthenticatedAction<S["actions"]>[] = [];
+  let actions: AuthenticatedAction<S>[] = [];
   let prevState = initialState;
   let prevChartUpdate: ChartUpdate<S> = initialUpdate;
 

@@ -1,7 +1,7 @@
 import { WizardSpec } from "src/game/spec";
 import { GameProps } from "@lib/tabletop/preact/types";
 
-import { getHandHeight } from "@shared/components/PositionHand/handLayout";
+import { getHandHeight } from "@shared/domEffects/positionHand";
 
 import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
@@ -14,12 +14,12 @@ import { useRefreshOnResize } from "@lib/hooks";
 export const Game = (props: GameProps<WizardSpec>) => {
   useRefreshOnResize();
 
-  const { state, room, actions } = props;
+  const { state, room, actions, err } = props;
   const numCards = state.player ? state.hands[state.player].length || 1 : 1;
 
   const tableHeight = getHandHeight(
     numCards,
-    document.body.getBoundingClientRect(),
+    document.body.getBoundingClientRect().width,
     35,
     60
   );
@@ -33,7 +33,12 @@ export const Game = (props: GameProps<WizardSpec>) => {
           style={{ height: `calc(100% - ${tableHeight}px)` }}
         >
           <Hud {...props} />
-          <Hand hand={state.hands[room.player]} play={actions.cart.play} />
+          <Hand
+            hand={state.hands[room.player]}
+            play={actions.cart.play}
+            err={err}
+            deal={state.phase === "deal"}
+          />
           <Seats {...props} />
           <TableCenter {...props} />
           <Trick {...props} />

@@ -1,4 +1,6 @@
 import { Vec } from "@lib/vector";
+import { rotateArray } from "@lib/array";
+import style from "@lib/stylus";
 
 type Dimensions = { width: number; height: number };
 
@@ -48,3 +50,15 @@ export const getSeatPosition = (
   seatIndex: number,
   { width, height }: Dimensions
 ) => Vec.mulV(getSeatRatio(numPlayers, seatIndex), [width, height]);
+
+export const getTranslateAdjustment = (ratio: number) =>
+  ratio === 0 ? 0 : ratio === 1 ? -100 : -50;
+
+export const getStyle = ([xRatio, yRatio]: number[]) => ({
+  left: `${xRatio * 100}%`,
+  top: `${yRatio * 100}%`,
+  transform: `translate(
+    ${getTranslateAdjustment(xRatio)}%,
+    ${getTranslateAdjustment(yRatio)}%
+  )`,
+});

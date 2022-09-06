@@ -76,10 +76,7 @@ export const getBattleStrength = (line: Cards[], isWinter: boolean) => {
 
   const heroineStrength = line
     .filter((c) => c === "h")
-    .reduce((total) => {
-      let value = isWinter ? 10 : 1;
-      return total + value;
-    }, 0);
+    .reduce((total) => total + 10, 0);
 
   return mercenaryStrength + heroineStrength;
 };

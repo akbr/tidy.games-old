@@ -1,5 +1,5 @@
 import type { SingleFrame, MultiFrame, Options } from "./types";
-import { getCommitStyles, setStyles, createAnimation } from "./utils";
+import { getCommitStyles, setStyles, createAnimationTask } from "./utils";
 import { convertFrameValues, convertOptionValues } from "./convertValues";
 import { mungeTransforms } from "./mungeTransforms";
 
@@ -33,5 +33,10 @@ export function runElement(
 
   const convertedOptions = convertOptionValues(options, index, length);
 
-  return createAnimation($el, parsedKeyframes, commitStyle, convertedOptions);
+  return createAnimationTask(
+    $el,
+    parsedKeyframes,
+    commitStyle,
+    convertedOptions
+  );
 }

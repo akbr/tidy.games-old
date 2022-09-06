@@ -1,3 +1,5 @@
+import { Task } from "@lib/async/task";
+
 const SPECIAL_KEYS = new Set(["offeset", "easing", "composite"]);
 export const getCommitStyles = (
   styles: Record<string, string | string[]> | Record<string, string>
@@ -31,15 +33,15 @@ export function stylesAreIdentical(
   return true;
 }
 
-export function createAnimation(
+export function createAnimationTask(
   $el: Element,
   styles: Record<string, any>,
   commitStyles: Record<string, string>,
   options: KeyframeAnimationOptions
-) {
+): Task<Animation> {
   let done = false;
 
-  const anim = $el.animate(styles, options) as Animation & { skip: () => void };
+  const anim = $el.animate(styles, options);
 
   const setDone = () => {
     done = true;
@@ -51,11 +53,12 @@ export function createAnimation(
     setDone();
   });
 
-  anim.skip = () => {
-    if (done) return;
-    setDone();
-    anim.finish();
+  return {
+    finished: anim.finished,
+    skip: () => {
+      if (done) return;
+      setDone();
+      anim.finish();
+    },
   };
-
-  return anim;
 }

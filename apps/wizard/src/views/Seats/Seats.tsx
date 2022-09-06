@@ -6,7 +6,7 @@ import { rotateIndex } from "@lib/array";
 import { Badge, BadgeProps } from "@shared/components/Badge";
 import { SpeechBubble, getBubblePos } from "@shared/components/SpeechBubble";
 import { PositionSeats } from "@shared/components/PositionSeats";
-import { getSeatCSSDirection } from "@shared/components/PositionSeats/seatsLayout";
+import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 
 import { BidDisplay } from "./BidDisplay";
 import { Twemoji } from "@shared/components/Twemoji";

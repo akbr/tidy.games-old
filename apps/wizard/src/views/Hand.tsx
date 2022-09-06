@@ -1,77 +1,72 @@
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
-import { style } from "@lib/stylus";
+import { skipTasks, style } from "@lib/stylus";
 import { dragify } from "@lib/dom/dragify";
 import { Card } from "@shared/components/Card";
-import { getPlayedPosition } from "@shared/components/PositionTrick/trickLayout";
 import { getNearestDimensions } from "@lib/dom";
+import { useRefreshOnResize } from "@lib/hooks";
+import { receive } from "@lib/globalUi";
 
-import { PositionHand } from "@shared/components/PositionHand";
-
-const initCardEvents = (
-  $el: HTMLElement,
-  setPlayed: (cardId: string) => void
-) =>
-  dragify($el, {
-    onStart: ($el) => {},
-    onDrag: ($el, x, y) => {
-      style($el, { x, y });
-    },
-    onEnd: ($el, x, y) => {
-      const played = y < -50;
-      if (played) {
-        setPlayed($el.dataset.card!);
-      } else {
-        style($el, { x: 0, y: 0 }, { duration: 200 });
-      }
-    },
-  });
-
-const applyPlayAnimation = ($card: HTMLElement) => {
-  const rect = getNearestDimensions($card);
-  const { x, y } = getPlayedPosition(4, 0, rect);
-  return style($card, { x: 0, y: 0, left: x, top: y }, { duration: 200 });
-};
-
-type HandCardProps = {
-  card: string;
-  play: (cardId: string) => void;
-  err?: any;
-};
-export const HandCard = ({ card, play }: HandCardProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [playAttempt, setPlayAttempt] = useState<string | null>(null);
-
-  useLayoutEffect(() => initCardEvents(ref.current!, setPlayAttempt), [ref]);
-
-  useLayoutEffect(() => {
-    if (playAttempt) {
-      applyPlayAnimation(ref.current!)?.finished.then(() => {
-        setPlayAttempt(null);
-        play(playAttempt);
-      });
-    }
-  }, [playAttempt]);
-
-  return (
-    <div ref={ref} data-card={card} class="absolute">
-      <Card key={"hand" + card} card={card} />
-    </div>
-  );
-};
+import { positionHand } from "@shared/domEffects/positionHand";
+import { getPlayedPosition } from "@shared/domEffects/positionTrick";
 
 export const Hand = ({
   hand,
   play,
+  err,
+  deal,
 }: {
   hand: string[];
-  play: (card: string) => void;
+  play: (card: string) => boolean;
+  err: null | Object;
+  deal: boolean;
 }) => {
-  return (
-    <PositionHand>
-      {hand.map((id) => (
-        <HandCard key={id} card={id} play={(s) => play(s)} />
+  const onResize = useRefreshOnResize();
+  const ref = useRef(null)!;
+  const vnode = (
+    <section id="hand" class="relative cursor-pointer" ref={ref}>
+      {hand.map((card) => (
+        <div class="absolute" data-card={card} key={card}>
+          <Card card={card} />
+        </div>
       ))}
-    </PositionHand>
+    </section>
   );
+
+  useLayoutEffect(() => {
+    receive(positionHand(ref.current!, { deal }));
+  }, [hand, onResize, err]);
+
+  useLayoutEffect(() => initHandDrags(ref.current!, play), []);
+
+  return vnode;
 };
+
+function initHandDrags(
+  $container: HTMLElement,
+  play: (card: string) => boolean
+) {
+  return dragify($container, {
+    selectEl: ($target) => $target.closest("[data-card]")!,
+    onBeforeStart: ($card) => skipTasks($card),
+    onDrag: ($card, { startX, startY, dX, dY }) => {
+      style($card, { x: startX + dX, y: startY + dY });
+    },
+    onEnd: ($card, { startX, startY, dY }) => {
+      const played = dY < -50;
+      if (played) {
+        const playSent = play($card.dataset.card!);
+        if (playSent) {
+          receive(
+            style($card, getPlayedPosition(1, 0, getNearestDimensions($card)), {
+              duration: 250,
+            })
+          );
+        }
+        return;
+      }
+
+      style($card, { x: startX, y: startY }, { duration: 250 });
+    },
+  });
+}

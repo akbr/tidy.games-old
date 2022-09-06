@@ -1,5 +1,5 @@
 import { is } from "@lib/compare/is";
-import type { Spec, NonStateReturns } from "./spec";
+import type { Spec } from "./spec";
 
 export type Ctx<S extends Spec> = {
   numPlayers: number;
@@ -7,22 +7,55 @@ export type Ctx<S extends Spec> = {
   seed: string;
 };
 
-export type AuthenticatedAction<A extends {}> = A & {
+export type AuthenticatedAction<S extends Spec> = Spec["actions"] & {
   player: number;
-  time?: number;
 };
 
-export type Chart<S extends Spec> = {
-  [Phase in S["phases"]]: (
+export type NonStateReturns = true | string;
+
+export type AutoStateEntry<S extends Spec> = (
+  state: S["states"],
+  ctx: Ctx<S>
+) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
+
+export type ActionValidator<S extends Spec> = (
+  action: AuthenticatedAction<S>,
+  state: S["states"],
+  ctx: Ctx<S>
+) => AuthenticatedAction<S> | string;
+
+export type ActionStateEntry<S extends Spec> = (
+  state: S["states"],
+  ctx: Ctx<S>,
+  action: AuthenticatedAction<S>
+) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
+
+export type ActionEntry<S extends Spec> = [
+  ActionValidator<S>,
+  ActionStateEntry<S>
+];
+
+export function withAction<
+  S extends Spec,
+  A extends AuthenticatedAction<S> | string
+>(
+  actionFn: (
+    action: AuthenticatedAction<S>,
+    state: S["states"],
+    ctx: Ctx<S>
+  ) => A,
+  entryFn: (
     state: S["states"],
     ctx: Ctx<S>,
-    action?: AuthenticatedAction<S["actions"]>
-  ) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
-};
+    action: Exclude<A, string>
+  ) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns
+) {
+  return [actionFn, entryFn] as unknown as ActionEntry<S>;
+}
 
-export type StatePatch<S extends Spec> = { phase: S["phases"] } & Partial<
-  S["game"]
->;
+export type Chart<S extends Spec> = Partial<{
+  [Phase in S["phases"]]: AutoStateEntry<S> | ActionEntry<S>;
+}>;
 
 export type ChartUpdate<S extends Spec> = {
   patches: Partial<S["states"]>[];
@@ -34,7 +67,7 @@ export function getChartUpdate<S extends Spec>(
   chart: Chart<S>,
   ctx: Ctx<S>,
   inputState: S["states"],
-  action?: AuthenticatedAction<S["actions"]>
+  action?: AuthenticatedAction<S>
 ): ChartUpdate<S> | string {
   const patches: Partial<S["states"]>[] = [];
   const states: S["states"][] = [];
@@ -44,25 +77,35 @@ export function getChartUpdate<S extends Spec>(
 
   while (iterarting) {
     const priorState = states.at(-1) || inputState;
+    const phase = priorState.phase as S["phases"];
 
-    //@ts-ignore
-    const chartFn = chart[priorState.phase];
+    const chartFn = chart[phase];
 
-    const result = chartFn(priorState, ctx, action) as
-      | Partial<S["states"]>
-      | Partial<S["states"]>[]
-      | NonStateReturns;
+    if (!chartFn) {
+      return `No entry point for phase "${phase}".`;
+    }
 
-    // Only run action on first iteration
+    let result: Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
+
+    if (typeof chartFn === "function") {
+      if (action) return `Phase ${phase} does not accept actions.`;
+      result = chartFn(priorState, ctx);
+    } else {
+      if (!action) {
+        iterarting = false;
+        continue;
+      }
+
+      const [actionFn, stateFn] = chartFn;
+      const modAction = actionFn(action, priorState, ctx);
+      if (is.string(modAction)) return modAction;
+      result = stateFn(priorState, ctx, modAction);
+    }
+
     action = undefined;
 
-    if (is.string(result)) {
-      return result;
-    }
-    if (is.null(result)) {
-      iterarting = false;
-      continue;
-    }
+    if (is.string(result)) return result;
+
     if (result === true) {
       iterarting = false;
       final = true;

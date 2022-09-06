@@ -7,7 +7,9 @@ export const setReceiver = (fn: Receiver) => {
   receiver = fn;
 };
 
-export const receive = (task: Task<any>) => receiver(task);
+export const receive = (task: Task<any> | undefined | null | void) => {
+  task && receiver(task);
+};
 
 export const setDelay = (ms: number) => {
   receive(delay(ms));

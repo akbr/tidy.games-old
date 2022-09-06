@@ -4,11 +4,6 @@ export type Actions = { type: string; data?: any };
 export type Options = Record<string, any> | null;
 export type State = { phase: Phase } & Game;
 
-export type NoChange = null;
-export type FinalState = true;
-export type Error = string;
-export type NonStateReturns = NoChange | FinalState | Error;
-
 export type Spec = {
   phases: Phase;
   game: Game;

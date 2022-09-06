@@ -99,7 +99,7 @@ function GameFeeder<S extends Spec>({
   client: Client<S>;
   View: NonNullable<AppViews<S>["Game"]>;
 }) {
-  const { room, state, action, ctx } = useSubscribe(client, (c) => c);
+  const { room, state, action, ctx, err } = useSubscribe(client, (c) => c);
   if (!room || !state || !ctx) return null;
   return (
     <View
@@ -109,6 +109,7 @@ function GameFeeder<S extends Spec>({
       state={state}
       action={action}
       actions={client.actions}
+      err={err}
     />
   );
 }

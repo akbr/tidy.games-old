@@ -1,32 +1,71 @@
-import { ComponentChildren } from "preact";
-
-import { deep } from "@lib/compare/deep";
-import { useRefreshOnResize, useDOMEffect, useShallowRef } from "@lib/hooks";
-import { style } from "@lib/stylus";
-import { getNearestDimensions } from "@lib/dom";
+import { Vec, toXY } from "@lib/vector";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
+import { getNearestDimensions } from "@lib/dom";
+import { style } from "@lib/stylus";
 import { seq, delay } from "@lib/async/task";
 
-import { getHeldPosition, getPlayedPosition, getWaggle } from "./trickLayout";
-import { useRef } from "preact/hooks";
+import { getSeatPosition, getSeatDirectionVector } from "./positionSeats";
 
-export const PositionTrick = ({
-  children,
-  ...props
-}: TrickProps & { children: ComponentChildren }) => {
-  useRefreshOnResize();
-  const ref = useRef(null);
-  const effectProps = useShallowRef(props);
-  useDOMEffect(applyTrickStyles, ref, effectProps);
+type Dimensions = { width: number; height: number };
+const CHILD_DIMENSIONS = [80, 112];
+const buffer = [1.3, 1.3];
 
-  return (
-    <section ref={ref} id="trick" class="absolute top-0 left-0">
-      {children}
-    </section>
+export const getHeldPosition = (
+  numPlayers: number,
+  seatIndex: number,
+  dimensions: Dimensions,
+  childDimensions = CHILD_DIMENSIONS
+) => {
+  const seat = getSeatPosition(numPlayers, seatIndex, dimensions);
+  const direction = getSeatDirectionVector(numPlayers, seatIndex);
+  const heldOffset = Vec.mulV(Vec.mul(direction, -1), childDimensions, buffer);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
+
+  return toXY(Vec.add(seat, heldOffset, cardCenter));
+};
+
+export const getCenterPlayedPosition = (
+  { width, height }: Dimensions,
+  childDimensions = CHILD_DIMENSIONS
+) => {
+  const screenCenter = Vec.mul([width, height], 0.5);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
+  return toXY(Vec.add(screenCenter, cardCenter));
+};
+
+export const getPlayedPosition = (
+  numPlayers: number,
+  seatIndex: number,
+  dimensions: Dimensions,
+  childDimensions = CHILD_DIMENSIONS
+) => {
+  const minYRatio = 0.35;
+  const seat = getSeatPosition(numPlayers, seatIndex, dimensions);
+  const direction = getSeatDirectionVector(numPlayers, seatIndex);
+
+  const playOffset = Vec.mulV(direction, [
+    dimensions.width / 2,
+    dimensions.height * minYRatio,
+  ]);
+  const padding = Vec.mulV(Vec.mul(direction, -1), [
+    childDimensions[0] + 12,
+    childDimensions[1] / 2,
+  ]);
+  const cardCenter = Vec.mul(childDimensions, -0.5);
+  const positionVector = Vec.add(seat, playOffset, padding, cardCenter);
+
+  return toXY(positionVector);
+};
+
+export const getWaggle = (amt: number, amt2: number) => {
+  const getAmt = () => randomBetween(amt, amt2);
+  return [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4].map(
+    (rotate) => ({
+      rotate,
+    })
   );
 };
-export default PositionTrick;
 
 export type TrickProps = {
   numPlayers: number;
@@ -38,10 +77,9 @@ export type TrickProps = {
     | { type: "won"; player: number };
 };
 
-export const applyTrickStyles = (
+export const positionTrick = (
   $trickContainer: HTMLElement,
-  curr: TrickProps,
-  prev?: TrickProps
+  curr: TrickProps
 ) => {
   const {
     numPlayers,
@@ -58,7 +96,7 @@ export const applyTrickStyles = (
   ) as (HTMLElement | undefined)[];
   const cardElsByPerspective = rotateArray(cardElsByPlayer, -perspective);
 
-  const dimensions = getNearestDimensions($trickContainer!);
+  const dimensions = getNearestDimensions($trickContainer);
 
   // Base styling
   // ------------
@@ -69,8 +107,6 @@ export const applyTrickStyles = (
       rotate: 0,
     });
   });
-
-  if (deep(curr, prev)) return;
 
   // Play effect
   // -----------

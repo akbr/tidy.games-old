@@ -1,23 +1,39 @@
+type Props = {
+  dX: number;
+  dY: number;
+  startX: number;
+  startY: number;
+  shiftX: number;
+  shiftY: number;
+};
+
 type Options = {
-  onStart: ($el: HTMLElement, startX: number, startY: number) => void;
-  onDrag: ($el: HTMLElement, dx: number, dy: number) => void;
-  onEnd: ($el: HTMLElement, dx: number, dy: number) => void;
+  selectEl?: ($el: HTMLElement) => HTMLElement;
+  onBeforeStart?: ($el: HTMLElement) => void;
+  onStart?: ($selected: HTMLElement, props: Props) => void;
+  onDrag?: ($selected: HTMLElement, props: Props) => void;
+  onEnd?: ($selected: HTMLElement, props: Props) => void;
 };
 
-const defaultOptions2: Options = {
-  onStart: () => undefined,
-  onDrag: () => undefined,
-  onEnd: () => undefined,
-};
+export const dragify = ($el: HTMLElement, options: Options) => {
+  const {
+    onStart = () => undefined,
+    selectEl = (x) => x,
+    onBeforeStart = () => undefined,
+    onDrag = () => undefined,
+    onEnd = () => undefined,
+  } = options;
 
-export const dragify = (
-  $el: HTMLElement,
-  { onStart, onDrag, onEnd } = defaultOptions2
-) => {
-  let startX: number;
-  let startY: number;
-  let dx: number;
-  let dy: number;
+  let $selected = $el;
+
+  const status = {
+    startX: 0,
+    startY: 0,
+    dX: 0,
+    dY: 0,
+    shiftX: 0,
+    shiftY: 0,
+  };
 
   const listeners = [
     ["mousemove", drag],
@@ -36,23 +52,33 @@ export const dragify = (
   }
 
   function dragStart(e: MouseEvent | TouchEvent) {
+    $selected = selectEl(e.target! as HTMLElement);
+
+    onBeforeStart($selected);
+
+    const rect = $selected.getBoundingClientRect();
+    const tapX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const tapY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    status.shiftX = tapX - rect.left;
+    status.shiftY = tapY - rect.top;
+
     toggleListeners(true);
-    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
-    startX = pageX;
-    startY = pageY;
-    onStart($el, startX, startY);
+    const { layerX, layerY } = "touches" in e ? e.touches[0] : e;
+    status.startX = layerX - status.shiftX;
+    status.startY = layerY - status.shiftY;
+    onStart($selected, status);
   }
 
   function drag(e: MouseEvent | TouchEvent) {
-    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
-    dx = pageX - startX;
-    dy = pageY - startY;
-    onDrag($el, dx, dy);
+    const { layerX, layerY } = "touches" in e ? e.touches[0] : e;
+    status.dX = layerX - status.startX - status.shiftX;
+    status.dY = layerY - status.startY - status.shiftY;
+    onDrag($selected, status);
   }
 
   function dragEnd(e: MouseEvent | TouchEvent) {
     toggleListeners(false);
-    onEnd($el, dx, dy);
+    onEnd($selected, status);
   }
 
   $el.addEventListener("mousedown", dragStart);
