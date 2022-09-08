@@ -10,7 +10,7 @@ import { ScoreTable } from "./ScoreTable";
 import { OptionsDisplay } from "./Options";
 
 export const UiButtons = (props: GameProps<WizardSpec>) => {
-  const { state } = props;
+  const { state } = props.frame;
   const [Dialog, setDialog] = useState<FunctionalComponent<
     GameProps<WizardSpec>
   > | null>(null);
@@ -48,17 +48,12 @@ export const UiButtons = (props: GameProps<WizardSpec>) => {
   );
 };
 
-function OptionsDialog({
-  meta,
-  ctx,
-  room,
-  state,
-  actions,
-}: GameProps<WizardSpec>) {
+function OptionsDialog({ frame, actions, cart }: GameProps<WizardSpec>) {
+  const { ctx, room } = frame;
   return (
     <>
       <div class="flex flex-col gap-2">
-        <h2>{meta.name}</h2>
+        <h2>{cart.meta.name}</h2>
         <div>
           <span class="font-bold">Room:</span> {room.id}
         </div>
@@ -80,6 +75,6 @@ function OptionsDialog({
   );
 }
 
-function ScoreTableDialog({ room, state }: GameProps<WizardSpec>) {
-  return <ScoreTable scores={state.scores} room={room} />;
+function ScoreTableDialog({ frame }: GameProps<WizardSpec>) {
+  return <ScoreTable scores={frame.state.scores} room={frame.room} />;
 }

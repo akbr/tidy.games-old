@@ -13,8 +13,9 @@ import { avatars } from "../server/";
 import { LobbyProps } from "./types";
 
 export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
-  const { cart, room, actions } = props;
-  const { addBot } = actions;
+  const { frame, cart, actions } = props;
+  const { room } = frame;
+  const { addBot, start, leave } = actions.server;
 
   const isAdmin = room.player === 0;
   const gameReady = room.seats.length >= cart.meta.players[0];
@@ -26,7 +27,7 @@ export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
       <PlayerDisplay {...props} />
       {isAdmin ? (
         <>
-          <button onClick={() => actions.start()} disabled={!gameReady}>
+          <button onClick={() => start()} disabled={!gameReady}>
             {gameReady ? "Start game" : "Waiting for players..."}
           </button>
           {addBot && <button onClick={() => addBot()}>Add bot</button>}
@@ -34,7 +35,7 @@ export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
       ) : (
         <div>The game creator will start the game. Hang tight!</div>
       )}
-      <button onClick={() => actions.leave()}>Leave</button>
+      <button onClick={() => leave()}>Leave</button>
     </div>
   );
 }
@@ -68,9 +69,15 @@ function ShareLink({ roomId }: { roomId: string }) {
   );
 }
 
-function PlayerDisplay<S extends Spec>({ room, cart, actions }: LobbyProps<S>) {
+function PlayerDisplay<S extends Spec>({
+  frame,
+  cart,
+  actions,
+}: LobbyProps<S>) {
   const [Dialog, setDialog] =
     useState<FunctionalComponent<MetaDialogProps> | null>(null);
+
+  const { room } = frame;
 
   return (
     <>
@@ -108,7 +115,7 @@ function PlayerDisplay<S extends Spec>({ room, cart, actions }: LobbyProps<S>) {
           <Dialog
             close={() => setDialog(null)}
             meta={room.seats[room.player]!}
-            set={actions.setMeta}
+            set={actions.server.setMeta}
           />
         </DialogOf>
       )}

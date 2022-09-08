@@ -1,14 +1,11 @@
 import { getTotalBids } from "../../game/logic";
-import { Twemoji } from "@shared/components/Twemoji";
 
 export const BidDisplay = ({
   round,
   bids,
-  waiting,
 }: {
   round: number;
   bids: (null | number)[];
-  waiting: boolean;
 }) => {
   const total = getTotalBids(bids);
   const diff = round - total;
@@ -17,14 +14,7 @@ export const BidDisplay = ({
 
   return (
     <div class="flex flex-row items-center gap-1">
-      Bids:
-      {waiting ? (
-        <div>
-          <Twemoji char="⌛" size={24} />
-        </div>
-      ) : (
-        <span>{str}</span>
-      )}
+      <span>Bids:</span> <span>{str}</span>
     </div>
   );
 };

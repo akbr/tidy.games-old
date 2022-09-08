@@ -14,7 +14,7 @@ import { useRefreshOnResize } from "@lib/hooks";
 export const Game = (props: GameProps<WizardSpec>) => {
   useRefreshOnResize();
 
-  const { state, room, actions, err } = props;
+  const { state, room, err } = props.frame;
   const numCards = state.player ? state.hands[state.player].length || 1 : 1;
 
   const tableHeight = getHandHeight(
@@ -32,10 +32,9 @@ export const Game = (props: GameProps<WizardSpec>) => {
           class="relative"
           style={{ height: `calc(100% - ${tableHeight}px)` }}
         >
-          <Hud {...props} />
           <Hand
             hand={state.hands[room.player]}
-            play={actions.cart.play}
+            play={props.actions.cart.play}
             err={err}
             deal={state.phase === "deal"}
           />
@@ -43,6 +42,7 @@ export const Game = (props: GameProps<WizardSpec>) => {
           <TableCenter {...props} />
           <Trick {...props} />
         </section>
+        <Hud {...props} />
         <UiButtons {...props} />
       </div>
     </div>

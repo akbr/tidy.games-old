@@ -35,7 +35,7 @@ export const Hand = ({
 
   useLayoutEffect(() => {
     receive(positionHand(ref.current!, { deal }));
-  }, [hand, onResize, err]);
+  }, [hand, onResize, deal, err]);
 
   useLayoutEffect(() => initHandDrags(ref.current!, play), []);
 
@@ -49,24 +49,23 @@ function initHandDrags(
   return dragify($container, {
     selectEl: ($target) => $target.closest("[data-card]")!,
     onBeforeStart: ($card) => skipTasks($card),
-    onDrag: ($card, { startX, startY, dX, dY }) => {
-      style($card, { x: startX + dX, y: startY + dY });
+    onDrag: ($card, { startTX, startTY, dX, dY }) => {
+      style($card, { x: startTX + dX, y: startTY + dY });
     },
-    onEnd: ($card, { startX, startY, dY }) => {
+    onEnd: ($card, { startTX, startTY, dY }) => {
       const played = dY < -50;
       if (played) {
-        const playSent = play($card.dataset.card!);
-        if (playSent) {
-          receive(
-            style($card, getPlayedPosition(1, 0, getNearestDimensions($card)), {
-              duration: 250,
-            })
-          );
-        }
+        play($card.dataset.card!);
+        const centerPos = getPlayedPosition(1, 0, getNearestDimensions($card));
+        receive(
+          style($card, centerPos, {
+            duration: 250,
+          })
+        );
         return;
       }
 
-      style($card, { x: startX, y: startY }, { duration: 250 });
+      style($card, { x: startTX, y: startTY }, { duration: 250 });
     },
   });
 }

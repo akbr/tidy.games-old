@@ -26,9 +26,7 @@ type MeterState<S extends Spec> = {
   action: ClientUpdate<S>["action"];
 };
 
-export type Client<S extends Spec> = {
-  subscribe: Subscription<ClientUpdate<S>>["subscribe"];
-  get: Subscription<ClientUpdate<S>>["get"];
+export type ClientProps<S extends Spec> = {
   actions: {
     server: ActionFns<ServerActions<S>>;
     cart: ActionFns<S["actions"]>;
@@ -36,6 +34,14 @@ export type Client<S extends Spec> = {
   meter: Meter<MeterState<S>>;
   cart: Cart<S>;
 };
+
+type ClientSubscriptionMethods<S extends Spec> = {
+  subscribe: Subscription<ClientUpdate<S>>["subscribe"];
+  get: Subscription<ClientUpdate<S>>["get"];
+};
+
+export type Client<S extends Spec> = ClientSubscriptionMethods<S> &
+  ClientProps<S>;
 
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,

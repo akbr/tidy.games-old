@@ -28,8 +28,12 @@ const getSortValue = (card: string, trumpSuit?: string) => {
   const bonus = suit === trumpSuit ? 1000 : suit === "w" ? 9999 : 0;
   return value + suitOrder.indexOf(suit) * 100 + bonus;
 };
-const sortHand = (hand: string[], trumpSuit?: string) =>
-  hand.sort((a, b) => getSortValue(a, trumpSuit) - getSortValue(b, trumpSuit));
+const sortHand = (hand: string[], trumpSuit?: string) => {
+  trumpSuit = trumpSuit === "j" ? undefined : trumpSuit; // Don't sort jesters as trump
+  return hand.sort(
+    (a, b) => getSortValue(a, trumpSuit) - getSortValue(b, trumpSuit)
+  );
+};
 
 export const getDeal = (
   numPlayers: number,

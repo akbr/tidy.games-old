@@ -2,8 +2,7 @@ import { ComponentChildren } from "preact";
 import { rotateArray } from "@lib/array";
 import { Twemoji } from "@shared/components/Twemoji";
 import { getScore } from "../game/logic";
-import { GameProps, RoomData } from "@lib/tabletop";
-import { WizardSpec } from "src/game/spec";
+import { RoomData } from "@lib/tabletop";
 import { memo } from "preact/compat";
 
 export const convert = (scores: number[][]) => {

@@ -12,4 +12,10 @@ export default defineConfig({
     },
   },
   plugins: [preact()],
+  esbuild: {
+    logOverride: { "this-is-undefined-in-esm": "silent" },
+  },
+  server: {
+    port: 3000,
+  },
 });

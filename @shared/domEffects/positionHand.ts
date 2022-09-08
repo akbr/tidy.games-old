@@ -1,3 +1,4 @@
+import { all } from "@lib/async/task";
 import { randomIntBetween } from "@lib/random";
 import { style, skipTasks } from "@lib/stylus";
 
@@ -57,7 +58,7 @@ export const positionHand = (
 
   const handHeight = getHandHeight(cardEls.length, rect.width);
 
-  cardEls.forEach(($card, idx) => {
+  const tasks = cardEls.map(($card, idx) => {
     const cardStyles = getCardStyles(
       idx,
       cardEls.length,
@@ -78,9 +79,11 @@ export const positionHand = (
         y: end.y + handHeight + 10,
         rotate: randomIntBetween(-5, -15),
       };
-      style($card, [start, end], { duration: 1000 });
-    } else {
-      style($card, end);
+      return style($card, [start, end], { duration: 1000 })!;
     }
+
+    return style($card, end, { duration: 250 })!;
   });
+
+  return all(tasks);
 };

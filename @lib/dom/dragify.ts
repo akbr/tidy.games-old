@@ -1,6 +1,10 @@
+import { getTranslateValues } from "@lib/stylus";
+
 type Props = {
   dX: number;
   dY: number;
+  startTX: number;
+  startTY: number;
   startX: number;
   startY: number;
   shiftX: number;
@@ -26,11 +30,13 @@ export const dragify = ($el: HTMLElement, options: Options) => {
 
   let $selected = $el;
 
-  const status = {
+  const status: Props = {
     startX: 0,
     startY: 0,
     dX: 0,
     dY: 0,
+    startTX: 0,
+    startTY: 0,
     shiftX: 0,
     shiftY: 0,
   };
@@ -55,6 +61,9 @@ export const dragify = ($el: HTMLElement, options: Options) => {
     $selected = selectEl(e.target! as HTMLElement);
 
     onBeforeStart($selected);
+    const tValues = getTranslateValues($selected);
+    status.startTX = tValues.x;
+    status.startTY = tValues.y;
 
     const rect = $selected.getBoundingClientRect();
     const tapX = "touches" in e ? e.touches[0].clientX : e.clientX;
@@ -63,16 +72,16 @@ export const dragify = ($el: HTMLElement, options: Options) => {
     status.shiftY = tapY - rect.top;
 
     toggleListeners(true);
-    const { layerX, layerY } = "touches" in e ? e.touches[0] : e;
-    status.startX = layerX - status.shiftX;
-    status.startY = layerY - status.shiftY;
+    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
+    status.startX = pageX - status.shiftX;
+    status.startY = pageY - status.shiftY;
     onStart($selected, status);
   }
 
   function drag(e: MouseEvent | TouchEvent) {
-    const { layerX, layerY } = "touches" in e ? e.touches[0] : e;
-    status.dX = layerX - status.startX - status.shiftX;
-    status.dY = layerY - status.startY - status.shiftY;
+    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
+    status.dX = pageX - status.startX - status.shiftX;
+    status.dY = pageY - status.startY - status.shiftY;
     onDrag($selected, status);
   }
 

@@ -27,7 +27,7 @@ function getEmojiCode(rawText: string) {
 export const getCDNUrl = (emoji: string) =>
   `https://twemoji.maxcdn.com/v/13.1.0/svg/${getEmojiCode(emoji)}.svg`;
 
-export const Twemoji = ({
+export function Twemoji({
   char,
   size = 72,
   align = "middle",
@@ -35,7 +35,7 @@ export const Twemoji = ({
   char: string;
   size?: number;
   align?: string;
-}) => {
+}) {
   return (
     <img
       src={getCDNUrl(char)}
@@ -47,4 +47,4 @@ export const Twemoji = ({
       }}
     ></img>
   );
-};
+}

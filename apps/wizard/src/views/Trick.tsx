@@ -6,17 +6,17 @@ import { useLayoutEffect, useRef } from "preact/hooks";
 import { useShallowRef } from "@lib/hooks";
 import { receive } from "@lib/globalUi";
 
-export const Trick = ({ state, room, ctx }: GameProps<WizardSpec>) => {
+export const Trick = ({ frame }: GameProps<WizardSpec>) => {
   const ref = useRef(null);
 
-  const { phase, trickWinner, trick, trickLeader } = state;
+  const { phase, trickWinner, trick, trickLeader, player } = frame.state;
 
   const effect = useShallowRef(
     (() => {
       if (phase === "played") {
         return {
           type: "played",
-          player: state.player!,
+          player: player!,
         } as const;
       }
 
@@ -32,9 +32,9 @@ export const Trick = ({ state, room, ctx }: GameProps<WizardSpec>) => {
   useLayoutEffect(() => {
     receive(
       positionTrick(ref.current!, {
-        numPlayers: ctx.numPlayers,
+        numPlayers: frame.ctx.numPlayers,
         leadPlayer: trickLeader,
-        perspective: room.player,
+        perspective: frame.room.player,
         effect,
       })
     );

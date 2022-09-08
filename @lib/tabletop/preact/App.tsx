@@ -4,10 +4,17 @@ import { Spec } from "@lib/tabletop/core/spec";
 import { Client } from "@lib/tabletop/client/";
 import useSubscribe from "@lib/store/useSubscribe";
 
-import type { TitleProps, LobbyProps, GameProps } from "./types";
+import type {
+  TitleProps,
+  LobbyProps,
+  GameProps,
+  TitleFrame,
+  LobbyFrame,
+  GameFrame,
+} from "./types";
 import DefaultBackrop from "./Backdrop";
 import DefaultAppContainer from "./Container";
-import NotificationsWrapper from "./NotificationsWrapper";
+import { NotificationsWrapper } from "./NotificationsWrapper";
 import DefaultTitle from "./Title";
 import DefaultLobby from "./Lobby";
 import DefaultGame from "./Game";
@@ -58,17 +65,13 @@ function TitleFeeder<S extends Spec>({
   client: Client<S>;
   View: NonNullable<AppViews<S>["Title"]>;
 }) {
-  const [room, connected] = useSubscribe(client, (c) => [c.room, c.connected]);
-  if (room) return null;
+  const frame = useSubscribe(client, (x) => x);
 
-  const { cart, actions } = client;
-  return (
-    <View
-      connected={connected}
-      meta={cart.meta}
-      actions={{ join: actions.server.join }}
-    />
-  );
+  if (frame.room) return null;
+  const titleFrame = frame as TitleFrame<S>;
+  const props = { frame: titleFrame, ...client };
+
+  return <View {...props} />;
 }
 
 function LobbyFeeder<S extends Spec>({
@@ -78,18 +81,13 @@ function LobbyFeeder<S extends Spec>({
   client: Client<S>;
   View: NonNullable<AppViews<S>["Lobby"]>;
 }) {
-  const [room, state] = useSubscribe(client, (c) => [c.room, c.state]);
-  if (!room || state) return null;
+  const frame = useSubscribe(client, (x) => x);
 
-  const { start, leave, setMeta, addBot } = client.actions.server;
-  const actions = {
-    start,
-    leave,
-    setMeta,
-    addBot: client.cart.botFn ? addBot : undefined,
-  };
+  if (!frame.room || frame.state) return null;
+  const titleFrame = frame as LobbyFrame<S>;
+  const props = { frame: titleFrame, ...client };
 
-  return <View cart={client.cart} room={room} actions={actions} />;
+  return <View {...props} />;
 }
 
 function GameFeeder<S extends Spec>({
@@ -99,19 +97,13 @@ function GameFeeder<S extends Spec>({
   client: Client<S>;
   View: NonNullable<AppViews<S>["Game"]>;
 }) {
-  const { room, state, action, ctx, err } = useSubscribe(client, (c) => c);
-  if (!room || !state || !ctx) return null;
-  return (
-    <View
-      meta={client.cart.meta}
-      ctx={ctx}
-      room={room}
-      state={state}
-      action={action}
-      actions={client.actions}
-      err={err}
-    />
-  );
+  const frame = useSubscribe(client, (x) => x);
+
+  if (!frame.room || !frame.state || !frame.ctx) return null;
+  const titleFrame = frame as GameFrame<S>;
+  const props = { frame: titleFrame, ...client };
+
+  return <View {...props} />;
 }
 
 function SideFeeder<S extends Spec>({

@@ -5,12 +5,14 @@ import type { TitleProps } from "./types";
 import { Field } from "./Utils";
 
 export default function Title<S extends Spec>({
-  connected,
-  meta,
+  frame,
+  cart,
   actions,
 }: TitleProps<S>) {
   const [code, setCode] = useState("");
-  const { join } = actions;
+  const { connected } = frame;
+  const { meta } = cart;
+  const { join } = actions.server;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-14 ">

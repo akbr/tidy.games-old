@@ -7,11 +7,11 @@ import {
   useCallback,
 } from "preact/hooks";
 
-import { Spec } from "@lib/tabletop/core/spec";
+import { Spec } from "../core/spec";
 import { Client, ClientUpdate } from "../client";
 import { useSubscribe } from "@lib/store";
 
-export default function NotificationsWrapper<S extends Spec>({
+export function NotificationsWrapper<S extends Spec>({
   children,
   client,
 }: {
@@ -54,8 +54,6 @@ function ConnectionWarning({ connected }: { connected: boolean }) {
   ) : null;
 }
 
-type Err = { type: string; data: string };
-
 const TimedError = <S extends Spec>({
   err,
   remove,
@@ -76,12 +74,11 @@ const TimedError = <S extends Spec>({
     </div>
   );
 };
-
-export const ErrorReciever = <S extends Spec>({
+function ErrorReciever<S extends Spec>({
   err,
 }: {
   err: ClientUpdate<S>["err"];
-}) => {
+}) {
   const errRef = useRef<ClientUpdate<S>["err"]>(null);
   const [errors, setErrors] = useState<NonNullable<ClientUpdate<S>["err"]>[]>(
     []
@@ -104,4 +101,4 @@ export const ErrorReciever = <S extends Spec>({
       ))}
     </div>
   );
-};
+}

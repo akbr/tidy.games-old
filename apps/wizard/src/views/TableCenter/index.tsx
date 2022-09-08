@@ -6,9 +6,12 @@ import { TrumpReveal } from "./TrumpReveal";
 import { BidInput } from "./BidInput";
 import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
+import { receive } from "@lib/globalUi";
+import { delay } from "@lib/async/task";
 
 export const TableCenter = (props: GameProps<WizardSpec>) => {
-  const { state, room, actions } = props;
+  const { state, room } = props.frame;
+  const { actions } = props;
 
   const vnode = (() => {
     const isMyTurn = room.player === state.player;
@@ -47,6 +50,7 @@ export const TableCenter = (props: GameProps<WizardSpec>) => {
     }
 
     if (state.phase === "bidsEnd") {
+      receive(delay(2000));
       return <BidsEnd bids={state.bids} round={state.round} />;
     }
 

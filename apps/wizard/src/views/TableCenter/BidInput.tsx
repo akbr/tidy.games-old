@@ -3,8 +3,9 @@ import { useState } from "preact/hooks";
 import { WizardSpec } from "../../game/spec";
 import { checkBid } from "../../game/logic";
 
-export function BidInput({ state, ctx, actions }: GameProps<WizardSpec>) {
+export function BidInput({ frame, actions }: GameProps<WizardSpec>) {
   const [bid, setBid] = useState(0);
+  const { state, ctx } = frame;
   const bidErr = checkBid(bid, state, ctx.options);
 
   return (

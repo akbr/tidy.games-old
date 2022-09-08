@@ -4,17 +4,16 @@ import { WizardSpec } from "src/game/spec";
 import { TrumpDisplay } from "./TrumpDisplay";
 import { BidDisplay } from "./BidDisplay";
 
-export const Hud = ({ state }: GameProps<WizardSpec>) => {
-  const { phase, round, bids, trumpCard, trumpSuit } = state;
-  const waiting = bids.includes(null);
+export const Hud = ({ frame }: GameProps<WizardSpec>) => {
+  const { phase, round, bids, trumpCard, trumpSuit } = frame.state;
 
   const showTrumpDisplay = trumpCard && phase !== "deal";
-  const showBidDisplay = ["bid", "bidded", "play", "played"].includes(phase);
+  const showBidDisplay = !bids.includes(null);
 
   return (
-    <div class="absolute top-0 right-0 p-2 text-right bg-black bg-opacity-20 rounded-bl-md">
+    <div class="absolute top-0 right-0 p-2 text-right bg-black bg-opacity-20 rounded-bl-md animate-fadeIn">
       <div class="flex flex-col gap-1.5 items-end">
-        <div>Round: {round}</div>
+        <div class="animate-fadeIn">Round: {round}</div>
         {showTrumpDisplay && (
           <div class="animate-fadeIn">
             <TrumpDisplay
@@ -26,7 +25,7 @@ export const Hud = ({ state }: GameProps<WizardSpec>) => {
         )}
         {showBidDisplay && (
           <div class="animate-fadeIn">
-            <BidDisplay round={round} bids={bids} waiting={waiting} />
+            <BidDisplay round={round} bids={bids} />
           </div>
         )}
       </div>

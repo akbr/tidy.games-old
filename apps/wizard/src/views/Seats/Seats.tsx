@@ -80,7 +80,8 @@ export const Seat = ({
   );
 };
 
-export const Seats = ({ state, room, ctx }: GameProps<WizardSpec>) => {
+export const Seats = ({ frame }: GameProps<WizardSpec>) => {
+  const { state, room, ctx } = frame;
   const { player } = room;
   const { phase, bids, actuals, trickLeader } = state;
 
