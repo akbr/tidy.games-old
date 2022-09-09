@@ -8,7 +8,7 @@ import {
 } from "preact/hooks";
 
 import { Spec } from "../core/spec";
-import { Client, ClientUpdate } from "../client";
+import { Client, Frame } from "../client";
 import { useSubscribe } from "@lib/store";
 
 export function NotificationsWrapper<S extends Spec>({
@@ -58,8 +58,8 @@ const TimedError = <S extends Spec>({
   err,
   remove,
 }: {
-  err: NonNullable<ClientUpdate<S>["err"]>;
-  remove: (err: ClientUpdate<S>["err"]) => void;
+  err: NonNullable<Frame<S>["err"]>;
+  remove: (err: Frame<S>["err"]) => void;
 }) => {
   useLayoutEffect(() => {
     let timeout = setTimeout(() => {
@@ -74,18 +74,12 @@ const TimedError = <S extends Spec>({
     </div>
   );
 };
-function ErrorReciever<S extends Spec>({
-  err,
-}: {
-  err: ClientUpdate<S>["err"];
-}) {
-  const errRef = useRef<ClientUpdate<S>["err"]>(null);
-  const [errors, setErrors] = useState<NonNullable<ClientUpdate<S>["err"]>[]>(
-    []
-  );
+function ErrorReciever<S extends Spec>({ err }: { err: Frame<S>["err"] }) {
+  const errRef = useRef<Frame<S>["err"]>(null);
+  const [errors, setErrors] = useState<NonNullable<Frame<S>["err"]>[]>([]);
 
   const remove = useCallback(
-    (err: ClientUpdate<S>["err"]) =>
+    (err: Frame<S>["err"]) =>
       setErrors((errs) => errs.filter((x) => x !== err)),
     [setErrors]
   );

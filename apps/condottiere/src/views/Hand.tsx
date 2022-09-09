@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import { DOMEffect, useDOMEffect } from "@lib/hooks";
 import { dragify } from "@lib/dom/dragify";
-import { style } from "@lib/stylus";
+import { style } from "@lib/style";
 import { getNearestDimensions } from "@lib/dom";
 
 import { getCenterPlayedPosition } from "@shared/components/PositionTrick/trickLayout";

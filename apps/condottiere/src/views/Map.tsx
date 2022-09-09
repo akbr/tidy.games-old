@@ -1,4 +1,4 @@
-import { getPosition } from "@lib/stylus";
+import { getPosition } from "@lib/style";
 
 import { Badge } from "@shared/components/Badge";
 import { Twemoji } from "@shared/components/Twemoji";

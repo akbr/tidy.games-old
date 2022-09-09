@@ -74,7 +74,7 @@ export const createMeter = <T>(
   function clearWaiting() {
     if (waitingFor.length > 0) {
       waitingFor.forEach((task) => {
-        task.skip();
+        task.finish();
       });
       waitingFor = [];
     }

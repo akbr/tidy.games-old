@@ -10,7 +10,6 @@ import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 
 import { BidDisplay } from "./BidDisplay";
 import { Twemoji } from "@shared/components/Twemoji";
-import { getPosition } from "@lib/stylus";
 import { setDelay } from "@lib/globalUi";
 
 type SeatProps = {
@@ -52,7 +51,7 @@ export const Seat = ({
           <div
             title="Trick leader"
             class="absolute animate-fadeIn"
-            style={getPosition({ left: 0, top: 0, x: "-50%", y: "-50%" })}
+            style={{ left: 0, top: 0, transform: "translate(-50%, -50%)" }}
           >
             <Twemoji char={"🚩"} size={18} />
           </div>
@@ -61,7 +60,7 @@ export const Seat = ({
           <div
             title="Waiting on player..."
             class="absolute animate-fadeIn"
-            style={getPosition({ left: "100%", top: 0, x: "-50%", y: "-50%" })}
+            style={{ left: "100%", top: 0, transform: "translate(-50%, -50%)" }}
           >
             <div class="animate-bounce">
               <Twemoji char={"⏳"} size={18} />

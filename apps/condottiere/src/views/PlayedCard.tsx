@@ -10,7 +10,7 @@ import {
   getHeldPosition,
 } from "@shared/components/PositionTrick/trickLayout";
 import { getNearestDimensions } from "@lib/dom";
-import style from "@lib/stylus";
+import style from "@lib/style";
 import { rotateIndex } from "@lib/array";
 import { randomBetween } from "@lib/random";
 import { delay, seq } from "@lib/async/task";

@@ -4,7 +4,7 @@ import { Twemoji } from "@shared/components/Twemoji";
 import { splitCard } from "@shared/components/Card";
 import { suits, values, colors } from "@shared/components/Card/glyphs";
 
-import { style } from "@lib/stylus";
+import { style } from "@lib/style";
 import { delay, seq } from "@lib/async/task";
 import { createRef } from "preact";
 import { useLayoutEffect } from "preact/hooks";

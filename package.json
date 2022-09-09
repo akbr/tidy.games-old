@@ -16,8 +16,9 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "express": "^4.17.3",
+    "motion": "^10.14.2",
     "preact": "latest",
+    "express": "^4.17.3",
     "ws": "^8.5.0"
   },
   "devDependencies": {

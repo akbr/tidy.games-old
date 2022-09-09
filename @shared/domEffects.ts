@@ -1,5 +1,5 @@
 import type { DOMEffect } from "@lib/hooks/useDomEffect";
-import { style } from "@lib/stylus";
+import { style } from "@lib/style";
 
 const fadeStyles = {
   in: [{ opacity: 0, y: -10 }, { opacity: 1 }],

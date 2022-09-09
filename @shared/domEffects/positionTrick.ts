@@ -2,8 +2,8 @@ import { Vec, toXY } from "@lib/vector";
 import { rotateArray } from "@lib/array";
 import { randomBetween } from "@lib/random";
 import { getNearestDimensions } from "@lib/dom";
-import { style } from "@lib/stylus";
-import { seq, delay } from "@lib/async/task";
+import { style } from "@lib/style";
+import { seq, delay, all } from "@lib/async/task";
 
 import { getSeatPosition, getSeatDirectionVector } from "./positionSeats";
 
@@ -60,11 +60,7 @@ export const getPlayedPosition = (
 
 export const getWaggle = (amt: number, amt2: number) => {
   const getAmt = () => randomBetween(amt, amt2);
-  return [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4].map(
-    (rotate) => ({
-      rotate,
-    })
-  );
+  return { rotate: [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4] };
 };
 
 export type TrickProps = {
@@ -113,18 +109,16 @@ export const positionTrick = (
   if (effect.type === "played" && effect.player !== perspective) {
     const $played = cardElsByPlayer[effect.player]!;
     const idx = cardElsByPerspective.indexOf($played);
+    style($played, {
+      ...getHeldPosition(numPlayers, idx, dimensions),
+      rotate: randomBetween(-40, 40),
+    });
     return style(
       $played,
-      [
-        {
-          ...getHeldPosition(numPlayers, idx, dimensions),
-          rotate: randomBetween(-40, 40),
-        },
-        {
-          ...getPlayedPosition(numPlayers, idx, dimensions),
-          rotate: 0,
-        },
-      ],
+      {
+        ...getPlayedPosition(numPlayers, idx, dimensions),
+        rotate: 0,
+      },
       {
         duration: randomBetween(400, 600),
       }
@@ -161,13 +155,17 @@ export const positionTrick = (
         delay: 500,
       }),
     () =>
-      style(
-        losingCards,
-        {
-          ...winningPlayed,
-          rotate: () => randomBetween(-30, 30),
-        },
-        { duration: 300, delay: 375 }
+      all(
+        losingCards.map(($card) =>
+          style(
+            $card,
+            {
+              ...winningPlayed,
+              rotate: randomBetween(-30, 30),
+            },
+            { duration: 300, delay: 375 }
+          )
+        )
       ),
     () =>
       style(

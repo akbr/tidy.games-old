@@ -1,4 +1,4 @@
-import { getTranslateValues } from "@lib/stylus";
+import { getTranslateValues } from "@lib/style";
 
 type Props = {
   dX: number;

@@ -12,7 +12,7 @@ import { RoomData } from "../server/routines";
 import { is } from "@lib/compare/is";
 import { CartUpdate } from "../core/store";
 
-export type ClientUpdate<S extends Spec> = {
+export type Frame<S extends Spec> = {
   connected: boolean;
   room: RoomData | null;
   state: S["states"] | null;
@@ -22,8 +22,8 @@ export type ClientUpdate<S extends Spec> = {
 };
 
 type MeterState<S extends Spec> = {
-  state: ClientUpdate<S>["state"];
-  action: ClientUpdate<S>["action"];
+  state: Frame<S>["state"];
+  action: Frame<S>["action"];
 };
 
 export type ClientProps<S extends Spec> = {
@@ -36,8 +36,8 @@ export type ClientProps<S extends Spec> = {
 };
 
 type ClientSubscriptionMethods<S extends Spec> = {
-  subscribe: Subscription<ClientUpdate<S>>["subscribe"];
-  get: Subscription<ClientUpdate<S>>["get"];
+  subscribe: Subscription<Frame<S>>["subscribe"];
+  get: Subscription<Frame<S>>["get"];
 };
 
 export type Client<S extends Spec> = ClientSubscriptionMethods<S> &
@@ -47,7 +47,7 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   cart: Cart<S>
 ): Client<S> {
-  let status: ClientUpdate<S> = {
+  let status: Frame<S> = {
     connected: false,
     room: null,
     state: null,
@@ -56,7 +56,7 @@ export function createClient<S extends Spec>(
     err: null,
   };
   let statusRef = { current: status };
-  function set(update: Partial<ClientUpdate<S>>) {
+  function set(update: Partial<Frame<S>>) {
     status = { ...status, ...update };
     statusRef.current = status;
   }
@@ -80,7 +80,7 @@ export function createClient<S extends Spec>(
       update();
     },
     onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
-      const mod: Partial<ClientUpdate<S>> = {};
+      const mod: Partial<Frame<S>> = {};
       let meterActions: Function[] = [];
 
       if (is.defined(room)) {
@@ -136,7 +136,7 @@ export function createClient<S extends Spec>(
   });
 
   meter.subscribe(({ state }) => {
-    set({ ...state });
+    set(state);
     update();
   });
 
@@ -168,7 +168,7 @@ type ActionFns<A extends { type: string; data?: any }> = {
 function createCartActionFns<S extends Spec>(
   cart: Cart<S>,
   socket: { send: Function },
-  statusRef: { current: ClientUpdate<S> },
+  statusRef: { current: Frame<S> },
   onErr: (err: string) => void
 ) {
   const actions: Record<string, any> = {};

@@ -1,5 +1,5 @@
 import { useShallowRef, useDOMEffect, DOMEffect } from "@lib/hooks";
-import { style } from "@lib/stylus";
+import { style } from "@lib/style";
 import { delay, seq } from "@lib/async/task";
 
 import { getScore } from "../../game/logic";
@@ -31,36 +31,12 @@ const scorePopEffect: DOMEffect<{
 
         return style(
           $el,
-          [
-            {
-              transform: "scale(1)",
-              opacity: 1,
-            },
-            {
-              transform: "scale(2) rotate(32deg)",
-              opacity: 1,
-            },
-            {
-              transform: "scale(2) rotate(32deg)",
-              opacity: 1,
-            },
-            {
-              transform: "scale(1)",
-              opacity: 1,
-            },
-            {
-              transform: "scale(1)",
-              opacity: 1,
-            },
-            {
-              transform: "scale(1)",
-              opacity: 1,
-            },
-            {
-              transform: "translateY(-15px)",
-              opacity: 0,
-            },
-          ],
+          {
+            scale: [1, 2, 1, 1, 1],
+            rotate: [0, -25, 0, 0, 0],
+            opacity: [1, 1, 1, 1, 0],
+            y: [0, 0, 0, 0, -15],
+          },
           { duration: 3500 }
         );
       },

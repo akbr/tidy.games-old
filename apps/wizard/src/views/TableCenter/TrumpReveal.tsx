@@ -1,6 +1,6 @@
 import { Card, splitCard } from "@shared/components/Card";
 import { useDOMEffect, DOMEffect } from "@lib/hooks";
-import { style } from "@lib/stylus";
+import { style } from "@lib/style";
 import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";

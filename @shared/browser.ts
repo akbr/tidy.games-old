@@ -1,4 +1,4 @@
-export const isDev = () => location.port === "3000";
+export const isDev = () => location.hostname === "localhost";
 export const getWSURL = () =>
   location.origin.replace(/^http/, "ws") + location.pathname;
 
@@ -8,5 +8,5 @@ export const getRoomURL = (roomId = "") => {
   const path = window.location.pathname;
   const hash = `#${roomId}`;
 
-  return [host, port, path, hash].join("");
+  return [location.protocol, "//", host, port, path, hash].join("");
 };

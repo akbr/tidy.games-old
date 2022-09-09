@@ -1,6 +1,6 @@
 import { all } from "@lib/async/task";
 import { randomIntBetween } from "@lib/random";
-import { style, skipTasks } from "@lib/stylus";
+import { style } from "@lib/style";
 
 const X_PEEK = 35;
 const Y_PEEK = 60;
@@ -69,8 +69,6 @@ export const positionHand = (
       yPeek
     );
 
-    skipTasks($card);
-
     const end = { ...cardStyles, opacity: 1, rotate: 0 };
 
     if (deal) {
@@ -79,7 +77,8 @@ export const positionHand = (
         y: end.y + handHeight + 10,
         rotate: randomIntBetween(-5, -15),
       };
-      return style($card, [start, end], { duration: 1000 })!;
+      style($card, start);
+      return style($card, end, { duration: 1000 })!;
     }
 
     return style($card, end, { duration: 250 })!;

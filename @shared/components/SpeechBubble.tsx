@@ -1,7 +1,6 @@
 import { ComponentChildren } from "preact";
-import { getPosition } from "@lib/stylus";
 
-const notchTransform = getPosition({ x: "-50%", y: "-50%", rotate: 45 });
+const notchTransform = { transform: "translate(-50%, -50%) rotate(45deg)" };
 const notchPositions = {
   left: {
     left: "0",
@@ -23,12 +22,20 @@ const notchPositions = {
 
 export const getBubblePos = (dir: keyof typeof notchPositions, amt = 16) => {
   if (dir === "left")
-    return getPosition({ top: "50%", left: "100%", y: "-50%", x: amt });
+    return { top: "50%", left: "100%", transform: `translate(${amt}px, -50%)` };
   if (dir === "right")
-    return getPosition({ top: "50%", right: "100%", y: "-50%", x: -amt });
+    return {
+      top: "50%",
+      right: "100%",
+      transform: `translate(${-amt}px, -50%)`,
+    };
   if (dir === "top")
-    return getPosition({ top: "100%", left: "50%", x: "-50%", y: amt });
-  return getPosition({ bottom: "100%", left: "50%", x: "-50%", y: -amt });
+    return { top: "100%", left: "50%", transform: `translate(-50%, ${amt}px)` };
+  return {
+    bottom: "100%",
+    left: "50%",
+    transform: `translate(-50%, ${-amt}px)`,
+  };
 };
 
 export const SpeechBubble = ({

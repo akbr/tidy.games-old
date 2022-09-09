@@ -1,16 +1,16 @@
 export interface Task<T = any> {
+  finish: () => void;
   finished: Promise<T>;
-  skip: () => void;
 }
 
 export function taskOf<T>(task: Task<T>): Task<T> {
   let done = false;
   return {
     ...task,
-    skip: () => {
+    finish: () => {
       if (done) return;
       done = true;
-      task.skip();
+      task.finish();
     },
   };
 }
@@ -35,7 +35,7 @@ export const delay = (ms: number, fn = noop): Task => {
   }, ms);
   return taskOf({
     finished: promise,
-    skip: () => {
+    finish: () => {
       clearTimeout(timeout);
       resolve(fn());
     },
@@ -50,8 +50,8 @@ export const all = (tasks: Task[]): Task<any> => {
   });
   return taskOf({
     finished: promise as Promise<null>,
-    skip: () => {
-      tasks.forEach((t) => t.skip());
+    finish: () => {
+      tasks.forEach((t) => t.finish());
       resolve(null);
     },
   });
@@ -62,26 +62,26 @@ export const seq = (fns: (() => Task | void)[]): Task => {
 
   let pending: Task | void;
   let idx = -1;
-  let skipping = false;
+  let finishing = false;
 
   function iterate() {
-    if (skipping && pending) pending.skip();
+    if (finishing && pending) pending.finish();
 
     idx = idx + 1;
     if (idx >= fns.length) return resolve(null);
 
     pending = fns[idx]();
-    if (pending && !skipping) pending.finished.then(iterate);
+    if (pending && !finishing) pending.finished.then(iterate);
 
-    if (!pending || skipping) iterate();
+    if (!pending || finishing) iterate();
   }
 
   iterate();
 
   return taskOf({
     finished: promise,
-    skip: () => {
-      skipping = true;
+    finish: () => {
+      finishing = true;
       iterate();
     },
   });

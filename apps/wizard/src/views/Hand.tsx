@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-import { skipTasks, style } from "@lib/stylus";
+import { style } from "@lib/style";
 import { dragify } from "@lib/dom/dragify";
 import { Card } from "@shared/components/Card";
 import { getNearestDimensions } from "@lib/dom";
@@ -48,7 +48,7 @@ function initHandDrags(
 ) {
   return dragify($container, {
     selectEl: ($target) => $target.closest("[data-card]")!,
-    onBeforeStart: ($card) => skipTasks($card),
+    onBeforeStart: ($card) => {},
     onDrag: ($card, { startTX, startTY, dX, dY }) => {
       style($card, { x: startTX + dX, y: startTY + dY });
     },

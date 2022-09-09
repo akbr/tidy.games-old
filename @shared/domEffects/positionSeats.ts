@@ -1,6 +1,6 @@
 import { Vec } from "@lib/vector";
 import { rotateArray } from "@lib/array";
-import style from "@lib/stylus";
+import { style } from "@lib/style";
 
 type Dimensions = { width: number; height: number };
 
