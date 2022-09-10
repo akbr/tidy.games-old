@@ -4,6 +4,7 @@ import { style } from "@lib/style";
 import { delay, seq } from "@lib/async/task";
 
 import { getScore } from "../../game/logic";
+import { receive } from "@lib/globalUi";
 
 type BidsDisplayProps = {
   bid: number;
@@ -51,7 +52,7 @@ const scorePopEffect = (
 export function BidDisplay(props: BidsDisplayProps) {
   const ref = useRef(null);
   useLayoutEffect(() => {
-    scorePopEffect(ref.current!, props);
+    receive(scorePopEffect(ref.current!, props));
   }, [useShallowRef(props)]);
 
   return <div ref={ref} />;

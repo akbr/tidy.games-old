@@ -35,16 +35,20 @@ export const getNextRound = (
 };
 
 export const wizardChart: Chart<WizardSpec> = {
-  roundStart: (s, c) => [
-    {
-      phase: "deal",
-      ...getDeal(c.numPlayers, s.round, c.seed + s.round),
-    },
-    { phase: "trumpReveal" },
-    s.trumpSuit === "w"
-      ? { phase: "select", player: s.dealer }
-      : { phase: "bid", player: rotateIndex(c.numPlayers, s.dealer, 1) },
-  ],
+  roundStart: (s, c) => {
+    const dealtCards = getDeal(c.numPlayers, s.round, c.seed + s.round);
+
+    return [
+      {
+        phase: "deal",
+        ...dealtCards,
+      },
+      { phase: "trumpReveal" },
+      dealtCards.trumpSuit === "w"
+        ? { phase: "select", player: s.dealer }
+        : { phase: "bid", player: rotateIndex(c.numPlayers, s.dealer, 1) },
+    ];
+  },
 
   select: withAction(
     (a, s) => {

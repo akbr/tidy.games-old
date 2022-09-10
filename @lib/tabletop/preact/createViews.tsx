@@ -1,7 +1,7 @@
 import { render } from "preact";
 import { Spec } from "../core";
 import { Client } from "../client";
-import { DevWrapper } from "@lib/meter/preact";
+import { DevWrapper, JSONDiff } from "@lib/meter/preact";
 import { App, AppViews } from "./App";
 import { setReceiver } from "@lib/globalUi";
 
@@ -19,14 +19,19 @@ export function createViews<S extends Spec>(
   const vdom = options.dev ? (
     <DevWrapper
       meter={client.meter}
-      stateDisplay={(s) => {
+      stateDisplay={function ({ curr, prev }) {
         return (
-          <div>
-            {s?.action && (
-              <div class="font-bold">{JSON.stringify(s.action)}</div>
+          <>
+            {curr?.action && (
+              <div class="font-bold">{JSON.stringify(curr.action)}</div>
             )}
-            {s?.state && <div>{JSON.stringify(s.state)}</div>}
-          </div>
+            {curr?.state && (
+              <JSONDiff
+                curr={curr.state}
+                prev={prev && prev.state ? prev.state : {}}
+              />
+            )}
+          </>
         );
       }}
     >

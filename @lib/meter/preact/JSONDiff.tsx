@@ -1,4 +1,4 @@
-function KeyValueCompare({
+export function KeyValueCompare({
   entryKey,
   prev,
   curr,
@@ -7,7 +7,8 @@ function KeyValueCompare({
   prev: any;
   curr: any;
 }) {
-  const backgroundColor = prev !== curr ? "yellow" : "";
+  const areDiff = prev !== curr;
+  const backgroundColor = areDiff ? "lightblue" : "";
   return (
     <span style={{ backgroundColor }}>
       {entryKey}: {JSON.stringify(curr)}
@@ -15,7 +16,7 @@ function KeyValueCompare({
   );
 }
 
-function JSONDiff({
+export function JSONDiff({
   prev,
   curr,
 }: {
@@ -37,9 +38,4 @@ function JSONDiff({
   );
 }
 
-const prev = { name: "Aaron", age: 36, hair: "brown", food: "lasgna" };
-const curr = { name: "Aaron", age: 37, hair: "brown", food: "sushi" };
-
-export function App() {
-  return <JSONDiff prev={prev} curr={curr} />;
-}
+export default JSONDiff;

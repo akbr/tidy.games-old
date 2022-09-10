@@ -1,5 +1,5 @@
-import { GameProps } from "@lib/tabletop/preact/types";
 import { useState } from "preact/hooks";
+import { GameProps } from "@lib/tabletop/preact/types";
 import { WizardSpec } from "../../game/spec";
 import { checkBid } from "../../game/logic";
 
