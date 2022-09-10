@@ -1,8 +1,8 @@
-import { useDOMEffect, DOMEffect } from "@lib/hooks";
 import { style } from "@lib/style";
-import { useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
+import { receive } from "@lib/globalUi";
 
-const roundEffect: DOMEffect<null> = ($el) =>
+const roundEffect = ($el: HTMLElement) =>
   style(
     $el,
     {
@@ -16,7 +16,9 @@ const roundEffect: DOMEffect<null> = ($el) =>
 
 export const RoundStart = ({ num }: { num: number }) => {
   const ref = useRef(null);
-  useDOMEffect(roundEffect, ref, null);
+  useLayoutEffect(() => {
+    receive(roundEffect(ref.current!));
+  }, []);
   return (
     <h2 ref={ref} class={`text-white`}>
       Round {num}

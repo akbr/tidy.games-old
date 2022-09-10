@@ -7,7 +7,8 @@ import { BidDisplay } from "./BidDisplay";
 export const Hud = ({ frame }: GameProps<WizardSpec>) => {
   const { phase, round, bids, trumpCard, trumpSuit } = frame.state;
 
-  const showTrumpDisplay = trumpCard && phase !== "deal";
+  const showTrumpDisplay =
+    trumpCard && phase !== "deal" && phase !== "trumpReveal";
   const showBidDisplay = !bids.includes(null);
 
   return (

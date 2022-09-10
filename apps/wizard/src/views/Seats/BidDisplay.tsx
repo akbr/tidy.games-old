@@ -1,15 +1,20 @@
-import { useShallowRef, useDOMEffect, DOMEffect } from "@lib/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
+import { useShallowRef } from "@lib/hooks";
 import { style } from "@lib/style";
 import { delay, seq } from "@lib/async/task";
 
 import { getScore } from "../../game/logic";
-import { useRef } from "preact/hooks";
 
-const scorePopEffect: DOMEffect<{
+type BidsDisplayProps = {
   bid: number;
   actual: number;
   shouldPop: boolean;
-}> = ($el, { bid, actual, shouldPop }) => {
+};
+
+const scorePopEffect = (
+  $el: HTMLElement,
+  { bid, actual, shouldPop }: BidsDisplayProps
+) => {
   style($el, {
     textShadow: "",
     opacity: 1,
@@ -43,15 +48,11 @@ const scorePopEffect: DOMEffect<{
     ]);
 };
 
-type BidsDisplayProps = {
-  bid: number;
-  actual: number;
-  shouldPop: boolean;
-};
-
-export function BidDisplay({ bid, actual, shouldPop }: BidsDisplayProps) {
+export function BidDisplay(props: BidsDisplayProps) {
   const ref = useRef(null);
-  useDOMEffect(scorePopEffect, ref, useShallowRef({ bid, actual, shouldPop }));
+  useLayoutEffect(() => {
+    scorePopEffect(ref.current!, props);
+  }, [useShallowRef(props)]);
 
   return <div ref={ref} />;
 }

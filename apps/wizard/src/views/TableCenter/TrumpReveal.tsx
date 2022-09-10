@@ -1,12 +1,12 @@
 import { Card, splitCard } from "@shared/components/Card";
-import { useDOMEffect, DOMEffect } from "@lib/hooks";
 import { style } from "@lib/style";
 import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
-import { useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
+import { receive } from "@lib/globalUi";
 
-const revealEffect: DOMEffect<string> = ($card, suit) => {
+const revealEffect = ($card: HTMLElement, suit: string) => {
   const { width, height } = getNearestDimensions($card.parentElement!);
   const $suit = $card.querySelector("#suit")!;
   const isWild = ["w", "j"].includes(suit);
@@ -60,7 +60,10 @@ const revealEffect: DOMEffect<string> = ($card, suit) => {
 export const TrumpReveal = ({ cardId }: { cardId: string }) => {
   const [, suit] = splitCard(cardId);
   const ref = useRef(null);
-  useDOMEffect(revealEffect, ref, splitCard(cardId)[1]);
+
+  useLayoutEffect(() => {
+    receive(revealEffect(ref.current!, suit));
+  }, [suit]);
 
   return (
     <div ref={ref}>

@@ -55,6 +55,11 @@ export const TableCenter = (props: GameProps<WizardSpec>) => {
     }
 
     if (state.phase === "roundEnd") {
+      return (
+        <div class="animate-fadeIn text-center">
+          <h3>Round complete.</h3>
+        </div>
+      );
     }
 
     if (state.phase === "end") {

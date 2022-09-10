@@ -18,7 +18,10 @@ export function NotificationsWrapper<S extends Spec>({
   children: ComponentChildren;
   client: Client<S>;
 }) {
-  const [err, connected] = useSubscribe(client, (x) => [x.err, x.connected]);
+  const [err, connected] = useSubscribe(client, (x) => [
+    x.frame.err,
+    x.frame.connected,
+  ]);
 
   return (
     <>

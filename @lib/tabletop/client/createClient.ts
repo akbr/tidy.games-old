@@ -11,6 +11,7 @@ import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
 import { RoomData } from "../server/routines";
 import { is } from "@lib/compare/is";
 import { CartUpdate } from "../core/store";
+import { shallow } from "@lib/compare/shallow";
 
 export type Frame<S extends Spec> = {
   connected: boolean;
@@ -19,6 +20,24 @@ export type Frame<S extends Spec> = {
   ctx: Ctx<S> | null;
   action: AuthenticatedAction<S> | null;
   err: { type: "serverErr" | "cartErr"; msg: string } | null;
+};
+
+export type TitleFrame<S extends Spec> = Frame<S> & {
+  room: null;
+  state: null;
+  ctx: null;
+};
+
+export type LobbyFrame<S extends Spec> = Frame<S> & {
+  room: NonNullable<Frame<S>["room"]>;
+  state: null;
+  ctx: null;
+};
+
+export type GameFrame<S extends Spec> = Frame<S> & {
+  room: NonNullable<Frame<S>["room"]>;
+  state: NonNullable<Frame<S>["state"]>;
+  ctx: NonNullable<Frame<S>["ctx"]>;
 };
 
 type MeterState<S extends Spec> = {
@@ -35,9 +54,14 @@ export type ClientProps<S extends Spec> = {
   cart: Cart<S>;
 };
 
+type ClientOutput<S extends Spec> =
+  | { view: "title"; frame: TitleFrame<S> }
+  | { view: "lobby"; frame: LobbyFrame<S> }
+  | { view: "game"; frame: GameFrame<S> };
+
 type ClientSubscriptionMethods<S extends Spec> = {
-  subscribe: Subscription<Frame<S>>["subscribe"];
-  get: Subscription<Frame<S>>["get"];
+  subscribe: Subscription<ClientOutput<S>>["subscribe"];
+  get: Subscription<ClientOutput<S>>["get"];
 };
 
 export type Client<S extends Spec> = ClientSubscriptionMethods<S> &
@@ -47,7 +71,7 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   cart: Cart<S>
 ): Client<S> {
-  let status: Frame<S> = {
+  let frame: Frame<S> = {
     connected: false,
     room: null,
     state: null,
@@ -55,18 +79,24 @@ export function createClient<S extends Spec>(
     action: null,
     err: null,
   };
-  let statusRef = { current: status };
+  let statusRef = { current: frame };
   function set(update: Partial<Frame<S>>) {
-    status = { ...status, ...update };
-    statusRef.current = status;
+    frame = { ...frame, ...update };
+    statusRef.current = frame;
   }
 
-  const store = createSubscription(status);
+  const store = createSubscription({ view: "title", frame } as ClientOutput<S>);
 
   const meter = createMeter<MeterState<S>>({ state: null, action: null });
 
   function update() {
-    store.next(status);
+    if (!frame.room) {
+      store.next({ view: "title", frame: frame as TitleFrame<S> });
+    }
+    if (frame.room && !frame.state)
+      store.next({ view: "lobby", frame: frame as LobbyFrame<S> });
+    if (frame.room && frame.state)
+      store.next({ view: "game", frame: frame as GameFrame<S> });
   }
 
   let lastUpdate: CartUpdate<S> | null = null;
@@ -104,7 +134,7 @@ export function createClient<S extends Spec>(
         const { ctx, prev, patches, action, final } = cartUpdate;
         const meterStates: MeterState<S>[] = [];
 
-        if (!status.ctx) {
+        if (!frame.ctx) {
           mod.ctx = ctx;
         }
 
@@ -135,8 +165,9 @@ export function createClient<S extends Spec>(
     },
   });
 
-  meter.subscribe(({ state }) => {
-    set(state);
+  meter.subscribe((curr, prev) => {
+    if (curr.state === prev.state) return;
+    set(curr.state);
     update();
   });
 

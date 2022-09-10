@@ -4,7 +4,9 @@ export function attachHashListener<S extends Spec>(client: Client<S>) {
   const { get, subscribe } = client;
 
   function reactToHash() {
-    const { room } = get();
+    const {
+      frame: { room },
+    } = get();
     const { id, player } = getHash();
 
     if (room && room.id === id && room.player === player) return;
@@ -18,7 +20,7 @@ export function attachHashListener<S extends Spec>(client: Client<S>) {
   reactToHash();
   window.onhashchange = () => reactToHash();
 
-  const un = subscribe(({ room }) => {
+  const un = subscribe(({ frame: { room } }) => {
     replaceHash(room ? { id: room.id, player: room.player } : {});
   });
 
