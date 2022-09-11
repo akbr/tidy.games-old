@@ -40,7 +40,7 @@ export type GameFrame<S extends Spec> = Frame<S> & {
   ctx: NonNullable<Frame<S>["ctx"]>;
 };
 
-type MeterState<S extends Spec> = {
+export type MeterState<S extends Spec> = {
   state: Frame<S>["state"];
   action: Frame<S>["action"];
 };
@@ -113,25 +113,26 @@ export function createClient<S extends Spec>(
       const mod: Partial<Frame<S>> = {};
       let meterActions: Function[] = [];
 
-      if (is.defined(room)) {
+      if (room) {
         mod.room = room;
-
-        if (room === null) {
-          lastUpdate = null;
-          mod.ctx = null;
-          meterActions.push(meter.actions.reset);
-        }
+      } else if (room === null) {
+        lastUpdate = null;
+        mod.room = null;
+        mod.ctx = null;
+        mod.state = null;
+        meterActions.push(meter.actions.reset);
       }
 
       if (cartErr) {
         mod.err = { type: "cartErr", msg: cartErr };
       }
+
       if (serverErr) {
         mod.err = { type: "serverErr", msg: serverErr };
       }
 
       if (cartUpdate) {
-        const { ctx, prev, patches, action, final } = cartUpdate;
+        const { ctx, prev, patches, action } = cartUpdate;
         const meterStates: MeterState<S>[] = [];
 
         if (!frame.ctx) {

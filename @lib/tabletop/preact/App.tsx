@@ -1,34 +1,49 @@
-import { ComponentChildren, h } from "preact";
+import { FunctionalComponent } from "preact";
 
+import { Subscribable } from "@lib/store";
 import { Spec } from "@lib/tabletop/core/spec";
 import { Client } from "@lib/tabletop/client/";
-import useSubscribe from "@lib/store/useSubscribe";
+import { useSubscribe } from "@lib/store/useSubscribe";
 
-import type { TitleProps, LobbyProps, GameProps } from "./types";
+import type {
+  TitleProps,
+  LobbyProps,
+  GameProps,
+  DialogView,
+  SetDialog,
+} from "./types";
+
 import DefaultBackrop from "./Backdrop";
 import DefaultAppContainer from "./Container";
-import { NotificationsWrapper } from "./NotificationsWrapper";
 import DefaultTitle from "./Title";
 import DefaultLobby from "./Lobby";
 import DefaultGame from "./Game";
-import { useRefreshOnResize } from "@lib/hooks";
+import { NotificationsWrapper } from "./NotificationsWrapper";
+import { SideWrapper } from "./SideWrapper";
+import DialogFeeder from "./DialogFeeder";
 
 export type AppViews<S extends Spec> = {
-  Backdrop?: (props: { children: ComponentChildren }) => JSX.Element;
-  AppContainer?: (props: { children: ComponentChildren }) => JSX.Element;
-  Title?: (props: TitleProps<S>) => JSX.Element;
-  Lobby?: (props: LobbyProps<S>) => JSX.Element;
-  Game?: (props: GameProps<S>) => JSX.Element;
-  Side?: (props: GameProps<S>) => JSX.Element;
+  Backdrop?: FunctionalComponent;
+  AppContainer?: FunctionalComponent;
+  Title?: FunctionalComponent<TitleProps<S>>;
+  Lobby?: FunctionalComponent<LobbyProps<S>>;
+  Game?: FunctionalComponent<GameProps<S>>;
+  Side?: FunctionalComponent<GameProps<S>>;
+};
+
+export type AppProps<S extends Spec> = {
+  client: Client<S>;
+  dialogStore: Subscribable<DialogView<S> | null>;
+  setDialog: SetDialog<S>;
+  views: AppViews<S>;
 };
 
 export function App<S extends Spec>({
   client,
+  dialogStore,
+  setDialog,
   views,
-}: {
-  client: Client<S>;
-  views: AppViews<S>;
-}) {
+}: AppProps<S>) {
   const {
     Backdrop = DefaultBackrop,
     AppContainer = DefaultAppContainer,
@@ -37,7 +52,7 @@ export function App<S extends Spec>({
     Game = DefaultGame,
   } = views;
 
-  const props = useSubscribe(client, (x) => ({ ...x, ...client }));
+  const props = useSubscribe(client, (x) => ({ ...x, ...client, setDialog }));
 
   return (
     <Backdrop>
@@ -47,6 +62,7 @@ export function App<S extends Spec>({
           {props.view === "lobby" && <Lobby {...props} />}
           {props.view === "game" && <Game {...props} />}
         </NotificationsWrapper>
+        <DialogFeeder {...{ ...props, dialogStore }} />
       </AppContainer>
       {props.view === "game" && views.Side && (
         <SideWrapper props={props} SideView={views.Side} />
@@ -54,21 +70,3 @@ export function App<S extends Spec>({
     </Backdrop>
   );
 }
-
-function SideWrapper<S extends Spec>({
-  props,
-  SideView,
-}: {
-  props: GameProps<S>;
-  SideView: NonNullable<AppViews<S>["Side"]>;
-}) {
-  useRefreshOnResize();
-  const { width } = document.body.getBoundingClientRect();
-  return width > 1200 ? (
-    <div class="flex justify-center items-center p-6">
-      <SideView {...props} />
-    </div>
-  ) : null;
-}
-
-export default App;

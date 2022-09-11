@@ -1,55 +1,49 @@
-import { FunctionalComponent } from "preact";
-import { useState } from "preact/hooks";
-
-import { GameProps } from "@lib/tabletop";
+import { Props, GameProps } from "@lib/tabletop/preact/types";
 import { Twemoji } from "@shared/components/Twemoji";
-import { DialogOf } from "@shared/components/DialogOf";
 import { WizardSpec } from "../game/spec";
 
 import { ScoreTable } from "./ScoreTable";
 import { OptionsDisplay } from "./Options";
 
-export const UiButtons = (props: GameProps<WizardSpec>) => {
-  const { state } = props.frame;
-  const [Dialog, setDialog] = useState<FunctionalComponent<
-    GameProps<WizardSpec>
-  > | null>(null);
-
+export const UiButtons = ({
+  frame: { state },
+  setDialog,
+}: GameProps<WizardSpec>) => {
   return (
-    <>
-      <div class="absolute top-0 left-0 m-1">
-        <div class="flex gap-2 p-2">
+    <div class="absolute top-0 left-0 m-1">
+      <div class="flex gap-2 p-2">
+        <div
+          class="cursor-pointer"
+          onClick={() => {
+            setDialog(OptionsDialog);
+          }}
+        >
+          <Twemoji char={"⚙️"} size={36} />
+        </div>
+        {state.scores.length > 0 && (
           <div
             class="cursor-pointer"
             onClick={() => {
-              setDialog(() => OptionsDialog);
+              setDialog(ScoreTableDialog);
             }}
           >
-            <Twemoji char={"⚙️"} size={36} />
+            <Twemoji char={"🗒️"} size={36} />
           </div>
-          {state.scores.length > 0 && (
-            <div
-              class="cursor-pointer"
-              onClick={() => {
-                setDialog(() => ScoreTableDialog);
-              }}
-            >
-              <Twemoji char={"🗒️"} size={36} />
-            </div>
-          )}
-        </div>
+        )}
       </div>
-      {Dialog && (
-        <DialogOf close={() => setDialog(null)}>
-          <Dialog {...props} />
-        </DialogOf>
-      )}
-    </>
+    </div>
   );
 };
 
-function OptionsDialog({ frame, actions, cart }: GameProps<WizardSpec>) {
+function OptionsDialog(props: Props<WizardSpec>) {
+  const { frame, actions, cart } = props;
   const { ctx, room } = frame;
+
+  if (!room || !ctx) {
+    props.setDialog(null);
+    return null;
+  }
+
   return (
     <>
       <div class="flex flex-col gap-2">
@@ -75,6 +69,13 @@ function OptionsDialog({ frame, actions, cart }: GameProps<WizardSpec>) {
   );
 }
 
-function ScoreTableDialog({ frame }: GameProps<WizardSpec>) {
-  return <ScoreTable scores={frame.state.scores} room={frame.room} />;
+function ScoreTableDialog({ frame, setDialog }: Props<WizardSpec>) {
+  const { state, room } = frame;
+
+  if (!state || !room) {
+    setDialog(null);
+    return null;
+  }
+
+  return <ScoreTable scores={state.scores} room={room} />;
 }

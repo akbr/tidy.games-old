@@ -8,10 +8,7 @@ export function useSubscribe<T, U>(
   isEqual = shallow
 ) {
   const [state, setState] = useState(selector(sub.get()));
-  useLayoutEffect(
-    () => withSelector(sub, selector, setState, isEqual),
-    [sub, selector, isEqual]
-  );
+  useLayoutEffect(() => withSelector(sub, selector, setState, isEqual), []);
   return state;
 }
 

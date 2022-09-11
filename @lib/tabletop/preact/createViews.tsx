@@ -1,9 +1,12 @@
 import { render } from "preact";
+import { DevWrapper } from "@lib/meter/preact";
+import { setReceiver } from "@lib/globalUi";
 import { Spec } from "../core";
 import { Client } from "../client";
-import { DevWrapper, JSONDiff } from "@lib/meter/preact";
+import { DialogView, SetDialog } from "./types";
+import { StateDisplay } from "./StateDisplay";
 import { App, AppViews } from "./App";
-import { setReceiver } from "@lib/globalUi";
+import { createSubscription } from "@lib/store";
 
 export function createViews<S extends Spec>(
   client: Client<S>,
@@ -11,35 +14,35 @@ export function createViews<S extends Spec>(
   views: AppViews<S>,
   options = { dev: false }
 ) {
+  // Configure waitFor global relay for animations
   setReceiver(client.meter.actions.waitFor);
-  const app = <App client={client} views={views} />;
 
-  // Optionally configure dev environment.
-  if (options.dev) client.meter.actions.setHistory(true);
-  const vdom = options.dev ? (
-    <DevWrapper
-      meter={client.meter}
-      stateDisplay={function ({ curr, prev }) {
-        return (
-          <>
-            {curr?.action && (
-              <div class="font-bold">{JSON.stringify(curr.action)}</div>
-            )}
-            {curr?.state && (
-              <JSONDiff
-                curr={curr.state}
-                prev={prev && prev.state ? prev.state : {}}
-              />
-            )}
-          </>
-        );
-      }}
-    >
-      {app}
-    </DevWrapper>
-  ) : (
-    app
+  // Create a global dialog store & helper
+  const dialogStore = createSubscription<DialogView<S> | null>(null);
+  const setDialog: SetDialog<S> = (x) => {
+    //@ts-ignore
+    dialogStore.next(() => x);
+  };
+
+  // Create application vdom
+  let vdom = (
+    <App
+      client={client}
+      dialogStore={dialogStore}
+      setDialog={setDialog}
+      views={views}
+    />
   );
+
+  // Create development environment
+  if (options.dev) {
+    client.meter.actions.setHistory(true);
+    vdom = (
+      <DevWrapper meter={client.meter} stateDisplay={StateDisplay}>
+        {vdom}
+      </DevWrapper>
+    );
+  }
 
   render(vdom, $el);
 }
