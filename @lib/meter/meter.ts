@@ -1,5 +1,5 @@
 import type { Task } from "@lib/async/task";
-import { createSubscription, Subscribable } from "../store/subscription";
+import { createSubscribable, Subscribable } from "../subscribable/subscribable";
 
 export type MeterStatus<T> = {
   state: T;
@@ -9,7 +9,7 @@ export type MeterStatus<T> = {
   playing: boolean;
 };
 
-export type Meter<T> = Subscribable<MeterStatus<T>> & {
+export type Meter<T> = Omit<Subscribable<MeterStatus<T>>, "next"> & {
   actions: {
     pushStates: (...states: T[]) => void;
     waitFor: (task: Task<any>) => void;
@@ -39,7 +39,7 @@ export const createMeter = <T>(
     };
   }
 
-  const { subscribe, get, next } = createSubscription<MeterStatus<T>>(
+  const { subscribe, get, next } = createSubscribable<MeterStatus<T>>(
     getStatus()
   );
 

@@ -1,9 +1,9 @@
 import { FunctionalComponent } from "preact";
 
-import { Subscribable } from "@lib/store";
+import { Subscribable } from "@lib/subscribable";
 import { Spec } from "@lib/tabletop/core/spec";
 import { Client } from "@lib/tabletop/client/";
-import { useSubscribe } from "@lib/store/useSubscribe";
+import { useSubscribable } from "@lib/subscribable/useSubscribable";
 
 import type {
   TitleProps,
@@ -29,6 +29,11 @@ export type AppViews<S extends Spec> = {
   Lobby?: FunctionalComponent<LobbyProps<S>>;
   Game?: FunctionalComponent<GameProps<S>>;
   Side?: FunctionalComponent<GameProps<S>>;
+  OptionsView?: FunctionalComponent<{
+    options: S["options"];
+    updateOptions: (options: S["options"]) => void;
+    numPlayers: number;
+  }>;
 };
 
 export type AppProps<S extends Spec> = {
@@ -52,14 +57,20 @@ export function App<S extends Spec>({
     Game = DefaultGame,
   } = views;
 
-  const props = useSubscribe(client, (x) => ({ ...x, ...client, setDialog }));
+  const props = useSubscribable(client, (x) => ({
+    ...x,
+    ...client,
+    setDialog,
+  }));
 
   return (
     <Backdrop>
       <AppContainer>
         <NotificationsWrapper client={client}>
           {props.view === "title" && <Title {...props} />}
-          {props.view === "lobby" && <Lobby {...props} />}
+          {props.view === "lobby" && (
+            <Lobby {...{ ...props, OptionsView: views.OptionsView }} />
+          )}
           {props.view === "game" && <Game {...props} />}
         </NotificationsWrapper>
         <DialogFeeder {...{ ...props, dialogStore }} />

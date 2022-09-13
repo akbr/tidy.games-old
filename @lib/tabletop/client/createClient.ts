@@ -1,4 +1,5 @@
-import { createSubscription, Subscription } from "@lib/store";
+import { is } from "@lib/compare/is";
+import { createSubscribable, Subscribable } from "@lib/subscribable";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 
@@ -9,9 +10,7 @@ import { expandStates } from "../core/utils";
 
 import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
 import { RoomData } from "../server/routines";
-import { is } from "@lib/compare/is";
 import { CartUpdate } from "../core/store";
-import { shallow } from "@lib/compare/shallow";
 
 export type Frame<S extends Spec> = {
   connected: boolean;
@@ -60,8 +59,8 @@ type ClientOutput<S extends Spec> =
   | { view: "game"; frame: GameFrame<S> };
 
 type ClientSubscriptionMethods<S extends Spec> = {
-  subscribe: Subscription<ClientOutput<S>>["subscribe"];
-  get: Subscription<ClientOutput<S>>["get"];
+  subscribe: Subscribable<ClientOutput<S>>["subscribe"];
+  get: Subscribable<ClientOutput<S>>["get"];
 };
 
 export type Client<S extends Spec> = ClientSubscriptionMethods<S> &
@@ -85,7 +84,7 @@ export function createClient<S extends Spec>(
     statusRef.current = frame;
   }
 
-  const store = createSubscription({ view: "title", frame } as ClientOutput<S>);
+  const store = createSubscribable({ view: "title", frame } as ClientOutput<S>);
 
   const meter = createMeter<MeterState<S>>({ state: null, action: null });
 
@@ -160,6 +159,7 @@ export function createClient<S extends Spec>(
 
       if (meterActions.length > 0) {
         meterActions.forEach((fn) => fn());
+        if (!mod.state) update();
       } else {
         update();
       }

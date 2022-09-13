@@ -6,7 +6,7 @@ import { Client } from "../client";
 import { DialogView, SetDialog } from "./types";
 import { StateDisplay } from "./StateDisplay";
 import { App, AppViews } from "./App";
-import { createSubscription } from "@lib/store";
+import { createSubscribable } from "@lib/subscribable";
 
 export function createViews<S extends Spec>(
   client: Client<S>,
@@ -18,7 +18,7 @@ export function createViews<S extends Spec>(
   setReceiver(client.meter.actions.waitFor);
 
   // Create a global dialog store & helper
-  const dialogStore = createSubscription<DialogView<S> | null>(null);
+  const dialogStore = createSubscribable<DialogView<S> | null>(null);
   const setDialog: SetDialog<S> = (x) => {
     //@ts-ignore
     dialogStore.next(() => x);

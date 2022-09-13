@@ -1,34 +1,8 @@
 import { Spec } from "@lib/tabletop";
-import { useEffect } from "preact/hooks";
+import { FunctionComponent } from "preact";
 
-export type OptionsView<S extends Spec> = (props: {
+export type OptionsView<S extends Spec> = FunctionComponent<{
   options: S["options"];
   setOptions: (options: S["options"]) => void;
   numPlayers: number;
-}) => JSX.Element;
-
-export type OptionsWrapperProps<S extends Spec> = {
-  OptionsView: OptionsView<S>;
-  options: S["options"];
-  setOptions: (options: S["options"]) => void;
-  numPlayers: number;
-};
-
-export const OptionsWrapper = <S extends Spec>({
-  OptionsView,
-  options,
-  setOptions,
-  numPlayers,
-}: OptionsWrapperProps<S>) => {
-  useEffect(() => {
-    setOptions(options);
-  }, [numPlayers]);
-
-  return (
-    <OptionsView
-      options={options}
-      setOptions={setOptions}
-      numPlayers={numPlayers}
-    />
-  );
-};
+}>;

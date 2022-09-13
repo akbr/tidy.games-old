@@ -5,14 +5,11 @@ export type Selector<T, U> = (curr: T) => U;
 
 export interface Subscribable<T> {
   subscribe: (listener: Listener<T>) => () => void;
+  next: (state: T) => void;
   get: () => T;
 }
 
-export type Subscription<T> = Subscribable<T> & {
-  next: (state: T) => void;
-};
-
-export function createSubscription<T>(initial: T): Subscription<T> {
+export function createSubscribable<T>(initial: T): Subscribable<T> {
   const listeners: Set<Listener<T>> = new Set();
   let curr = initial;
   let prev = initial;
@@ -31,8 +28,10 @@ export function createSubscription<T>(initial: T): Subscription<T> {
   };
 }
 
+export default createSubscribable;
+
 export function withSelector<T, U>(
-  { subscribe }: Subscribable<T>,
+  { subscribe }: Omit<Subscribable<T>, "next">,
   selector: Selector<T, U>,
   listener: Listener<U>,
   isEqual = shallow

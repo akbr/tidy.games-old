@@ -1,5 +1,5 @@
 import { ComponentChildren, FunctionComponent } from "preact";
-import useStore from "@lib/store/useSubscribe";
+import { useSubscribable } from "@lib/subscribable/useSubscribable";
 import type { Meter } from "../meter";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { memo } from "preact/compat";
@@ -8,7 +8,7 @@ type StateDisplay<T> = FunctionComponent<{ curr: T; prev?: T }>;
 
 function StateList<T>({ meter, SD }: { meter: Meter<T>; SD: StateDisplay<T> }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { states, idx } = useStore(meter, ({ states, idx }) => ({
+  const { states, idx } = useSubscribable(meter, ({ states, idx }) => ({
     states,
     idx,
   }));
@@ -53,7 +53,7 @@ function MeterConsole<T>({
   meter: Meter<T>;
   children: ComponentChildren;
 }) {
-  const { playing, waitingFor } = useStore(
+  const { playing, waitingFor } = useSubscribable(
     meter,
     ({ playing, waitingFor }) => ({ playing, waitingFor })
   );

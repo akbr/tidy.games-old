@@ -2,7 +2,7 @@ import { Spec } from "../core";
 import { DialogOf } from "./DialogOf";
 import { AppProps } from "./App";
 import { Props } from "./types";
-import { useSubscribe } from "@lib/store";
+import { useSubscribable } from "@lib/subscribable";
 
 export function DialogFeeder<S extends Spec>(
   props: Props<S> & {
@@ -10,7 +10,7 @@ export function DialogFeeder<S extends Spec>(
   }
 ) {
   const { dialogStore, setDialog } = props;
-  const Dialog = useSubscribe(dialogStore, (x) => x);
+  const Dialog = useSubscribable(dialogStore, (x) => x);
 
   if (!Dialog) return null;
 

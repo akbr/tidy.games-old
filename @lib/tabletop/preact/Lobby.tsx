@@ -5,17 +5,37 @@ import { Badge } from "@shared/components/Badge";
 import { DialogOf } from "@shared/components/DialogOf";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
-import { getRoomURL } from "@shared/browser";
 
 import type { Spec } from "../core";
 import type { SocketMeta } from "../server";
 import { avatars } from "../server/";
 import { LobbyProps } from "./types";
+import { AppViews } from "./App";
 
-export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
-  const { frame, cart, actions } = props;
+export const getRoomURL = (roomId = "") => {
+  const host = window.location.hostname.replace("www.", "");
+  const port = location.port === "" ? "" : `:${location.port}`;
+  const path = window.location.pathname;
+  const hash = `#${roomId}`;
+
+  return [location.protocol, "//", host, port, path, hash].join("");
+};
+
+export default function DefaultLobby<S extends Spec>(
+  props: LobbyProps<S> & { OptionsView?: AppViews<S>["OptionsView"] }
+) {
+  const { frame, cart, actions, OptionsView } = props;
   const { room } = frame;
   const { addBot, start, leave } = actions.server;
+
+  const numPlayers = room.seats.length;
+
+  const [options, setOptions] = useState(cart.getOptions(numPlayers));
+  const updateOptions = (nextOptions: S["options"]) =>
+    setOptions(cart.getOptions(numPlayers, nextOptions));
+  useEffect(() => {
+    setOptions(cart.getOptions(numPlayers, options));
+  }, [numPlayers]);
 
   const isAdmin = room.player === 0;
   const gameReady = room.seats.length >= cart.meta.players[0];
@@ -27,7 +47,14 @@ export default function DefaultLobby<S extends Spec>(props: LobbyProps<S>) {
       <PlayerDisplay {...props} />
       {isAdmin ? (
         <>
-          <button onClick={() => start()} disabled={!gameReady}>
+          {OptionsView && (
+            <OptionsView
+              options={options}
+              updateOptions={updateOptions}
+              numPlayers={numPlayers}
+            />
+          )}
+          <button onClick={() => start({ options })} disabled={!gameReady}>
             {gameReady ? "Start game" : "Waiting for players..."}
           </button>
           {addBot && <button onClick={() => addBot()}>Add bot</button>}

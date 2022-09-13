@@ -1,9 +1,9 @@
 import { shallow } from "@lib/compare/shallow";
-import { Subscribable, Selector, withSelector } from "./subscription";
+import { Subscribable, Selector, withSelector } from "./subscribable";
 import { useState, useLayoutEffect } from "preact/hooks";
 
-export function useSubscribe<T, U>(
-  sub: Subscribable<T>,
+export function useSubscribable<T, U>(
+  sub: Omit<Subscribable<T>, "next">,
   selector: Selector<T, U>,
   isEqual = shallow
 ) {
@@ -12,4 +12,4 @@ export function useSubscribe<T, U>(
   return state;
 }
 
-export default useSubscribe;
+export default useSubscribable;

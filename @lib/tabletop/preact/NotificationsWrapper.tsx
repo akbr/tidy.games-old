@@ -9,7 +9,7 @@ import {
 
 import { Spec } from "../core/spec";
 import { Client, Frame } from "../client";
-import { useSubscribe } from "@lib/store";
+import { useSubscribable } from "@lib/subscribable";
 
 export function NotificationsWrapper<S extends Spec>({
   children,
@@ -18,7 +18,7 @@ export function NotificationsWrapper<S extends Spec>({
   children: ComponentChildren;
   client: Client<S>;
 }) {
-  const [err, connected] = useSubscribe(client, (x) => [
+  const [err, connected] = useSubscribable(client, (x) => [
     x.frame.err,
     x.frame.connected,
   ]);
