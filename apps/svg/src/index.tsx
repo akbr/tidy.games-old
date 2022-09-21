@@ -1,13 +1,7 @@
 import "@shared/base.css";
 import { h, render } from "preact";
-import { setup } from "@twind/preact";
 import { maxInt } from "@lib/array";
 import { randomBetween } from "@lib/random";
-
-setup({
-  preflight: false,
-  props: { className: true },
-});
 
 const $app = document.getElementById("app")!;
 

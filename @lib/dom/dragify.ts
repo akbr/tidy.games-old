@@ -82,6 +82,7 @@ export const dragify = ($el: HTMLElement, options: Options) => {
     const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
     status.dX = pageX - status.startX - status.shiftX;
     status.dY = pageY - status.startY - status.shiftY;
+    console.log(status.dX, status.dY);
     onDrag($selected, status);
   }
 

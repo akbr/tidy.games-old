@@ -30,6 +30,22 @@ export function createSubscribable<T>(initial: T): Subscribable<T> {
 
 export default createSubscribable;
 
+export function createSet<T extends Object, U>(subscribable: Subscribable<T>) {
+  return (partial: Partial<T>) => {
+    subscribable.next({
+      ...subscribable.get(),
+      ...partial,
+    });
+  };
+}
+
+export function createActions<T extends Object, U>(
+  subscribable: Subscribable<T>,
+  fn: (set: (partial: Partial<T>) => void, get: () => T) => U
+) {
+  return fn(createSet(subscribable), subscribable.get);
+}
+
 export function withSelector<T, U>(
   { subscribe }: Omit<Subscribable<T>, "next">,
   selector: Selector<T, U>,

@@ -16,10 +16,14 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "motion": "^10.14.2",
-    "preact": "latest",
+    "@tldraw/vec": "^1.7.1",
     "express": "^4.17.3",
-    "ws": "^8.5.0"
+    "motion": "^10.14.2",
+    "nanoid": "^4.0.0",
+    "perfect-arrows": "^0.3.7",
+    "preact": "latest",
+    "ws": "^8.5.0",
+    "zustand": "^4.1.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.4.0",

@@ -1,15 +1,13 @@
-import { FunctionalComponent } from "preact";
 import { useEffect, useState } from "preact/hooks";
 
 import { Badge } from "@shared/components/Badge";
-import { DialogOf } from "@shared/components/DialogOf";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 
 import type { Spec } from "../core";
 import type { SocketMeta } from "../server";
 import { avatars } from "../server/";
-import { LobbyProps } from "./types";
+import { LobbyProps, Props } from "./types";
 import { AppViews } from "./App";
 
 export const getRoomURL = (roomId = "") => {
@@ -48,11 +46,13 @@ export default function DefaultLobby<S extends Spec>(
       {isAdmin ? (
         <>
           {OptionsView && (
-            <OptionsView
-              options={options}
-              updateOptions={updateOptions}
-              numPlayers={numPlayers}
-            />
+            <Field legend="Options">
+              <OptionsView
+                options={options}
+                updateOptions={updateOptions}
+                numPlayers={numPlayers}
+              />
+            </Field>
           )}
           <button onClick={() => start({ options })} disabled={!gameReady}>
             {gameReady ? "Start game" : "Waiting for players..."}
@@ -99,64 +99,68 @@ function ShareLink({ roomId }: { roomId: string }) {
 function PlayerDisplay<S extends Spec>({
   frame,
   cart,
-  actions,
+  setDialog,
 }: LobbyProps<S>) {
-  const [Dialog, setDialog] =
-    useState<FunctionalComponent<MetaDialogProps> | null>(null);
-
   const { room } = frame;
 
   return (
-    <>
-      <Field
-        legend={`🪑 Players (${room.seats.length}/${cart.meta.players[1]})`}
-      >
-        <div class="flex justify-center gap-1">
-          {room.seats.map((player, idx) => {
-            if (!player) return;
-            let isPlayer = idx === room.player;
-            let style = {
-              backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
-              borderRadius: "4px",
-              cursor: isPlayer ? "pointer" : "",
-            };
-            return (
-              <div
-                class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
-                style={style}
-                onClick={() => {
-                  if (isPlayer) setDialog(() => SetMeta);
-                }}
-              >
-                <Badge {...{ ...player, player: idx }}></Badge>
-                {isPlayer && (
-                  <div class="text-center text-base mt-1 -mb-1">YOU</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </Field>
-      {Dialog && (
-        <DialogOf close={() => setDialog(null)}>
-          <Dialog
-            close={() => setDialog(null)}
-            meta={room.seats[room.player]!}
-            set={actions.server.setMeta}
-          />
-        </DialogOf>
-      )}
-    </>
+    <Field legend={`🪑 Players (${room.seats.length}/${cart.meta.players[1]})`}>
+      <div class="flex justify-center gap-1">
+        {room.seats.map((player, idx) => {
+          if (!player) return;
+          let isPlayer = idx === room.player;
+          let style = {
+            backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
+            borderRadius: "4px",
+            cursor: isPlayer ? "pointer" : "",
+          };
+          return (
+            <div
+              class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
+              style={style}
+              onClick={() => {
+                if (isPlayer) setDialog(SetMetaDialog);
+              }}
+            >
+              <Badge {...{ ...player, player: idx }}></Badge>
+              {isPlayer && (
+                <div class="text-center text-base mt-1 -mb-1">YOU</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Field>
+  );
+}
+
+function SetMetaDialog<S extends Spec>({
+  frame,
+  setDialog,
+  actions,
+}: Props<S>) {
+  const { room } = frame;
+  if (!room) {
+    setDialog(null);
+    return null;
+  }
+  return (
+    <SetMeta
+      meta={room.seats[room.player]}
+      set={actions.server.setMeta}
+      close={() => setDialog(null)}
+    />
   );
 }
 
 type MetaDialogProps = {
-  meta?: SocketMeta;
+  meta: SocketMeta | null;
   set: (meta: SocketMeta) => void;
   close: () => void;
 };
 
-function SetMeta({ meta = {}, set, close }: MetaDialogProps) {
+function SetMeta({ meta, set, close }: MetaDialogProps) {
+  if (!meta) meta = {};
   const [name, setName] = useState(meta.name);
   const [avatar, setAvatar] = useState(meta.avatar || avatars[0]);
 
