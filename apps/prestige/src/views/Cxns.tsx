@@ -1,23 +1,23 @@
-import { useGame } from "../state/useGame";
+import { useTable } from "../state";
 
 export function Cxns() {
-  const cxns = useGame((x) => x.board.cxns);
-  const systems = useGame((x) => x.board.systems);
-  const selectedSystem = useGame((x) =>
-    x.selected && x.selected.type === "system" ? x.selected.data : false
+  const cxns = useTable((x) => x.board.cxns);
+  const systems = useTable((x) => x.board.systems);
+  const selectedSystem = useTable((x) =>
+    x.selected && x.selected.type === "system" ? x.selected : false
   );
-  const mode = useGame((x) => x.mode);
+  const mode = useTable((x) => x.mode);
 
   return (
     <g id="cxns">
       {cxns.map((cxn) => {
-        const [id1, id2] = cxn;
-        const s1 = systems.find((x) => x.name === id1)!;
-        const s2 = systems.find((x) => x.name === id2)!;
+        const [s1, s2] = cxn.systems.map(
+          (name) => systems.find((x) => x.name === name)!
+        );
         const highlighted =
-          mode === "moveSelect" &&
+          mode === "selectMove" &&
           selectedSystem &&
-          cxn.includes(selectedSystem.name);
+          (s1.name === selectedSystem.name || s2.name === selectedSystem.name);
 
         return (
           <CxnSprite

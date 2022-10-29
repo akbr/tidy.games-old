@@ -1,84 +1,93 @@
-import { Board, MoveOrder, Order } from "./gameTypes";
-import { getInitialBoard } from "./getInitialBoard";
-import { resolveTurn } from "./resolveTurn";
-import { nanoid } from "nanoid";
+import { Board, Events, Orders } from "../game/game.types";
+import { createBoard } from "../game/board/";
+import { resolve } from "../game/resolve2";
 
-type GameEntry = {
+import { nanoid } from "nanoid";
+import { Optional } from "../game/utils";
+
+export type CurrentEntry = {
   board: Board;
-  orders: Order[];
-  turns: { board: Board; orders: Order[]; numTicks: number }[];
+  orders: Orders[];
+};
+
+export type ResolvedEntry = CurrentEntry & {
+  events: Events[];
+  numTicks: number;
+};
+
+export type EntryRes = (CurrentEntry | ResolvedEntry) & {
+  id: string;
+  player: number;
+  turn: number;
+};
+
+export type DBEntry = {
+  current: CurrentEntry;
+  history: ResolvedEntry[];
 };
 
 export type Server = ReturnType<typeof createServer>;
 
 export function createServer() {
-  const db: Record<string, GameEntry> = {};
+  let db: Record<string, DBEntry> = {};
 
   return {
     createGame: (id: string) => {
       db[id] = {
-        board: getInitialBoard(),
-        orders: [],
-        turns: [],
+        current: { board: createBoard(), orders: [] },
+        history: [],
       };
-
-      return true;
     },
 
-    get: (
+    get: (id: string, player: number, turnNum?: number): EntryRes | string => {
+      const entry = db[id];
+      const maxTurn = entry.history.length + 1;
+      const turn = turnNum === undefined ? maxTurn : turnNum;
+      if (turn > maxTurn || turn < 1) return "Invalid turn number.";
+      if (turn > entry.history.length)
+        return { ...entry.current, turn, id, player };
+      return { ...entry.history[turn - 1], turn, id, player };
+    },
+
+    submit: <O extends Optional<Orders, "id">>(
       id: string,
-      turnNum?: number
-    ): {
-      turn: number;
-      numTurns: number;
-      board: Board;
-      orders: MoveOrder[];
-      numTicks?: number;
-    } => {
-      const entry = db[id];
-      const numTurns = entry.turns.length + 1;
-
-      const modTurn =
-        turnNum === undefined
-          ? numTurns
-          : turnNum === -1
-          ? entry.turns.length
-          : turnNum;
-
-      const turn = entry.turns[modTurn - 1] || {
-        board: entry.board,
-        orders: entry.orders,
-        numTurns,
-        turn: numTurns,
-        numTicks: undefined,
+      order: O
+    ): Orders => {
+      const validatedOrder = { ...order, id: order.id || nanoid(10) };
+      const current = db[id].current;
+      db[id].current = {
+        ...current,
+        orders: current.orders.concat(validatedOrder),
       };
+      return validatedOrder;
+    },
 
-      return {
-        ...turn,
-        turn: modTurn,
-        numTurns,
+    resolve: (id: string, numTicks = 10) => {
+      const entry = db[id];
+      const current = entry.current;
+      const { board, events } = resolve(
+        current.board,
+        current.orders,
+        numTicks
+      );
+
+      entry.history.push({
+        ...current,
+        events,
+        numTicks,
+      });
+
+      entry.current = {
+        board,
+        orders: [],
       };
     },
 
-    submit: <O extends Omit<Order, "id">>(id: string, order: O) => {
-      const entry = db[id];
-      const modOrder = { ...order, id: nanoid(10) };
-      entry.orders = [...entry.orders, modOrder];
-      return entry.orders;
+    dump: () => {
+      console.log(JSON.stringify(db));
     },
-
-    resolve: (id: string) => {
-      const numTicks = 10;
-
-      const entry = db[id];
-      const { board, orders, turns } = entry;
-
-      turns.push({ board, orders, numTicks });
-
-      entry.board = resolveTurn(board, orders, numTicks).at(-1)!;
-      entry.orders = [];
-
-      return true;
+    restore: (input: string) => {
+      db = JSON.parse(input) as any;
     },
   };
 }

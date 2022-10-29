@@ -1,10 +1,9 @@
-import { is } from "@lib/compare/is";
 import { createSubscribable, Subscribable } from "@lib/subscribable";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 
 import { Spec } from "../core/spec";
-import { AuthenticatedAction, Ctx, getChartUpdate } from "../core/chart";
+import { AuthenticatedAction, Ctx } from "../core/chart";
 import { Cart } from "../core/cart";
 import { expandStates } from "../core/utils";
 
@@ -78,15 +77,13 @@ export function createClient<S extends Spec>(
     action: null,
     err: null,
   };
-  let statusRef = { current: frame };
-  function set(update: Partial<Frame<S>>) {
-    frame = { ...frame, ...update };
-    statusRef.current = frame;
-  }
 
   const store = createSubscribable({ view: "title", frame } as ClientOutput<S>);
-
   const meter = createMeter<MeterState<S>>({ state: null, action: null });
+
+  function set(update: Partial<Frame<S>>) {
+    frame = { ...frame, ...update };
+  }
 
   function update() {
     if (!frame.room) {
@@ -174,10 +171,7 @@ export function createClient<S extends Spec>(
 
   const actions = {
     server: createServerActionFns(actionKeys, socket),
-    cart: createCartActionFns(cart, socket, statusRef, (msg) => {
-      set({ err: { type: "cartErr", msg: `Client submission error: ${msg}` } });
-      update();
-    }),
+    cart: createCartActionFns(cart, socket),
   } as Client<S>["actions"];
 
   socket.open();
@@ -199,28 +193,15 @@ type ActionFns<A extends { type: string; data?: any }> = {
 
 function createCartActionFns<S extends Spec>(
   cart: Cart<S>,
-  socket: { send: Function },
-  statusRef: { current: Frame<S> },
-  onErr: (err: string) => void
+  socket: { send: Function }
 ) {
   const actions: Record<string, any> = {};
   Object.keys(cart.actionKeys).forEach((type) => {
     actions[type] = (data: any) => {
-      const { ctx, state, room } = statusRef.current;
-      if (!ctx || !state || !room) {
-        onErr("Client cannot submit action: no ctx or state");
-        return false;
-      }
       const action = {
         type,
         data,
-        player: room.player,
       };
-      const chartUpdate = getChartUpdate(cart.chart, ctx, state, action);
-      if (is.string(chartUpdate)) {
-        onErr(chartUpdate);
-        return false;
-      }
       socket.send({ to: "cart", msg: action });
       return true;
     };

@@ -1,49 +1,85 @@
-import { Board, Order } from "./gameTypes";
-import type { Server } from "./server";
-import { set } from "./useGame";
-import { resolveTurn } from "./resolveTurn";
+import { createSet, Subscribable } from "@lib/subscribable";
+import {
+  getBoardAtTick,
+  getIntermediateBoards,
+  IntermediateBoard,
+} from "src/game/resolve2";
+import { Orders } from "../game/game.types";
+import { Optional } from "../game/utils";
+import type { Server, EntryRes } from "./server";
+import { TableState, TableStateActions } from "./tableState";
 
-export function createClient(server: Server, id: string) {
-  let _boards: Board[] = [];
-  let _orders: Order[] = [];
+export function createClient(
+  server: Server,
+  tableState: Subscribable<TableState>,
+  tableActions: TableStateActions
+) {
+  const tableSet = createSet(tableState);
 
-  const api = {
-    create: () => {
-      server.createGame(id);
+  let res: EntryRes;
+  let id: string;
+  let boards: IntermediateBoard[] = [];
+
+  const clientActions = {
+    setId: (_id: string) => {
+      id = _id;
     },
-    seekTo: (num: number) => {
-      const board = _boards[num];
-      if (board) {
-        set({
-          board,
-          seek: [num, _boards.length],
-          orders: num === 0 ? _orders : [],
-        });
+
+    createGame: () => server.createGame(id),
+
+    fetch: (turnNum?: number) => {
+      const _res = server.get(id, 0, turnNum);
+
+      if (typeof _res === "string") {
+        console.warn(res);
+        return;
       }
+
+      res = _res;
+
+      if ("events" in res) {
+        const { board, orders, events, numTicks } = res;
+        boards = getIntermediateBoards(board, orders, events, numTicks);
+      }
+
+      clientActions.updateTable();
     },
-    get: (turnNum?: number) => {
-      const { numTicks, ...res } = server.get(id, turnNum);
-      const { board, orders } = res;
 
-      _boards =
-        numTicks !== undefined ? resolveTurn(board, orders, numTicks) : [board];
-      _orders = res.orders;
+    updateTable: (tick = 0) => {
+      const _res = res;
+      const isPastTurn = "events" in _res;
 
-      set({
-        ...res,
-        seek: _boards.length > 1 ? [0, _boards.length] : undefined,
+      tableSet({
+        id: _res.id,
+        player: _res.player,
+        turn: _res.turn,
+        board:
+          isPastTurn && tick > 0 ? getBoardAtTick(boards, tick) : _res.board,
+        orders: isPastTurn && tick > 0 ? [] : _res.orders,
+        ticks: isPastTurn
+          ? {
+              numTicks: _res.numTicks,
+              tick,
+            }
+          : null,
+        events: isPastTurn ? _res.events : [],
+        visibleEvents: isPastTurn
+          ? _res.events.filter((e) => e.ticks <= tick)
+          : [],
       });
     },
+
     resolve: () => {
       server.resolve(id);
-      api.get(-1);
+      clientActions.fetch();
     },
-    submit: (order: Omit<Order, "id">) => {
-      const orders = server.submit(id, order);
-      _orders = orders;
-      set({ orders, selected: null, mode: null });
+
+    submit: (order: Optional<Orders, "id">) => {
+      server.submit(id, order);
+      clientActions.fetch();
+      tableActions.select(null);
     },
   };
 
-  return api;
+  return clientActions;
 }

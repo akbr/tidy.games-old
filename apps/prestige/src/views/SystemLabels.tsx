@@ -1,8 +1,8 @@
-import { System } from "../state/gameTypes";
-import { useGame } from "../state/useGame";
+import { System } from "../game/board/board.types";
+import { useTable } from "../state";
 
 export function SystemLabels() {
-  const systems = useGame((x) => x.board.systems);
+  const systems = useTable((x) => x.board.systems);
 
   return (
     <section id="SystemLabels">
@@ -35,6 +35,18 @@ export function SystemLabel(system: System) {
       >
         {name}
       </div>
+      {system.fleets.length > 0 && (
+        <div
+          class="text-xs"
+          style={{
+            position: "absolute",
+            left: "100%",
+            top: "100%",
+          }}
+        >
+          {JSON.stringify(system.fleets)}
+        </div>
+      )}
       <div data-select={id} class="h-full" />
     </div>
   );

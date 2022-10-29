@@ -10,6 +10,11 @@ export function createUseSubscribable<T>(sub: Omit<Subscribable<T>, "next">) {
   };
 }
 
+type SubscribableHook<T> = <U>(
+  selector: Selector<T, U>,
+  isEqual?: <T, U>(objA: T, objB: U) => boolean
+) => U;
+
 export function useSubscribable<T, U>(
   sub: Omit<Subscribable<T>, "next">,
   selector: Selector<T, U>,

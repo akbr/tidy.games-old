@@ -5,7 +5,7 @@ export type Selector<T, U> = (curr: T) => U;
 
 export interface Subscribable<T> {
   subscribe: (listener: Listener<T>) => () => void;
-  next: (state: T) => void;
+  next: (state: T, silent?: boolean) => void;
   get: () => T;
 }
 
@@ -19,9 +19,10 @@ export function createSubscribable<T>(initial: T): Subscribable<T> {
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
-    next: (state) => {
+    next: (state, silent) => {
       prev = curr;
       curr = state;
+      if (silent) return;
       listeners.forEach((fn) => fn(curr, prev));
     },
     get: () => curr,
@@ -31,11 +32,14 @@ export function createSubscribable<T>(initial: T): Subscribable<T> {
 export default createSubscribable;
 
 export function createSet<T extends Object, U>(subscribable: Subscribable<T>) {
-  return (partial: Partial<T>) => {
-    subscribable.next({
-      ...subscribable.get(),
-      ...partial,
-    });
+  return (partial: Partial<T>, silent?: boolean) => {
+    subscribable.next(
+      {
+        ...subscribable.get(),
+        ...partial,
+      },
+      silent
+    );
   };
 }
 

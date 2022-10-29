@@ -1,15 +1,18 @@
 import { getArrow } from "perfect-arrows";
-import { useGame } from "../state/useGame";
+import { useTable } from "../state";
 
 export function MoveOrder() {
-  const moveOrder = useGame((x) =>
-    x.selected?.type === "planMoveOrder" ? x.selected : null
+  const moveOrder = useTable((x) =>
+    x.selected?.type === "planMove" ? x.selected : null
   );
 
   if (!moveOrder) return null;
 
   const { from, to } = moveOrder;
-  return (
+
+  return null;
+  /**
+   *   return (
     <g>
       <PerfectArrow
         sx={from.x}
@@ -22,11 +25,12 @@ export function MoveOrder() {
       />
     </g>
   );
+   */
 }
 
 export function ActiveMoveOrders() {
-  const orders = useGame((x) => x.orders);
-  const systems = useGame((x) => x.board.systems);
+  const orders = useTable((x) => x.orders);
+  const systems = useTable((x) => x.board.systems);
 
   return (
     <g id="moveOrders">

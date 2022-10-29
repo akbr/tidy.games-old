@@ -23,6 +23,7 @@ export const Hand = ({
 }) => {
   const onResize = useRefreshOnResize();
   const ref = useRef(null)!;
+
   const vnode = (
     <section id="hand" class="relative cursor-pointer" ref={ref}>
       {hand.map((card) => (

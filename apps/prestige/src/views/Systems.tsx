@@ -1,8 +1,8 @@
-import { System } from "../state/gameTypes";
-import { useGame, GameState } from "../state/useGame";
+import type { System } from "../game/board/board.types";
+import { useTable } from "../state";
 
 export function Systems() {
-  const systems = useGame((x) => x.board.systems);
+  const systems = useTable((x) => x.board.systems);
   return (
     <g id="systems">
       {systems.map((system) => (
@@ -12,11 +12,10 @@ export function Systems() {
   );
 }
 
-const qSelectedSystem = ({ selected }: GameState) =>
-  selected && selected.type === "system" ? selected.data : false;
-
 export function ConfigSystem({ system }: { system: System }) {
-  const selectedSystem = useGame(qSelectedSystem);
+  const selectedSystem = useTable((x) =>
+    x.selected && x.selected.type === "system" ? x.selected : false
+  );
   const highlighted = selectedSystem && selectedSystem.id === system.id;
   const props = { ...system, highlighted };
   return <SystemSprite {...props} />;

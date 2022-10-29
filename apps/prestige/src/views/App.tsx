@@ -1,8 +1,6 @@
 import { ComponentChildren } from "preact";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { dragify } from "@lib/dom/simpleDragify";
-
-import { useCamera, actions as cameraActions } from "../state/useCamera";
 
 import { InfoBox } from "./InfoBox";
 import { Systems } from "./Systems";
@@ -10,15 +8,18 @@ import { SystemLabels } from "./SystemLabels";
 import { Cxns } from "./Cxns";
 import { MoveOrder, ActiveMoveOrders } from "./MoveOrder";
 import { TransitFleets } from "./TransitFleets";
+import { TransitBattles } from "./TransitBattles";
 import { Nav } from "./Nav";
-import { useGame } from "../state/useGame";
-import { onSelect } from "../state/onSelect";
+import { Assets } from "./Assets";
+import { useCamera, cameraActions, tableActions } from "../state";
+import { Dev } from "./Dev";
 
 export const App = () => {
   return (
     <>
       <GameArea />
       <Nav />
+      <Assets />
       <Dev />
       <InfoBox />
     </>
@@ -31,6 +32,7 @@ function GameArea() {
       <DragContainer>
         <SystemLabels />
         <TransitFleets />
+        <TransitBattles />
         <svg id="map" width="1000px" height="1000px">
           <Cxns />
           <MoveOrder />
@@ -43,8 +45,6 @@ function GameArea() {
 }
 
 function EventForwarder({ children }: { children: ComponentChildren }) {
-  const state = useGame((x) => x);
-
   return (
     <div
       class="h-full"
@@ -53,20 +53,15 @@ function EventForwarder({ children }: { children: ComponentChildren }) {
         const $target = e.target as HTMLElement;
         const $selectable = $target.closest("[data-select]") as HTMLElement;
         if (!$selectable) return;
-        onSelect($selectable.dataset.select!, state);
+        const str = $selectable.dataset.select!;
+        if (str === "clear") {
+          tableActions.select(null);
+        } else {
+          tableActions.select(str);
+        }
       }}
     >
       {children}
-    </div>
-  );
-}
-
-function Dev() {
-  const x = useCamera((x) => x);
-  const seleced = useGame((x) => x.selected);
-  return (
-    <div class="absolute bottom-0 text-sm">
-      <div class=" max-w-[100px]">{JSON.stringify(x)}</div>
     </div>
   );
 }
