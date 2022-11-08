@@ -22,7 +22,7 @@ export const wizardCart: Cart<WizardSpec> = {
       numRounds,
     };
   },
-  getInitialState: (ctx) => {
+  getInitialGame: (ctx) => {
     const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
     return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
   },
@@ -32,16 +32,10 @@ export const wizardCart: Cart<WizardSpec> = {
     play: null,
     select: null,
   },
-  adjustState: (patch, player) => {
-    if (patch.hands) {
-      const hands = patch.hands.map((hand, idx) =>
-        idx === player ? hand : []
-      );
-      return {
-        hands,
-      };
-    }
-  },
+  adjustGame: (g, player) => ({
+    ...g,
+    hands: g.hands.map((hand, idx) => (idx === player ? hand : [])),
+  }),
   botFn: wizardBotFn,
 };
 export default wizardCart;

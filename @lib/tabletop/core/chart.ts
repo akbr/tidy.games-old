@@ -7,77 +7,73 @@ export type Ctx<S extends Spec> = {
   seed: string;
 };
 
-export type AuthenticatedAction<S extends Spec> = Spec["actions"] & {
+export type AuthAction<S extends Spec> = S["actions"] & {
   player: number;
 };
 
 export type NonStateReturns = true | string;
 
-export type AutoStateEntry<S extends Spec> = (
-  state: S["states"],
+export type EntryReturn<S extends Spec> =
+  | S["game"]
+  | S["game"][]
+  | NonStateReturns;
+
+export type NoActionEntry<S extends Spec, Game extends S["game"]> = (
+  game: Readonly<Game>,
   ctx: Ctx<S>
-) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
+) => EntryReturn<S>;
 
-export type ActionValidator<S extends Spec> = (
-  action: AuthenticatedAction<S>,
-  state: S["states"],
-  ctx: Ctx<S>
-) => AuthenticatedAction<S> | string;
-
-export type ActionStateEntry<S extends Spec> = (
-  state: S["states"],
-  ctx: Ctx<S>,
-  action: AuthenticatedAction<S>
-) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
-
-export type ActionEntry<S extends Spec> = [
-  ActionValidator<S>,
-  ActionStateEntry<S>
-];
+export type ActionEntry<S extends Spec, Game extends S["game"]> = {
+  fn: (
+    action: Readonly<AuthAction<S>>,
+    game: Readonly<Game>,
+    ctx: Ctx<S>
+  ) => EntryReturn<S>;
+};
 
 export function withAction<
   S extends Spec,
-  A extends AuthenticatedAction<S> | string
+  G extends S["game"],
+  A extends AuthAction<S>
 >(
-  actionFn: (
-    action: AuthenticatedAction<S>,
-    state: S["states"],
-    ctx: Ctx<S>
-  ) => A,
-  entryFn: (
-    state: S["states"],
-    ctx: Ctx<S>,
-    action: Exclude<A, string>
-  ) => Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns
+  actionFn: (action: AuthAction<S>, game: G, ctx: Ctx<S>) => A | string,
+  entryFn: (game: G, action: A, ctx: Ctx<S>) => EntryReturn<S>
 ) {
-  return [actionFn, entryFn] as unknown as ActionEntry<S>;
+  const result: ActionEntry<S, G> = {
+    fn: (a, g, c) => {
+      const actionOrError = actionFn(a, g, c);
+      if (typeof actionOrError === "string") return actionOrError;
+      return entryFn(g, actionOrError, c);
+    },
+  };
+  return result;
 }
 
 export type Chart<S extends Spec> = Partial<{
-  [Phase in S["phases"]]: AutoStateEntry<S> | ActionEntry<S>;
+  [Phase in S["game"]["phase"]]:
+    | NoActionEntry<S, Extract<S["game"], { phase: Phase }>>
+    | ActionEntry<S, Extract<S["game"], { phase: Phase }>>;
 }>;
 
 export type ChartUpdate<S extends Spec> = {
-  patches: Partial<S["states"]>[];
-  states: S["states"][];
+  games: S["game"][];
   final: boolean;
 };
 
 export function getChartUpdate<S extends Spec>(
   chart: Chart<S>,
   ctx: Ctx<S>,
-  inputState: S["states"],
-  action?: AuthenticatedAction<S>
+  inputGame: S["game"],
+  action?: AuthAction<S>
 ): ChartUpdate<S> | string {
-  const patches: Partial<S["states"]>[] = [];
-  const states: S["states"][] = [];
+  const games: S["game"][] = [];
 
   let final = false;
   let iterarting = true;
 
   while (iterarting) {
-    const priorState = states.at(-1) || inputState;
-    const phase = priorState.phase as S["phases"];
+    const priorGame = games.at(-1) || inputGame;
+    const phase = priorGame.phase as S["game"]["phase"];
 
     const chartFn = chart[phase];
 
@@ -85,21 +81,18 @@ export function getChartUpdate<S extends Spec>(
       return `No entry point for phase "${phase}".`;
     }
 
-    let result: Partial<S["states"]> | Partial<S["states"]>[] | NonStateReturns;
+    let result: EntryReturn<S>;
 
     if (typeof chartFn === "function") {
       if (action) return `Phase ${phase} does not accept actions.`;
-      result = chartFn(priorState, ctx);
+      result = chartFn(priorGame as any, ctx);
     } else {
       if (!action) {
         iterarting = false;
         continue;
       }
 
-      const [actionFn, stateFn] = chartFn;
-      const modAction = actionFn(action, priorState, ctx);
-      if (is.string(modAction)) return modAction;
-      result = stateFn(priorState, ctx, modAction);
+      result = chartFn.fn(action, priorGame as any, ctx);
     }
 
     action = undefined;
@@ -112,18 +105,16 @@ export function getChartUpdate<S extends Spec>(
       continue;
     }
 
-    const patch = result;
-    const patchez = Array.isArray(patch) ? patch : [patch];
-    patchez.forEach((patch) => {
-      let prev = states.at(-1) || inputState;
-      patches.push(patch);
-      states.push({ ...prev, ...patch });
-    });
+    const game = result;
+    if (Array.isArray(game)) {
+      games.push(...game);
+    } else {
+      games.push(game);
+    }
   }
 
   return {
-    patches,
-    states,
+    games,
     final,
   };
 }

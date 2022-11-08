@@ -1,6 +1,6 @@
 import type { Socket, SocketServer } from "@lib/socket";
 import type { Spec } from "../core/spec";
-import type { Cart, ActionKeys } from "../core/cart";
+import type { Cart } from "../core/cart";
 import type { CartUpdate } from "../core/store";
 import { createRoutines, RoomData, SocketMeta } from "./routines";
 

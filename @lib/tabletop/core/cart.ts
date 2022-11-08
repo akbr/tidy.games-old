@@ -1,5 +1,5 @@
 import type { Spec } from "./spec";
-import type { Ctx, Chart, AuthenticatedAction } from "./chart";
+import type { Ctx, Chart, AuthAction } from "./chart";
 
 export type Cart<S extends Spec> = {
   meta: {
@@ -7,17 +7,11 @@ export type Cart<S extends Spec> = {
     players: [number, number];
   };
   getOptions: (numPlayers: number, options?: S["options"]) => S["options"];
-  getInitialState: (ctx: Ctx<S>) => S["states"] | string;
+  getInitialGame: (ctx: Ctx<S>) => S["game"] | string;
   chart: Chart<S>;
   actionKeys: ActionKeys<S["actions"]>;
-  adjustState?: (
-    patch: Partial<S["states"]>,
-    player: number
-  ) => Partial<S["game"]> | void;
-  adjustAction?: (
-    action: AuthenticatedAction<S>,
-    player: number
-  ) => Partial<AuthenticatedAction<S>> | false | undefined;
+  adjustGame?: (game: S["game"], player: number) => S["game"];
+  adjustAction?: (action: AuthAction<S>, player: number) => AuthAction<S>;
   botFn?: BotFn<S>;
 };
 
@@ -26,7 +20,7 @@ export type ActionKeys<Actions extends { type: string }> = {
 };
 
 export type BotFn<S extends Spec> = (
-  state: S["states"],
+  game: S["game"],
   ctx: Ctx<S>,
   playerIndex: number
 ) => S["actions"] | void;

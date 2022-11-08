@@ -2,7 +2,6 @@ import { createLocalSocketPair } from "@lib/socket";
 import { Spec } from "../core/spec";
 import { BotFn } from "../core/cart";
 import { CartStore } from "../core/store";
-import { expandStates } from "../core/utils";
 import { ServerSocket, ServerApi } from "./createServer";
 
 export interface CartHost<S extends Spec> {
@@ -46,6 +45,7 @@ export const createCartHost = <S extends Spec>(
       if (player < 0) return "Invalid player index.";
 
       sockets[player] = socket ? socket : undefined;
+
       if (socket) {
         const cartUpdate = store.get(player);
         socket.send({ cartUpdate });
@@ -65,9 +65,9 @@ export const createBotSocket = <S extends Spec>(
 
   clientSocket.onmessage = ({ cartUpdate }) => {
     if (!cartUpdate) return;
-    const states = expandStates(cartUpdate);
-    states.forEach((state) => {
-      const action = botFn(state, cartUpdate.ctx, cartUpdate.player);
+
+    cartUpdate.games.forEach((game) => {
+      const action = botFn(game, cartUpdate.ctx, cartUpdate.player);
       if (action) botSend(action);
     });
   };

@@ -1,5 +1,5 @@
 import type { Task } from "@lib/async/task";
-import { createSubscribable, Subscribable } from "../subscribable/subscribable";
+import { createEmitter, ReadOnlyEmitter } from "@lib/emitter";
 
 export type MeterStatus<T> = {
   state: T;
@@ -9,15 +9,14 @@ export type MeterStatus<T> = {
   playing: boolean;
 };
 
-export type Meter<T> = Omit<Subscribable<MeterStatus<T>>, "next"> & {
-  actions: {
-    pushStates: (...states: T[]) => void;
-    waitFor: (task: Task<any>) => void;
-    setPlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
-    setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
-    setHistory: (val: boolean) => void;
-    reset: () => void;
-  };
+export type Meter<T> = {
+  emitter: ReadOnlyEmitter<MeterStatus<T>>;
+  pushStates: (...states: T[]) => void;
+  setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
+  waitFor: (task: Task<any>) => void;
+  togglePlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
+  toggleHistory: (val: boolean) => void;
+  reset: (state: T) => void;
 };
 
 export const createMeter = <T>(
@@ -28,6 +27,7 @@ export const createMeter = <T>(
   let idx = 0;
   let playing = true;
   let waitingFor: Task<any>[] = [];
+  let awaitedState: T | null = null;
 
   function getStatus(): MeterStatus<T> {
     return {
@@ -39,36 +39,41 @@ export const createMeter = <T>(
     };
   }
 
-  const { subscribe, get, next } = createSubscribable<MeterStatus<T>>(
-    getStatus()
-  );
+  const { subscribe, get, next } = createEmitter(getStatus());
 
   function update() {
     next(getStatus());
   }
 
-  function updateIdx(nextIdx: number) {
+  function updateState(nextIdx: number) {
+    if (nextIdx < 0 || nextIdx > states.length - 1) return;
+
     idx = nextIdx;
+
     if (!history) {
-      states = states.splice(idx);
+      states = states.slice(idx);
       idx = 0;
     }
+
+    const myState = states[idx];
+    awaitedState = myState;
+    update();
+
+    Promise.resolve().then(() => {
+      if (myState !== awaitedState) return;
+      awaitedState = null;
+      iterate();
+    });
   }
 
   function iterate(): false | void {
     const isWaiting = waitingFor.length > 0;
-    const isAtEnd = idx === states.length - 1;
-    if (isWaiting || isAtEnd || !playing) {
-      update();
-      return;
-    }
-    updateIdx(idx + 1);
-    update();
-    asyncIterate();
-  }
 
-  function asyncIterate() {
-    setTimeout(iterate, 0);
+    if (isWaiting || awaitedState || !playing) {
+      update();
+    } else {
+      updateState(idx + 1);
+    }
   }
 
   function clearWaiting() {
@@ -80,49 +85,40 @@ export const createMeter = <T>(
     }
   }
   return {
-    subscribe,
-    get,
-    actions: {
-      reset: () => {
-        clearWaiting();
-        states = [initial];
-        updateIdx(0);
-        update();
-      },
-      pushStates: (...incoming) => {
-        states = [...states, ...incoming];
-        asyncIterate();
-      },
-      setHistory: (val) => {
-        history = val;
-      },
-      waitFor: (task) => {
-        task.finished.then(() => {
-          waitingFor = waitingFor.filter((x) => x !== task);
-          iterate();
-        });
-        waitingFor = [...waitingFor, task];
-        asyncIterate();
-      },
-      setPlay: (toggle) => {
-        typeof toggle === "function"
-          ? (playing = toggle(playing))
-          : (playing = toggle);
+    emitter: { subscribe, get },
+    reset: (state) => {
+      clearWaiting();
+      states = [state];
+      updateState(0);
+    },
+    pushStates: (...incoming) => {
+      states = [...states, ...incoming];
+      iterate();
+    },
+    toggleHistory: (val) => {
+      history = val;
+    },
+    waitFor: (task) => {
+      task.finished.then(() => {
+        waitingFor = waitingFor.filter((x) => x !== task);
         iterate();
-      },
-      setIdx: (input) => {
-        const nextIdx =
-          typeof input === "function" ? input(idx, states.length) : input;
+      });
+      waitingFor = [...waitingFor, task];
+      iterate();
+    },
+    togglePlay: (toggle) => {
+      typeof toggle === "function"
+        ? (playing = toggle(playing))
+        : (playing = toggle);
+      iterate();
+    },
+    setIdx: (input) => {
+      const nextIdx =
+        typeof input === "function" ? input(idx, states.length) : input;
 
-        if (nextIdx > states.length - 1) return;
-
-        playing = false;
-
-        clearWaiting();
-
-        updateIdx(nextIdx);
-        update();
-      },
+      playing = false;
+      clearWaiting();
+      updateState(nextIdx);
     },
   };
 };

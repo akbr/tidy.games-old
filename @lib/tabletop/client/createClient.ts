@@ -1,185 +1,139 @@
-import { createSubscribable, Subscribable } from "@lib/subscribable";
+import { createEmitter, createSetFn, ReadOnlyEmitter } from "@lib/emitter";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 
 import { Spec } from "../core/spec";
-import { AuthenticatedAction, Ctx } from "../core/chart";
+import { AuthAction, Ctx } from "../core/chart";
 import { Cart } from "../core/cart";
-import { expandStates } from "../core/utils";
 
 import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
 import { RoomData } from "../server/routines";
 import { CartUpdate } from "../core/store";
 
-export type Frame<S extends Spec> = {
+export type AppState<S extends Spec> = {
   connected: boolean;
-  room: RoomData | null;
-  state: S["states"] | null;
-  ctx: Ctx<S> | null;
-  action: AuthenticatedAction<S> | null;
   err: { type: "serverErr" | "cartErr"; msg: string } | null;
-};
-
-export type TitleFrame<S extends Spec> = Frame<S> & {
-  room: null;
-  state: null;
-  ctx: null;
-};
-
-export type LobbyFrame<S extends Spec> = Frame<S> & {
-  room: NonNullable<Frame<S>["room"]>;
-  state: null;
-  ctx: null;
-};
-
-export type GameFrame<S extends Spec> = Frame<S> & {
-  room: NonNullable<Frame<S>["room"]>;
-  state: NonNullable<Frame<S>["state"]>;
-  ctx: NonNullable<Frame<S>["ctx"]>;
-};
+  action: null | AuthAction<S>;
+} & (
+  | /* Title */ { room: null; ctx: null; game: null }
+  | /* Lobby */ { room: RoomData; ctx: Ctx<S>; game: null }
+  | /* Game */ {
+      room: RoomData;
+      ctx: Ctx<S>;
+      game: S["game"];
+    }
+);
 
 export type MeterState<S extends Spec> = {
-  state: Frame<S>["state"];
-  action: Frame<S>["action"];
+  game: S["game"] | null;
+  action: AuthAction<S> | null;
 };
 
-export type ClientProps<S extends Spec> = {
-  actions: {
-    server: ActionFns<ServerActions<S>>;
-    cart: ActionFns<S["actions"]>;
-  };
+export type Client<S extends Spec> = {
+  emitter: ReadOnlyEmitter<AppState<S>>;
+  serverActions: ActionFns<ServerActions<S>>;
+  cartActions: ActionFns<S["actions"]>;
   meter: Meter<MeterState<S>>;
   cart: Cart<S>;
 };
-
-type ClientOutput<S extends Spec> =
-  | { view: "title"; frame: TitleFrame<S> }
-  | { view: "lobby"; frame: LobbyFrame<S> }
-  | { view: "game"; frame: GameFrame<S> };
-
-type ClientSubscriptionMethods<S extends Spec> = {
-  subscribe: Subscribable<ClientOutput<S>>["subscribe"];
-  get: Subscribable<ClientOutput<S>>["get"];
-};
-
-export type Client<S extends Spec> = ClientSubscriptionMethods<S> &
-  ClientProps<S>;
 
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   cart: Cart<S>
 ): Client<S> {
-  let frame: Frame<S> = {
+  let appState: AppState<S> = {
     connected: false,
     room: null,
-    state: null,
+    game: null,
     ctx: null,
     action: null,
     err: null,
   };
 
-  const store = createSubscribable({ view: "title", frame } as ClientOutput<S>);
-  const meter = createMeter<MeterState<S>>({ state: null, action: null });
+  const emitter = createEmitter<AppState<S>>(appState);
+  const set = createSetFn(emitter);
+  const meter = createMeter<MeterState<S>>({ game: null, action: null });
 
-  function set(update: Partial<Frame<S>>) {
-    frame = { ...frame, ...update };
-  }
-
-  function update() {
-    if (!frame.room) {
-      store.next({ view: "title", frame: frame as TitleFrame<S> });
-    }
-    if (frame.room && !frame.state)
-      store.next({ view: "lobby", frame: frame as LobbyFrame<S> });
-    if (frame.room && frame.state)
-      store.next({ view: "game", frame: frame as GameFrame<S> });
-  }
-
-  let lastUpdate: CartUpdate<S> | null = null;
+  let lastCartUpdate: CartUpdate<S> | null = null;
   const socket = createSocketManager(server, {
-    onopen: () => {
-      set({ connected: true });
-      update();
-    },
-    onclose: () => {
-      set({ connected: false });
-      update();
-    },
-    onmessage: ({ room, cartUpdate, cartErr, serverErr }) => {
-      const mod: Partial<Frame<S>> = {};
-      let meterActions: Function[] = [];
+    onopen: () => set({ connected: true }),
+    onclose: () => set({ connected: false }),
+    onmessage: (res) => {
+      const { room, cartUpdate, cartErr, serverErr } = res;
+
+      const update: Partial<AppState<S>> = {};
+      let pendingMeterActions: Function[] = [];
 
       if (room) {
-        mod.room = room;
+        update.room = room;
       } else if (room === null) {
-        lastUpdate = null;
-        mod.room = null;
-        mod.ctx = null;
-        mod.state = null;
-        meterActions.push(meter.actions.reset);
+        // Reset state
+        lastCartUpdate = null;
+        update.room = null;
+        update.ctx = null;
+        update.game = null;
+        pendingMeterActions.push(meter.reset);
       }
 
       if (cartErr) {
-        mod.err = { type: "cartErr", msg: cartErr };
+        update.err = { type: "cartErr", msg: cartErr };
       }
 
       if (serverErr) {
-        mod.err = { type: "serverErr", msg: serverErr };
+        update.err = { type: "serverErr", msg: serverErr };
       }
 
       if (cartUpdate) {
-        const { ctx, prev, patches, action } = cartUpdate;
+        const { ctx, prevGame, games, action } = cartUpdate;
         const meterStates: MeterState<S>[] = [];
 
-        if (!frame.ctx) {
-          mod.ctx = ctx;
+        update.ctx = ctx;
+
+        if (!lastCartUpdate) {
+          meterStates.push({ game: prevGame, action: null });
         }
 
-        if (!lastUpdate) meterStates.push({ state: prev, action: null });
-
-        if (patches.length > 0) {
-          const meterUpdates = expandStates(cartUpdate).map((state, idx) => {
-            if (idx === 0 && action) return { state, action };
-            return { state, action: null };
-          });
-          meterStates.push(...meterUpdates);
-        }
+        const meterUpdates = games.map((game, idx) => {
+          if (idx === 0 && action) return { game, action };
+          return { game, action: null };
+        });
+        meterStates.push(...meterUpdates);
 
         if (meterStates.length > 0) {
-          meterActions.push(() => meter.actions.pushStates(...meterStates));
+          pendingMeterActions.push(() => meter.pushStates(...meterStates));
         }
 
-        lastUpdate = cartUpdate;
+        lastCartUpdate = cartUpdate;
       }
 
-      set(mod);
-
-      if (meterActions.length > 0) {
-        meterActions.forEach((fn) => fn());
-        if (!mod.state) update();
+      if (pendingMeterActions.length > 0) {
+        set(update); // TK make silent
+        pendingMeterActions.forEach((fn) => fn());
       } else {
-        update();
+        set(update);
       }
     },
   });
 
-  meter.subscribe((curr, prev) => {
+  meter.emitter.subscribe((curr, prev) => {
     if (curr.state === prev.state) return;
-    set(curr.state);
-    update();
+    const { game, action } = curr.state;
+    if (game) set({ game, action });
   });
 
-  const actions = {
-    server: createServerActionFns(actionKeys, socket),
-    cart: createCartActionFns(cart, socket),
-  } as Client<S>["actions"];
+  const serverActions = createServerActionFns(actionKeys, socket) as ActionFns<
+    ServerActions<S>
+  >;
+  const cartActions = createCartActionFns(cart, socket) as ActionFns<
+    S["actions"]
+  >;
 
   socket.open();
 
   return {
-    subscribe: store.subscribe,
-    get: store.get,
-    actions,
+    emitter,
+    serverActions,
+    cartActions,
     meter,
     cart,
   };

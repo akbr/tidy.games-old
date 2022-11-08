@@ -1,13 +1,13 @@
 import { is } from "@lib/compare/is";
 import type { Spec } from "./spec";
-import { AuthenticatedAction, Ctx, getChartUpdate, ChartUpdate } from "./chart";
+import { AuthAction, Ctx, getChartUpdate, ChartUpdate } from "./chart";
 import type { Cart } from "./cart";
 
 export type CartUpdate<S extends Spec> = {
-  prev: S["states"];
-  action?: AuthenticatedAction<S>;
-  patches: ChartUpdate<S>["patches"];
-  final: ChartUpdate<S>["final"];
+  prevGame: S["game"];
+  action?: AuthAction<S>;
+  games: S["game"][];
+  final: boolean;
   ctx: Ctx<S>;
   player: number;
 };
@@ -30,65 +30,54 @@ export function createCartStore<S extends Spec>(
   const ctx = validateContext(cart, initCtx);
   if (is.string(ctx)) return ctx;
 
-  const initialState = cart.getInitialState(ctx);
-  if (is.string(initialState)) return initialState;
+  const initialGame = cart.getInitialGame(ctx);
+  if (is.string(initialGame)) return initialGame;
 
-  const initialUpdate = getChartUpdate(cart.chart, ctx, initialState);
+  const initialUpdate = getChartUpdate(cart.chart, ctx, initialGame);
   if (is.string(initialUpdate))
     return `Error on initialUpdate: ${initialUpdate}`;
 
-  let actions: AuthenticatedAction<S>[] = [];
-  let prevState = initialState;
+  let actions: AuthAction<S>[] = [];
+  let prevGame = initialGame;
   let prevChartUpdate: ChartUpdate<S> = initialUpdate;
 
   return {
     get: (player = -1) => {
-      const { adjustState, adjustAction } = cart;
-      const { patches, final } = prevChartUpdate;
+      const { adjustGame, adjustAction } = cart;
+      const { games, final } = prevChartUpdate;
       const lastAction = actions.at(-1);
 
-      const nextPrev = adjustState
-        ? (() => {
-            const patch = adjustState(prevState, player);
-            return patch ? { ...prevState, ...patch } : prevState;
-          })()
-        : prevState;
+      const adjPrevGame = adjustGame ? adjustGame(prevGame, player) : prevGame;
 
-      const nextPatches = adjustState
-        ? prevChartUpdate.patches.map((patch) => {
-            const result = adjustState(patch, player);
-            return result ? { ...patch, ...result } : patch;
-          })
-        : patches;
+      const adjGames = adjustGame
+        ? games.map((g) => adjustGame(g, player))
+        : games;
 
-      const nextAction =
+      const adjAction =
         adjustAction && lastAction
-          ? (() => {
-              const result = adjustAction(lastAction, player);
-              return result ? { ...lastAction, ...result } : lastAction;
-            })()
+          ? adjustAction(lastAction, player)
           : lastAction;
 
       return {
         player,
-        prev: nextPrev,
-        action: nextAction,
-        patches: nextPatches,
+        action: adjAction,
+        prevGame: adjPrevGame,
+        games: adjGames,
         final,
         ctx,
       };
     },
     submit: (inputAction, player) => {
       const action = { ...inputAction, player, time: Date.now() };
-      const prev = prevChartUpdate.states.at(-1)!;
+      const prev = prevChartUpdate.games.at(-1)!;
       const update = getChartUpdate(cart.chart, ctx, prev, action);
 
       if (is.string(update)) return update;
-      if (update.states.length === 0)
+      if (update.games.length === 0)
         return "Action returned no error but caused no state change.";
 
       actions.push(action);
-      prevState = prev;
+      prevGame = prev;
       prevChartUpdate = update;
     },
   };

@@ -1,5 +1,5 @@
 import { ComponentChildren, FunctionComponent } from "preact";
-import { useSubscribable } from "@lib/subscribable/useSubscribable";
+import { useEmitter } from "@lib/emitter";
 import type { Meter } from "../meter";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { memo } from "preact/compat";
@@ -8,11 +8,10 @@ type StateDisplay<T> = FunctionComponent<{ curr: T; prev?: T }>;
 
 function StateList<T>({ meter, SD }: { meter: Meter<T>; SD: StateDisplay<T> }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { states, idx } = useSubscribable(meter, ({ states, idx }) => ({
-    states,
-    idx,
-  }));
-  const { setIdx } = meter.actions;
+  const states = useEmitter(meter.emitter, ({ states }) => states);
+  const idx = useEmitter(meter.emitter, ({ idx }) => idx);
+
+  const { setIdx } = meter;
   useLayoutEffect(() => {
     const $el = ref.current! as any;
     if ($el.scrollIntoViewIfNeeded) {
@@ -53,8 +52,8 @@ function MeterConsole<T>({
   meter: Meter<T>;
   children: ComponentChildren;
 }) {
-  const { playing, waitingFor } = useSubscribable(
-    meter,
+  const { playing, waitingFor } = useEmitter(
+    meter.emitter,
     ({ playing, waitingFor }) => ({ playing, waitingFor })
   );
 
@@ -64,15 +63,11 @@ function MeterConsole<T>({
       class="h-full flex flex-col gap-4 bg-gray-200 w-[175px] text-black p-2 break-all"
     >
       <div class="text-center">
-        <button onClick={() => meter.actions.setIdx((x) => x - 1)}>
-          {"⬅️"}
-        </button>
-        <button onClick={() => meter.actions.setPlay((x) => !x)}>
+        <button onClick={() => meter.setIdx((x) => x - 1)}>{"⬅️"}</button>
+        <button onClick={() => meter.togglePlay((x) => !x)}>
           {playing ? "⏸️" : "▶️"}
         </button>
-        <button onClick={() => meter.actions.setIdx((x) => x + 1)}>
-          {"➡️"}
-        </button>
+        <button onClick={() => meter.setIdx((x) => x + 1)}>{"➡️"}</button>
         <div>Waiting: {waitingFor.length}</div>
       </div>
       {children}

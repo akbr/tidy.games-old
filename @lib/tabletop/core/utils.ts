@@ -1,16 +1,16 @@
 import type { Spec } from "./spec";
 
-export function expandStates<S extends Spec>({
+export function applyPatches<S extends Spec>({
   prev,
   patches,
 }: {
-  prev: S["states"];
-  patches: Partial<S["states"]>[];
+  prev: S["game"];
+  patches: Partial<S["game"]>[];
 }) {
-  const states: S["states"][] = [];
+  const games: S["game"][] = [];
   patches.forEach((patch, idx) => {
-    const prior = states[idx - 1] || prev;
-    states.push({ ...prior, ...patch });
+    const prior = games[idx - 1] || prev;
+    games.push({ ...prior, ...patch });
   });
-  return states;
+  return games;
 }

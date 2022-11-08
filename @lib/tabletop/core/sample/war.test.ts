@@ -20,7 +20,7 @@ test("creates with default options", () => {
   if (typeof host !== "object") return;
 
   const update = host.get();
-  expect(update.patches.length).toBe(2);
+  expect(update.games.length).toBe(2);
   expect(update.final).toBe(false);
   expect(host.submit({ type: "play", data: 2 }, 1)).toBe("Not your turn!");
   expect(host.submit({ type: "play", data: 222 }, 0)).toBe(

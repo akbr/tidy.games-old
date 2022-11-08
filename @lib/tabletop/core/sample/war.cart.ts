@@ -1,6 +1,7 @@
 import type { CreateSpec } from "../spec";
 import type { Cart } from "../cart";
 import { randomIntBetween } from "@lib/random";
+import { withAction } from "../chart";
 
 export type WarSpec = CreateSpec<{
   phases: "start" | "deal" | "play" | "played" | "end";
@@ -12,7 +13,7 @@ export type WarSpec = CreateSpec<{
   actions: { type: "play"; data: number };
 }>;
 
-const getInitialState: Cart<WarSpec>["getInitialState"] = ({ numPlayers }) => ({
+const getInitialGame: Cart<WarSpec>["getInitialGame"] = ({ numPlayers }) => ({
   phase: "start",
   activePlayer: null,
   hands: Array.from({ length: numPlayers }).map(() => []),
@@ -21,29 +22,33 @@ const getInitialState: Cart<WarSpec>["getInitialState"] = ({ numPlayers }) => ({
 });
 
 const chart: Cart<WarSpec>["chart"] = {
-  start: (s, c, a) => ({ phase: "deal" }),
-  deal: (s, { numPlayers, seed }) => {
-    const hands = s.hands.map((hand, idx) => [
+  start: (g) => ({ ...g, phase: "deal" }),
+  deal: (g, { seed }) => {
+    const hands = g.hands.map((hand, idx) => [
       randomIntBetween(0, 3, seed + idx),
     ]);
-    return { phase: "play", hands, activePlayer: 0 };
+    return { ...g, phase: "play", hands, activePlayer: 0 };
   },
-  play: (s, c, a) => {
-    if (!a) return null;
-    if (a.player !== s.activePlayer) return "Not your turn!";
-    if (s.hands[a.player].indexOf(a.data) === -1)
-      return "You don't have that number!";
-    const table = [...s.table, a.data];
-    const hands = s.hands.map((hand, idx) => {
-      if (idx !== a.player) return hand;
-      return hand.filter((x) => x !== a.data);
-    });
-    return { phase: "played", table, hands };
-  },
-  played: (s, { numPlayers }) => {
-    if (s.activePlayer === numPlayers - 1)
-      return { phase: "end", activePlayer: null };
-    return { phase: "play", activePlayer: (s.activePlayer! += 1) };
+  play: withAction(
+    (a, g) => {
+      if (a.player !== g.activePlayer) return "Not your turn!";
+      if (g.hands[a.player].indexOf(a.data) === -1)
+        return "You don't have that number!";
+      return a;
+    },
+    (g, a) => {
+      const table = [...g.table, a.data];
+      const hands = g.hands.map((hand, idx) => {
+        if (idx !== a.player) return hand;
+        return hand.filter((x) => x !== a.data);
+      });
+      return { ...g, phase: "played", table, hands };
+    }
+  ),
+  played: (g, { numPlayers }) => {
+    if (g.activePlayer === numPlayers - 1)
+      return { ...g, phase: "end", activePlayer: null };
+    return { ...g, phase: "play", activePlayer: g.activePlayer! + 1 };
   },
   end: () => true,
 };
@@ -54,15 +59,11 @@ export const warCart: Cart<WarSpec> = {
     players: [2, 4],
   },
   getOptions: () => null,
-  getInitialState,
+  getInitialGame,
   chart,
-  adjustState: (state, player, patch) => {
-    if (patch.hands) {
-      const strippedHands = patch.hands.map((val, i) =>
-        i === player ? val : []
-      );
-      return { hands: strippedHands };
-    }
+  adjustGame: (g, player) => {
+    const strippedHands = g.hands.map((val, i) => (i === player ? val : []));
+    return { ...g, hands: strippedHands };
   },
   actionKeys: {
     play: null,

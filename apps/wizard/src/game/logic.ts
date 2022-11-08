@@ -54,7 +54,7 @@ export const getDeal = (
     hands,
     trumpCard: trumpCard || null,
     trumpSuit: trumpSuit || null,
-  } as const;
+  };
 };
 
 const getLeadSuit = (trick: string[]) =>

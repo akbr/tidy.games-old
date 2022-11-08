@@ -1,24 +1,23 @@
-import type { Chart } from "@lib/tabletop";
+import { Chart, withAction } from "@lib/tabletop";
 import { rotateIndex } from "@lib/array";
 
 import { WizardSpec } from "./spec";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
-import { withAction } from "@lib/tabletop/core/chart";
 
 export const getNextRound = (
   { numPlayers }: { numPlayers: number },
-  state = {} as WizardSpec["states"]
+  g = {} as WizardSpec["game"]
 ) => {
   const dealer =
-    state.dealer !== undefined ? rotateIndex(numPlayers, state.dealer, 1) : 0;
-  const scores = state.scores
-    ? ([...state.scores, state.bids, state.actuals] as number[][])
+    g.dealer !== undefined ? rotateIndex(numPlayers, g.dealer, 1) : 0;
+  const scores = g.scores
+    ? ([...g.scores, g.bids, g.actuals] as number[][])
     : [];
 
-  const nextRound: WizardSpec["states"] = {
+  const nextRound: WizardSpec["game"] = {
     phase: "roundStart",
     player: null,
-    round: state.round ? state.round + 1 : 1,
+    round: g.round ? g.round + 1 : 1,
     dealer,
     hands: Array.from({ length: numPlayers }, () => []),
     trumpCard: null,
@@ -35,113 +34,137 @@ export const getNextRound = (
 };
 
 export const wizardChart: Chart<WizardSpec> = {
-  roundStart: (s, c) => {
-    const dealtCards = getDeal(c.numPlayers, s.round, c.seed + s.round);
+  roundStart: (g, c) => {
+    const { hands } = getDeal(c.numPlayers, g.round, c.seed + g.round);
 
-    return [
-      {
-        phase: "deal",
-        ...dealtCards,
-      },
-      { phase: "trumpReveal" },
-      dealtCards.trumpSuit === "w"
-        ? { phase: "select", player: s.dealer }
-        : { phase: "bid", player: rotateIndex(c.numPlayers, s.dealer, 1) },
-    ];
+    return {
+      ...g,
+      phase: "deal",
+      hands,
+    };
   },
 
+  deal: (g, c) => {
+    const { trumpCard, trumpSuit } = getDeal(
+      c.numPlayers,
+      g.round,
+      c.seed + g.round
+    );
+
+    return {
+      ...g,
+      phase: "trumpReveal",
+      trumpCard,
+      trumpSuit,
+    };
+  },
+
+  trumpReveal: (g, c) =>
+    g.trumpSuit === "w"
+      ? { ...g, phase: "select", player: g.dealer }
+      : {
+          ...g,
+          phase: "bid",
+          player: rotateIndex(c.numPlayers, g.dealer, 1),
+        },
+
   select: withAction(
-    (a, s) => {
-      if (a.type !== "select" || a.player !== s.player)
-        return "Action mismatch.";
+    (a, g) => {
+      if (a.player !== g.player) return "It's not your turn.";
+      if (a.type !== g.phase) return "Invalid action type.";
       if (!["c", "d", "h", "s"].includes(a.data)) return "Invalid suit.";
       return a;
     },
-    (s, c, a) => [
-      {
-        phase: "selected",
-        trumpSuit: a.data,
-        player: rotateIndex(c.numPlayers, s.dealer, 1),
-      },
-      { phase: "bid" },
-    ]
+    (g, a, c) => ({
+      ...g,
+      phase: "selected",
+      trumpSuit: a.data,
+      player: rotateIndex(c.numPlayers, g.dealer, 1),
+    })
   ),
 
+  selected: (g) => ({
+    ...g,
+    phase: "bid",
+  }),
+
   bid: withAction(
-    (a, s) =>
-      a.type !== "bid" || a.player !== s.player ? "Action mismatch." : a,
-    (s, c, a) => {
-      const bidErr = checkBid(a.data, s, c.options);
+    (a, g, c) => {
+      if (a.type !== g.phase || a.player !== g.player) return "Action mismatch";
+      const bidErr = checkBid(a.data, g, c.options);
       if (bidErr) return bidErr;
-      const nextBids = s.bids.map((bid, i) => (i === a.player ? a.data : bid));
-      return { phase: "bidded", bids: nextBids };
+      return a;
+    },
+    (g, a) => {
+      const nextBids = g.bids.map((bid, i) => (i === a.player ? a.data : bid));
+      return { ...g, phase: "bidded", bids: nextBids };
     }
   ),
 
-  bidded: ({ bids, player }, { numPlayers }) =>
-    bids.includes(null)
-      ? { phase: "bid", player: rotateIndex(numPlayers, player!, 1) }
-      : { phase: "bidsEnd", player: null },
+  bidded: (g, c) =>
+    g.bids.includes(null)
+      ? { ...g, phase: "bid", player: rotateIndex(c.numPlayers, g.player!, 1) }
+      : { ...g, phase: "bidsEnd", player: null },
 
-  bidsEnd: ({ dealer }, { numPlayers }) => ({
+  bidsEnd: (g, c) => ({
+    ...g,
     phase: "play",
-    player: rotateIndex(numPlayers, dealer, 1),
+    player: rotateIndex(c.numPlayers, g.dealer, 1),
   }),
 
   play: withAction(
-    (a, s) =>
-      a.type !== "play" || a.player !== s.player
-        ? "You don't have that card."
-        : a,
-    (s, _, a) => {
-      const hand = s.hands[a.player];
+    (a, g) => {
+      if (a.type !== g.phase || a.player !== g.player) return "Action mismatch";
+      const hand = g.hands[a.player];
       if (!hand.includes(a.data)) return "You don't have that card.";
-      if (!getPlayableCards(hand, s.trick).includes(a.data))
+      if (!getPlayableCards(hand, g.trick).includes(a.data))
         return "Illegal play.";
-
-      const nextHands = s.hands.map((hand, i) =>
+      return a;
+    },
+    (g, a) => {
+      const nextHands = g.hands.map((hand, i) =>
         i === a.player! ? hand.filter((card) => card !== a.data) : hand
       );
-      const nextTrick = [...s.trick, a.data];
+      const nextTrick = [...g.trick, a.data];
 
-      return { phase: "played", hands: nextHands, trick: nextTrick };
+      return { ...g, phase: "played", hands: nextHands, trick: nextTrick };
     }
   ),
 
-  played: ({ trick, player, trumpSuit, trickLeader }, { numPlayers }) =>
-    trick.length < numPlayers
-      ? {
-          phase: "play",
-          player: rotateIndex(numPlayers, player!, 1),
-        }
+  played: (g, c) =>
+    g.trick.length < c.numPlayers
+      ? { ...g, phase: "play", player: rotateIndex(c.numPlayers, g.player!, 1) }
       : {
+          ...g,
           phase: "trickWon",
           player: null,
           trickWinner: rotateIndex(
-            numPlayers,
-            getWinningIndex(trick, trumpSuit),
-            trickLeader
+            c.numPlayers,
+            getWinningIndex(g.trick, g.trumpSuit),
+            g.trickLeader
           ),
         },
 
-  trickWon: ({ hands, trickWinner, actuals }) => {
-    const roundContinues = hands[0].length > 0;
-    const nextActuals = actuals.map((n, idx) =>
-      idx === trickWinner ? n + 1 : n
+  trickWon: (g) => {
+    const roundContinues = g.hands[0].length > 0;
+    const nextActuals = g.actuals.map((n, idx) =>
+      idx === g.trickWinner ? n + 1 : n
     );
 
     if (roundContinues) {
       return {
+        ...g,
         phase: "play",
         actuals: nextActuals,
         trick: [],
-        trickLeader: trickWinner!,
+        trickLeader: g.trickWinner!,
         trickWinner: null,
-        player: trickWinner,
+        player: g.trickWinner,
       };
     }
 
     return {
+      ...g,
       phase: "roundEnd",
       actuals: nextActuals,
       trick: [],
@@ -149,17 +172,17 @@ export const wizardChart: Chart<WizardSpec> = {
     };
   },
 
-  roundEnd: (game, ctx) => {
-    const { round } = game;
-    const gameContinues = ctx.options.numRounds !== round;
-    if (gameContinues) return getNextRound(ctx, game);
+  roundEnd: (g, c) => {
+    const gameContinues = c.options.numRounds !== g.round;
 
-    const { scores, bids, actuals } = game;
-    const nextScores = [...scores, bids, actuals] as number[][];
-    return {
-      phase: "end",
-      scores: nextScores,
-    };
+    return gameContinues
+      ? getNextRound(c, g)
+      : {
+          ...g,
+          phase: "end",
+          scores: [...g.scores, g.bids, g.actuals] as number[][],
+        };
   },
+
   end: () => true,
 };
