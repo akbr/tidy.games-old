@@ -1,4 +1,4 @@
-import { is } from "@lib/compare/is";
+import { is } from "@lib/compare";
 import type { Spec } from "./spec";
 
 export type Ctx<S extends Spec> = {

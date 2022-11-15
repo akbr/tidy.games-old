@@ -7,8 +7,6 @@ export const DialogOf = ({
   close: () => void;
   children: ComponentChildren;
 }) => {
-  //useRefreshOnResize();
-
   return (
     <div class="absolute top-0 w-full h-full flex items-center justify-center">
       <div

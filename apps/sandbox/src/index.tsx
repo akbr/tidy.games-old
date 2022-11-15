@@ -1,28 +1,17 @@
 import "@shared/base.css";
 import { render } from "preact";
-import { createMeter } from "@lib/meter";
-import { DevWrapper } from "@lib/meter/preact";
-import createEmitter, { useEmitter } from "@lib/emitter";
-import { delay } from "@lib/async/task";
-import { useLayoutEffect } from "preact/hooks";
-//import { App } from "./App";
-//render(<App />, document.body);
+import { useLayoutEffect, useRef } from "preact/hooks";
+import { style } from "@lib/style";
 
-const meter = createMeter(0, { history: true });
-
-const App = () => {
-  const n = useEmitter(meter.emitter, (x) => x.state);
+function App() {
+  const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    meter.waitFor(delay(1000));
-  });
-  return <div>Hello, world! {n}</div>;
-};
+    const $el = ref.current!;
+    style($el, [{ x: 0 }, { x: 100, rotate: 90 }, { x: 50 }], {
+      duration: 1000,
+    });
+  }, []);
+  return <div ref={ref} class="absolute w-5 h-5 bg-slate-500"></div>;
+}
 
-render(
-  <DevWrapper meter={meter} stateDisplay={(x) => <div>{x.curr}</div>}>
-    <App />
-  </DevWrapper>,
-  document.body
-);
-
-meter.pushStates(1, 2, 3, 4, 5);
+render(<App />, document.body);

@@ -4,11 +4,11 @@ import { Badge } from "@shared/components/Badge";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 
-import type { Spec } from "../core";
-import type { SocketMeta } from "../server";
-import { avatars } from "../server/";
-import { LobbyProps, Props } from "./types";
-import { AppViews } from "./App";
+import { AppProps } from "../types";
+import type { Spec } from "../../core";
+import type { SocketMeta } from "../../server";
+import { avatars } from "../../server/";
+import { useEmitter } from "@lib/emitter";
 
 export const getRoomURL = (roomId = "") => {
   const host = window.location.hostname.replace("www.", "");
@@ -19,32 +19,27 @@ export const getRoomURL = (roomId = "") => {
   return [location.protocol, "//", host, port, path, hash].join("");
 };
 
-export default function DefaultLobby<S extends Spec>(
-  props: LobbyProps<S> & { OptionsView?: AppViews<S>["OptionsView"] }
-) {
-  const { frame, cart, actions, OptionsView } = props;
-  const { room } = frame;
-  const { addBot, start, leave } = actions.server;
+export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
+  const { id, playerIndex } = useEmitter(client.appEmitter, (x) => x.loc);
+  const sockets = useEmitter(client.appEmitter, (x) => x.sockets);
 
-  const numPlayers = room.seats.length;
+  const { cart, serverActions } = client;
+  const { addBot, start, leave } = serverActions;
+
+  const numPlayers = sockets.length;
 
   const [options, setOptions] = useState(cart.getOptions(numPlayers));
-  const updateOptions = (nextOptions: S["options"]) =>
-    setOptions(cart.getOptions(numPlayers, nextOptions));
+
   useEffect(() => {
     setOptions(cart.getOptions(numPlayers, options));
   }, [numPlayers]);
 
-  const isAdmin = room.player === 0;
-  const gameReady = room.seats.length >= cart.meta.players[0];
+  const isAdmin = playerIndex === 0;
+  const gameReady = sockets.length >= cart.meta.players[0];
 
-  return (
-    <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px] mb-2">{cart.meta.name}</div>
-      <ShareLink roomId={room.id} />
-      <PlayerDisplay {...props} />
-      {isAdmin ? (
-        <>
+  /**
+   *   const updateOptions = (nextOptions: S["options"]) =>
+    setOptions(cart.getOptions(numPlayers, nextOptions));
           {OptionsView && (
             <Field legend="Options">
               <OptionsView
@@ -54,6 +49,41 @@ export default function DefaultLobby<S extends Spec>(
               />
             </Field>
           )}
+ */
+
+  return (
+    <div class="flex flex-col h-full justify-center items-center gap-4">
+      <div class="text-center font-bold text-[64px] mb-2">{cart.meta.name}</div>
+      <ShareLink roomId={id} />
+      <Field legend={`🪑 Players (${sockets.length}/${cart.meta.players[1]})`}>
+        <div class="flex justify-center gap-1">
+          {sockets.map((player, idx) => {
+            player = player || {};
+            let isPlayer = idx === playerIndex;
+            let style = {
+              backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
+              borderRadius: "4px",
+              cursor: isPlayer ? "pointer" : "",
+            };
+            return (
+              <div
+                class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
+                style={style}
+                onClick={() => {
+                  //if (isPlayer) setDialog(SetMetaDialog);
+                }}
+              >
+                <Badge {...{ ...player, player: idx }}></Badge>
+                {isPlayer && (
+                  <div class="text-center text-base mt-1 -mb-1">YOU</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Field>
+      {isAdmin ? (
+        <>
           <button onClick={() => start({ options })} disabled={!gameReady}>
             {gameReady ? "Start game" : "Waiting for players..."}
           </button>
@@ -96,58 +126,19 @@ function ShareLink({ roomId }: { roomId: string }) {
   );
 }
 
-function PlayerDisplay<S extends Spec>({
-  frame,
-  cart,
-  setDialog,
-}: LobbyProps<S>) {
-  const { room } = frame;
+function SetMetaDialog<S extends Spec>({ client, setDialog }: AppProps<S>) {
+  const { playerIndex, id } = useEmitter(client.appEmitter, (x) => x.loc);
+  const sockets = useEmitter(client.appEmitter, (x) => x.sockets);
 
-  return (
-    <Field legend={`🪑 Players (${room.seats.length}/${cart.meta.players[1]})`}>
-      <div class="flex justify-center gap-1">
-        {room.seats.map((player, idx) => {
-          if (!player) return;
-          let isPlayer = idx === room.player;
-          let style = {
-            backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
-            borderRadius: "4px",
-            cursor: isPlayer ? "pointer" : "",
-          };
-          return (
-            <div
-              class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
-              style={style}
-              onClick={() => {
-                if (isPlayer) setDialog(SetMetaDialog);
-              }}
-            >
-              <Badge {...{ ...player, player: idx }}></Badge>
-              {isPlayer && (
-                <div class="text-center text-base mt-1 -mb-1">YOU</div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </Field>
-  );
-}
-
-function SetMetaDialog<S extends Spec>({
-  frame,
-  setDialog,
-  actions,
-}: Props<S>) {
-  const { room } = frame;
-  if (!room) {
+  if (id === "") {
     setDialog(null);
     return null;
   }
+
   return (
     <SetMeta
-      meta={room.seats[room.player]}
-      set={actions.server.setMeta}
+      meta={sockets[playerIndex]}
+      set={client.serverActions.setMeta}
       close={() => setDialog(null)}
     />
   );

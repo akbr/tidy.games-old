@@ -1,19 +1,18 @@
 import { values, suits, colors } from "./glyphs";
 import { memo } from "preact/compat";
 
-export const splitCard = (cardId: string): [number, string] => {
+export const splitCard = (cardId: string) => {
   const split = cardId.split("|");
-  return [parseInt(split[0], 10), split[1]];
+  const value = parseInt(split[0], 10) as keyof typeof values;
+  const suit = split[1] as keyof typeof suits;
+  const color = colors[suit] || "black";
+  return { value, suit, color } as const;
 };
 
 const shadow = { filter: "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.5))" };
 export const Card = memo(({ card }: { card: string }) => {
-  const [value, suit] = splitCard(card) as [
-    keyof typeof values,
-    keyof typeof suits
-  ];
+  const { value, suit, color } = splitCard(card);
 
-  const color = colors[suit] || "black";
   const showValue = !["w", "j"].includes(suit);
 
   return (
@@ -41,29 +40,27 @@ export const Card = memo(({ card }: { card: string }) => {
 export default Card;
 
 export const MiniCard = ({
-  suit,
-  value,
-  color = colors[suit] || "black",
+  card,
+  showValue = true,
+  overrideColor = null,
 }: {
-  suit: keyof typeof suits;
-  value: keyof typeof values | null;
-  color?: string;
+  card: string;
+  showValue?: boolean;
+  overrideColor?: string | null;
 }) => {
+  let { value, suit, color } = splitCard(card);
+  color = overrideColor || color;
+
   return (
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
-        {value !== null && (
+        {showValue && (
           <div class="w-4 h-4" style={{ fill: color }}>
-            {values[value] && values[value]!()}
+            {values[value]()}
           </div>
-        )}
-        <div
-          class="w-4 h-4"
-          style={{
-            fill: color,
-          }}
-        >
-          {suits[suit] && suits[suit]!()}
+        )}{" "}
+        <div class="w-4 h-4" style={{ fill: color }}>
+          {suit && suits[suit]()}
         </div>
       </div>
     </div>

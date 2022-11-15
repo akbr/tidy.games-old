@@ -1,5 +1,5 @@
 import { useRef } from "preact/hooks";
-import { shallow } from "@lib/compare/shallow";
+import { shallow } from "@lib/compare";
 
 export function useShallowRef<T extends any>(input: T): T {
   const ref = useRef<T | null>(null);

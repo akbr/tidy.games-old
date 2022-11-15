@@ -1,5 +1,4 @@
-import { GameProps } from "@lib/tabletop/preact";
-import { WizardSpec } from "src/game/spec";
+import { useGame, cartActions } from "@src/control";
 
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
@@ -9,32 +8,32 @@ import { SelectInput } from "./SelectInput";
 import { receive } from "@lib/globalUi";
 import { delay } from "@lib/async/task";
 
-export const TableCenter = (props: GameProps<WizardSpec>) => {
-  const { state, room } = props.frame;
-  const { actions } = props;
+export const TableCenter = () => {
+  const { game, playerIndex } = useGame();
+  const { phase, round, trumpCard, bids } = game;
 
   const vnode = (() => {
-    const isMyTurn = room.player === state.player;
+    const isMyTurn = playerIndex === game.player;
 
-    if (state.phase === "roundStart") {
-      return <RoundStart num={state.round} />;
+    if (phase === "roundStart") {
+      return <RoundStart num={round} />;
     }
 
-    if (state.phase === "trumpReveal") {
-      return state.trumpCard ? <TrumpReveal cardId={state.trumpCard} /> : null;
+    if (phase === "trumpReveal") {
+      return trumpCard ? <TrumpReveal cardId={trumpCard} /> : null;
     }
 
-    if (state.phase === "select") {
+    if (phase === "select") {
       return !isMyTurn ? (
         <h3 class={`animate-pulse text-center max-w-[150px]`}>
           Waiting for dealer to select trump...
         </h3>
       ) : (
-        <SelectInput select={actions.cart.select} />
+        <SelectInput select={cartActions.select} />
       );
     }
 
-    if (state.phase === "bid" || state.phase === "bidded") {
+    if (phase === "bid" || phase === "bidded") {
       return !isMyTurn ? (
         <div class="animate-fadeIn">
           <div class="animate-pulse text-center">
@@ -44,17 +43,17 @@ export const TableCenter = (props: GameProps<WizardSpec>) => {
             </h3>
           </div>
         </div>
-      ) : state.phase !== "bidded" ? (
-        <BidInput {...props} />
+      ) : phase !== "bidded" ? (
+        <BidInput />
       ) : null;
     }
 
-    if (state.phase === "bidsEnd") {
+    if (phase === "bidsEnd") {
       receive(delay(2000));
-      return <BidsEnd bids={state.bids} round={state.round} />;
+      return <BidsEnd bids={bids} round={round} />;
     }
 
-    if (state.phase === "roundEnd") {
+    if (phase === "roundEnd") {
       return (
         <div class="animate-fadeIn text-center">
           <h3>Round complete.</h3>
@@ -62,7 +61,7 @@ export const TableCenter = (props: GameProps<WizardSpec>) => {
       );
     }
 
-    if (state.phase === "end") {
+    if (phase === "end") {
       return <div>Game over, man!</div>;
     }
 

@@ -2,7 +2,7 @@ import type { Socket, SocketServer } from "@lib/socket";
 import type { Spec } from "../core/spec";
 import type { Cart } from "../core/cart";
 import type { CartUpdate } from "../core/store";
-import { createRoutines, RoomData, SocketMeta } from "./routines";
+import { createRoutines, RoomStatus, SocketMeta, Sockets } from "./routines";
 
 export type ServerApi<S extends Spec> = SocketServer<
   ServerOutputs<S>,
@@ -30,18 +30,19 @@ export type ServerActions<S extends Spec> =
     }
   | {
       type: "join";
-      data?: { id: string; seatIndex?: number };
+      data?: { id: string; playerIndex?: number };
     }
   | { type: "leave" }
   | { type: "addBot" }
   | { type: "start"; data?: { options?: S["options"]; seed?: string } };
 
-export type ServerOutputs<S extends Spec> = Partial<{
-  cartErr: string;
-  serverErr: string;
-  room: RoomData | null;
-  cartUpdate: CartUpdate<S>;
-}>;
+export type ServerOutputs<S extends Spec> = {
+  loc?: RoomStatus | null;
+  sockets?: Sockets;
+  cartUpdate?: CartUpdate<S>;
+  serverErr?: string;
+  cartErr?: string;
+};
 
 export const actionKeys = {
   setMeta: null,
@@ -79,7 +80,11 @@ export function createServer<S extends Spec>(cart: Cart<S>) {
 
         if (msg.type === "join") {
           leaveRoom(socket);
-          const serverErr = joinRoom(socket, msg.data?.id, msg.data?.seatIndex);
+          const serverErr = joinRoom(
+            socket,
+            msg.data?.id,
+            msg.data?.playerIndex
+          );
           if (serverErr) socket.send({ serverErr });
           return;
         }

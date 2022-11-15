@@ -18,16 +18,18 @@ export const createCartHost = <S extends Spec>(
   let working = false;
 
   return {
-    submit: function submit(player, action) {
+    submit: function submit(playerIndex, action) {
       if (working) {
-        actionQueue.push([player, action]);
+        if (!actionQueue.filter((x) => x[1] === action).length)
+          actionQueue.push([playerIndex, action]);
         return;
       }
 
-      const result = store.submit(action, player);
+      const result = store.submit(action, playerIndex);
       working = true;
+
       if (typeof result === "string") {
-        sockets[player]?.send({ cartErr: result });
+        sockets[playerIndex]?.send({ cartErr: result });
       } else {
         sockets.forEach((socket, idx) => {
           const cartUpdate = store.get(idx);
@@ -41,13 +43,13 @@ export const createCartHost = <S extends Spec>(
         submit(nextPlayer, nextAction);
       }
     },
-    setSocket: (player, socket) => {
-      if (player < 0) return "Invalid player index.";
+    setSocket: (playerIndex, socket) => {
+      if (playerIndex < 0) return "Invalid player index.";
 
-      sockets[player] = socket ? socket : undefined;
+      sockets[playerIndex] = socket ? socket : undefined;
 
       if (socket) {
-        const cartUpdate = store.get(player);
+        const cartUpdate = store.get(playerIndex);
         socket.send({ cartUpdate });
       }
     },
@@ -63,11 +65,14 @@ export const createBotSocket = <S extends Spec>(
   const botSend = (action: S["actions"]) =>
     clientSocket.send({ to: "cart", msg: action });
 
-  clientSocket.onmessage = ({ cartUpdate }) => {
-    if (!cartUpdate) return;
+  clientSocket.onmessage = (res) => {
+    if (!res.cartUpdate) return;
 
-    cartUpdate.games.forEach((game) => {
-      const action = botFn(game, cartUpdate.ctx, cartUpdate.player);
+    const { cartUpdate } = res;
+    const { games, ctx, playerIndex } = cartUpdate;
+
+    games.forEach((game) => {
+      const action = botFn(game, ctx, playerIndex);
       if (action) botSend(action);
     });
   };

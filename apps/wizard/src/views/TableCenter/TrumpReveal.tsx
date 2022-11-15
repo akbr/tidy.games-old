@@ -1,10 +1,13 @@
-import { Card, splitCard } from "@shared/components/Card";
+import { useLayoutEffect, useRef } from "preact/hooks";
+
 import { style } from "@lib/style";
 import { getNearestDimensions } from "@lib/dom";
 import { seq } from "@lib/async/task";
 import { randomBetween } from "@lib/random";
-import { useLayoutEffect, useRef } from "preact/hooks";
-import { receive } from "@lib/globalUi";
+
+import { Card, splitCard } from "@shared/components/Card";
+
+import { waitFor } from "@src/control";
 
 const revealEffect = ($card: HTMLElement, suit: string) => {
   const { width, height } = getNearestDimensions($card.parentElement!);
@@ -58,11 +61,11 @@ const revealEffect = ($card: HTMLElement, suit: string) => {
 };
 
 export const TrumpReveal = ({ cardId }: { cardId: string }) => {
-  const [, suit] = splitCard(cardId);
+  const { suit } = splitCard(cardId);
   const ref = useRef(null);
 
   useLayoutEffect(() => {
-    receive(revealEffect(ref.current!, suit));
+    waitFor(revealEffect(ref.current!, suit));
   }, [suit]);
 
   return (

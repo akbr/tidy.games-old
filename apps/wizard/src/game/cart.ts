@@ -9,6 +9,13 @@ export const wizardCart: Cart<WizardSpec> = {
     name: "Wizard",
     players: [2, 6],
   },
+  getNumPlayers: (num) => {
+    const [min, max] = wizardCart.meta.players;
+    if (num === undefined) return 2;
+    if (num < min) return min;
+    if (num > max) return max;
+    return num;
+  },
   getOptions: (
     numPlayers,
     options = { canadian: true, numRounds: 60 / numPlayers }
@@ -22,10 +29,7 @@ export const wizardCart: Cart<WizardSpec> = {
       numRounds,
     };
   },
-  getInitialGame: (ctx) => {
-    const validNumPlayers = ctx.numPlayers >= 2 && ctx.numPlayers <= 6;
-    return validNumPlayers ? getNextRound(ctx) : "Invalid number of players.";
-  },
+  getInitialGame: getNextRound,
   chart: wizardChart,
   actionKeys: {
     bid: null,

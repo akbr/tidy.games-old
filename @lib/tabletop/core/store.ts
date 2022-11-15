@@ -1,15 +1,15 @@
-import { is } from "@lib/compare/is";
+import { is } from "@lib/compare";
 import type { Spec } from "./spec";
 import { AuthAction, Ctx, getChartUpdate, ChartUpdate } from "./chart";
 import type { Cart } from "./cart";
 
 export type CartUpdate<S extends Spec> = {
+  playerIndex: number;
   prevGame: S["game"];
   action?: AuthAction<S>;
   games: S["game"][];
   final: boolean;
   ctx: Ctx<S>;
-  player: number;
 };
 
 export type CartStore<S extends Spec> = {
@@ -59,7 +59,7 @@ export function createCartStore<S extends Spec>(
           : lastAction;
 
       return {
-        player,
+        playerIndex: player,
         action: adjAction,
         prevGame: adjPrevGame,
         games: adjGames,

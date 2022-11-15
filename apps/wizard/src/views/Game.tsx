@@ -1,7 +1,5 @@
-import { WizardSpec } from "src/game/spec";
-import { GameProps } from "@lib/tabletop/preact/types";
-
 import { getHandHeight } from "@shared/domEffects/positionHand";
+import { useGame } from "@src/control";
 
 import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
@@ -10,12 +8,36 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 import { useRefreshOnResize } from "@lib/hooks";
+import { ComponentChildren, h } from "preact";
 
-export const Game = (props: GameProps<WizardSpec>) => {
+export const Game = () => {
+  return (
+    <Outer>
+      <Table>
+        <Seats />
+        <TableCenter />
+        <Trick />
+      </Table>
+      <Hud />
+      <UiButtons />
+    </Outer>
+  );
+};
+
+function Outer({ children }: { children: ComponentChildren }) {
+  return (
+    <div class="h-full flex justify-center">
+      <div class="relative w-full text-white overflow-hidden">{children}</div>
+    </div>
+  );
+}
+
+function Table({ children }: { children: ComponentChildren }) {
   useRefreshOnResize();
 
-  const { state, room, err } = props.frame;
-  const numCards = state.player ? state.hands[state.player].length || 1 : 1;
+  const [playerIndex, hands] = useGame((s) => [s.playerIndex, s.game.hands]);
+
+  const numCards = hands[playerIndex]?.length || 1;
 
   const tableHeight = getHandHeight(
     numCards,
@@ -25,28 +47,14 @@ export const Game = (props: GameProps<WizardSpec>) => {
   );
 
   return (
-    <div class="h-full flex justify-center">
-      <div class="relative w-full text-white overflow-hidden">
-        <section
-          id="table"
-          class="relative"
-          style={{ height: `calc(100% - ${tableHeight}px)` }}
-        >
-          <Hand
-            hand={state.hands[room.player]}
-            play={props.actions.cart.play}
-            err={err}
-            deal={state.phase === "deal"}
-          />
-          <Seats {...props} />
-          <TableCenter {...props} />
-          <Trick {...props} />
-        </section>
-        <Hud {...props} />
-        <UiButtons {...props} />
-      </div>
-    </div>
+    <section
+      id="table"
+      class="relative "
+      style={{ height: `calc(100% - ${tableHeight}px)` }}
+    >
+      {children}
+    </section>
   );
-};
+}
 
 export default Game;

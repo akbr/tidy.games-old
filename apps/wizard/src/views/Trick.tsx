@@ -1,15 +1,16 @@
-import { positionTrick } from "@shared/domEffects/positionTrick";
-import { Card } from "@shared/components/Card";
-import { GameProps } from "@lib/tabletop";
-import { WizardSpec } from "src/game/spec";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { useShallowRef } from "@lib/hooks";
-import { receive } from "@lib/globalUi";
+import { positionTrick } from "@shared/domEffects/positionTrick";
+import { Card } from "@shared/components/Card";
 
-export const Trick = ({ frame }: GameProps<WizardSpec>) => {
+import { useGame, waitFor } from "@src/control";
+
+export const Trick = () => {
   const ref = useRef(null);
 
-  const { phase, trickWinner, trick, trickLeader, player } = frame.state;
+  const { game, ctx, playerIndex } = useGame();
+
+  const { phase, trickWinner, trick, trickLeader, player } = game;
 
   const effect = useShallowRef(
     (() => {
@@ -30,11 +31,11 @@ export const Trick = ({ frame }: GameProps<WizardSpec>) => {
   );
 
   useLayoutEffect(() => {
-    receive(
+    waitFor(
       positionTrick(ref.current!, {
-        numPlayers: frame.ctx.numPlayers,
+        numPlayers: ctx.numPlayers,
         leadPlayer: trickLeader,
-        perspective: frame.room.player,
+        perspective: playerIndex,
         effect,
       })
     );

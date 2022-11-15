@@ -1,3 +1,2 @@
-export { default } from "./createViews";
-export * from "./createViews";
-export * from "./types";
+export { default } from "./createViewManager";
+export * from "./createViewManager";

@@ -1,9 +1,9 @@
-import { shallow } from "@lib/compare/shallow";
+import { shallow } from "@lib/compare";
 import { ReadOnlyEmitter } from "./emitter";
 import { useState, useLayoutEffect } from "preact/hooks";
 import { withSelector, Selector } from "./utils";
 
-type UseEmitterHook<T> = {
+export type UseEmitterHook<T> = {
   <U>(
     selector: Selector<T, U>,
     isEqual?: <T, U>(objA: T, objB: U) => boolean

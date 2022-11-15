@@ -1,6 +1,6 @@
 import { useRefreshOnResize } from "@lib/hooks";
 import { Spec } from "@lib/tabletop/core/spec";
-import { AppViews } from "./App";
+import { AppViews } from "./Root";
 import type { GameProps } from "./types";
 
 export function SideWrapper<S extends Spec>({

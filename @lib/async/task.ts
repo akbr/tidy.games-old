@@ -57,10 +57,10 @@ export const all = (tasks: Task[]): Task<any> => {
   });
 };
 
-export const seq = (fns: (() => Task | void)[]): Task => {
+export const seq = (fns: (() => Task | void | null)[]): Task => {
   const { promise, resolve } = getPromiseParts();
 
-  let pending: Task | void;
+  let pending: Task | void | null;
   let idx = -1;
   let finishing = false;
 

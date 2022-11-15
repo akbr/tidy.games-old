@@ -1,4 +1,4 @@
-import { shallow } from "@lib/compare/shallow";
+import { shallow } from "@lib/compare";
 import createEmitter, {
   Emitter,
   ReadOnlyEmitter,

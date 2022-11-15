@@ -1,12 +1,12 @@
 import { useState } from "preact/hooks";
-import { GameProps } from "@lib/tabletop/preact/types";
-import { WizardSpec } from "../../game/spec";
+import { useGame, cartActions } from "@src/control";
 import { checkBid } from "../../game/logic";
 
-export function BidInput({ frame, actions }: GameProps<WizardSpec>) {
+export function BidInput() {
   const [bid, setBid] = useState(0);
-  const { state, ctx } = frame;
-  const bidErr = checkBid(bid, state, ctx.options);
+  const { game, ctx } = useGame();
+
+  const bidErr = checkBid(bid, game, ctx.options);
 
   return (
     <div class="flex flex-col gap-[16px] text-center animate-fadeIn">
@@ -23,7 +23,7 @@ export function BidInput({ frame, actions }: GameProps<WizardSpec>) {
         <button
           style={{ minWidth: "36px", minHeight: "36px" }}
           onClick={() => setBid(bid + 1)}
-          disabled={bid === state.round}
+          disabled={bid === game.round}
         >
           +
         </button>
@@ -32,7 +32,7 @@ export function BidInput({ frame, actions }: GameProps<WizardSpec>) {
         style={{ minWidth: "100px" }}
         disabled={!!bidErr}
         onClick={() => {
-          actions.cart.bid(bid);
+          cartActions.bid(bid);
         }}
       >
         Bid

@@ -1,3 +1,34 @@
+export function shallow(objA: any, objB: any) {
+  if (Object.is(objA, objB)) {
+    return true;
+  }
+
+  if (
+    typeof objA !== "object" ||
+    objA === null ||
+    typeof objB !== "object" ||
+    objB === null
+  ) {
+    return false;
+  }
+
+  const keysA = Object.keys(objA);
+  if (keysA.length !== Object.keys(objB).length) {
+    return false;
+  }
+
+  for (let i = 0; i < keysA.length; i++) {
+    if (
+      !Object.prototype.hasOwnProperty.call(objB, keysA[i] as string) ||
+      !Object.is(objA[keysA[i]], objB[keysA[i]])
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export function deep(a: any, b: any): boolean {
   if (a === b) return true;
 
@@ -51,3 +82,29 @@ export function deep(a: any, b: any): boolean {
   // true if both NaN, false otherwise
   return a !== a && b !== b;
 }
+
+export function deepPatch<T>(curr: T, prev: T): T {
+  if (deep(curr, prev)) return prev;
+
+  if (
+    typeof curr === "object" &&
+    typeof prev === "object" &&
+    curr !== null &&
+    prev !== null
+  ) {
+    for (let key in curr) {
+      curr[key] = deepPatch(curr[key], prev[key]);
+    }
+  }
+
+  return curr;
+}
+
+export const is = {
+  string: (x: unknown): x is string => typeof x === "string",
+  number: (x: unknown): x is number => typeof x === "number",
+  boolean: (x: unknown): x is boolean => typeof x === "boolean",
+  null: (x: unknown): x is null => x === null,
+  undefined: (x: unknown): x is undefined => x === undefined,
+  defined: <T>(x: T | undefined): x is T => x !== undefined,
+};

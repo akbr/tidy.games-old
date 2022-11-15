@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+
 export function SelectInput({ select }: { select: (trump: string) => void }) {
   const [suit, setSuit] = useState("c");
   const [state, setState] = useState<"in" | "out">("in");

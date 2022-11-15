@@ -1,7 +1,4 @@
-export type Value =
-  | string
-  | number
-  | ((index: number, length: number) => string | number);
+export type Value = string | number;
 
 interface BaseStyles
   extends Omit<CSSStyleDeclaration, "direction" | "transition"> {}

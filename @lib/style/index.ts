@@ -1,3 +1,2 @@
-export { default } from "./motionWrapper";
-export * from "./motionWrapper";
-export { getTranslateValues } from "./getTranslateValues";
+export { default } from "./style";
+export * from "./style";

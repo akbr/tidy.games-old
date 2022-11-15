@@ -1,4 +1,4 @@
-import type { Task } from "@lib/async/task";
+import { delay, Task } from "@lib/async/task";
 import { createEmitter, ReadOnlyEmitter } from "@lib/emitter";
 
 export type MeterStatus<T> = {
@@ -13,7 +13,7 @@ export type Meter<T> = {
   emitter: ReadOnlyEmitter<MeterStatus<T>>;
   pushStates: (...states: T[]) => void;
   setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
-  waitFor: (task: Task<any>) => void;
+  waitFor: (task?: Task<any> | number) => void;
   togglePlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
   toggleHistory: (val: boolean) => void;
   reset: (state: T) => void;
@@ -99,17 +99,20 @@ export const createMeter = <T>(
       history = val;
     },
     waitFor: (task) => {
-      task.finished.then(() => {
-        waitingFor = waitingFor.filter((x) => x !== task);
+      if (!task) return;
+      const realTask = typeof task === "number" ? delay(task) : task;
+      realTask.finished.then(() => {
+        waitingFor = waitingFor.filter((x) => x !== realTask);
         iterate();
       });
-      waitingFor = [...waitingFor, task];
+      waitingFor = [...waitingFor, realTask];
       iterate();
     },
     togglePlay: (toggle) => {
       typeof toggle === "function"
         ? (playing = toggle(playing))
         : (playing = toggle);
+      update();
       iterate();
     },
     setIdx: (input) => {

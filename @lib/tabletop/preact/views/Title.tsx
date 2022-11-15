@@ -1,18 +1,16 @@
 import { useState } from "preact/hooks";
 
 import type { Spec } from "@lib/tabletop/core/spec";
-import type { TitleProps } from "./types";
 import { Field } from "./Utils";
+import { AppProps } from "../types";
+import { useEmitter } from "@lib/emitter";
 
-export default function Title<S extends Spec>({
-  frame,
-  cart,
-  actions,
-}: TitleProps<S>) {
+export default function Title<S extends Spec>({ client }: AppProps<S>) {
+  const connected = useEmitter(client.appEmitter, (x) => x.connected);
   const [code, setCode] = useState("");
-  const { connected } = frame;
-  const { meta } = cart;
-  const { join } = actions.server;
+
+  const { meta } = client.cart;
+  const { join } = client.serverActions;
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-14 ">

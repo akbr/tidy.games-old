@@ -6,8 +6,9 @@ export type Cart<S extends Spec> = {
     name: string;
     players: [number, number];
   };
+  getNumPlayers: (numPlayers?: number) => number;
   getOptions: (numPlayers: number, options?: S["options"]) => S["options"];
-  getInitialGame: (ctx: Ctx<S>) => S["game"] | string;
+  getInitialGame: (ctx: Ctx<S>) => S["game"];
   chart: Chart<S>;
   actionKeys: ActionKeys<S["actions"]>;
   adjustGame?: (game: S["game"], player: number) => S["game"];
@@ -24,3 +25,11 @@ export type BotFn<S extends Spec> = (
   ctx: Ctx<S>,
   playerIndex: number
 ) => S["actions"] | void;
+
+// ---
+
+export function getCtx<S extends Spec>(cart: Cart<S>, seed = ""): Ctx<S> {
+  const numPlayers = cart.getNumPlayers();
+  const options = cart.getOptions(numPlayers);
+  return { numPlayers, options, seed };
+}

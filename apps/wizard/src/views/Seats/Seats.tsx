@@ -1,16 +1,53 @@
-import { GameProps } from "@lib/tabletop/preact/types";
-import { WizardSpec } from "src/game/spec";
-
 import { rotateIndex } from "@lib/array";
 
 import { Badge, BadgeProps } from "@shared/components/Badge";
 import { SpeechBubble, getBubblePos } from "@shared/components/SpeechBubble";
 import { PositionSeats } from "@shared/components/PositionSeats";
 import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
+import { Twemoji } from "@shared/components/Twemoji";
 
 import { BidDisplay } from "./BidDisplay";
-import { Twemoji } from "@shared/components/Twemoji";
-import { setDelay } from "@lib/globalUi";
+
+import { useApp, useGame, waitFor } from "@src/control";
+
+export const Seats = () => {
+  const sockets = useApp((x) => x.sockets);
+  const { game, ctx, playerIndex } = useGame();
+  const { phase, bids, actuals, trickLeader } = game;
+
+  if (phase === "bidded") waitFor(1000);
+
+  const biddingActive =
+    phase === "bid" || phase === "bidded" || phase == "bidsEnd";
+
+  let seats = Array.from({ length: ctx.numPlayers }).map((_, playerIdx) => {
+    const { name, avatar } = sockets[playerIdx] || {};
+    const vIdx = rotateIndex(ctx.numPlayers, playerIdx, -playerIndex);
+    const bid = bids[playerIdx];
+
+    return (
+      <Seat
+        player={playerIdx}
+        name={name}
+        avatar={avatar}
+        dir={getSeatCSSDirection(ctx.numPlayers, vIdx)}
+        bid={bids[playerIdx]}
+        actual={actuals[playerIdx]}
+        showBidBubble={biddingActive && bid !== null}
+        showBidDisplay={!biddingActive && bid !== null}
+        shouldPop={phase === "roundEnd"}
+        isLeadPlayer={trickLeader === playerIdx}
+        isWaiting={game.player === playerIdx}
+      />
+    );
+  });
+
+  return (
+    <section id="seats" class="relative h-full">
+      <PositionSeats perspective={playerIndex}>{seats}</PositionSeats>
+    </section>
+  );
+};
 
 type SeatProps = {
   dir: "left" | "right" | "bottom" | "top";
@@ -76,45 +113,6 @@ export const Seat = ({
         <div class="invisible">_</div>
       )}
     </div>
-  );
-};
-
-export const Seats = ({ frame }: GameProps<WizardSpec>) => {
-  const { state, room, ctx } = frame;
-  const { player } = room;
-  const { phase, bids, actuals, trickLeader } = state;
-
-  if (phase === "bidded") setDelay(1000);
-
-  const biddingActive =
-    phase === "bid" || phase === "bidded" || phase == "bidsEnd";
-
-  let seats = room.seats.map((info, playerIdx) => {
-    const { name, avatar } = info || {};
-    const vIdx = rotateIndex(room.seats.length, playerIdx, -player);
-    const bid = bids[playerIdx];
-
-    return (
-      <Seat
-        player={playerIdx}
-        name={name}
-        avatar={avatar}
-        dir={getSeatCSSDirection(ctx.numPlayers, vIdx)}
-        bid={bids[playerIdx]}
-        actual={actuals[playerIdx]}
-        showBidBubble={biddingActive && bid !== null}
-        showBidDisplay={!biddingActive && bid !== null}
-        shouldPop={phase === "roundEnd"}
-        isLeadPlayer={trickLeader === playerIdx}
-        isWaiting={state.player === playerIdx}
-      />
-    );
-  });
-
-  return (
-    <section id="seats" class="relative h-full">
-      <PositionSeats perspective={player}>{seats}</PositionSeats>
-    </section>
   );
 };
 

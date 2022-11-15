@@ -1,4 +1,4 @@
-import { is } from "@lib/compare/is";
+import { is } from "@lib/compare";
 
 import type { Spec } from "../core/spec";
 import type { Cart } from "../core/cart";
@@ -15,10 +15,9 @@ export type Room<S extends Spec> = {
   host?: CartHost<S>;
 };
 
-export type RoomData = {
+export type RoomStatus = {
   id: string;
-  seats: (SocketMeta | null)[];
-  player: number;
+  playerIndex: number;
   started: boolean;
 };
 
@@ -26,6 +25,7 @@ export type SocketMeta = {
   avatar?: string;
   name?: string;
 };
+export type Sockets = (SocketMeta | null)[];
 
 export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
   const rooms = new Map<string, Room<S>>();
@@ -34,6 +34,17 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     meta: new Map<ServerSocket<S>, SocketMeta>(),
     bot: new Set<ServerSocket<S>>(),
   };
+
+  function getRoomStatus<S extends Spec>(
+    room: Room<S>,
+    socket: ServerSocket<S>
+  ): RoomStatus {
+    return {
+      id: room.id,
+      started: !!room.host,
+      playerIndex: room.seats.indexOf(socket),
+    };
+  }
 
   // ---
 
@@ -85,19 +96,13 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
   }
 
   function broadcastRoomStatus(room: Room<S>) {
-    const seats = room.seats.map((socket) =>
-      socket ? sockets.meta.get(socket) || {} : null
-    );
+    const s = room.seats.map((s) => (s ? sockets.meta.get(s) || null : null));
 
     room.seats.forEach((socket, player) => {
       socket &&
         socket.send({
-          room: {
-            id: room.id,
-            player,
-            seats,
-            started: room.host ? true : false,
-          },
+          loc: getRoomStatus(room, socket),
+          sockets: s,
         });
     });
   }
@@ -124,7 +129,7 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     if (is.string(store)) return store;
     room.host = createCartHost(store);
 
-    broadcastRoomStatusOf(socket);
+    broadcastRoomStatus(room);
     room.seats.forEach((socket, idx) => {
       room.host!.setSocket(idx, socket);
     });
@@ -151,6 +156,7 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     if (!room) return "You are not in a room.";
     if (!room.host) return "This room's game has not started.";
     const socketIndex = room.seats.indexOf(socket);
+
     const err = room.host.submit(socketIndex, action);
     if (err) return err;
   }
@@ -187,7 +193,7 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     if (!socket) return;
     sockets.room.delete(socket);
     sockets.bot.delete(socket);
-    socket.send({ room: null });
+    socket.send({ loc: null });
   }
 
   return {

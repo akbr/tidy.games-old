@@ -25,10 +25,10 @@ export function createEmitter<T>(initial: T): Emitter<T> {
       return () => listeners.delete(fn);
     },
     next: (state, { silent } = defaultOptions) => {
-      prev = curr;
       curr = state;
       if (silent) return;
       listeners.forEach((fn) => fn(curr, prev));
+      prev = curr;
     },
     get: () => curr,
   };
