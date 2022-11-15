@@ -9,14 +9,14 @@ import { createSocketManager } from "@lib/socket";
 import { shallow, deepPatch } from "@lib/compare";
 
 import { Spec } from "../core/spec";
-import { AuthAction, Ctx } from "../core/chart";
-import { Cart, getCtx } from "../core/cart";
+import { AuthAction, Ctx } from "../core/reducer";
+import { Game, getCtx } from "../core/game";
 import { SocketMeta } from "../server";
 import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
 
 import {
   ActionFns,
-  createCartActionFns,
+  createGameActionFns,
   createServerActionFns,
 } from "./createActionFns";
 
@@ -32,25 +32,25 @@ export type AppState = {
   err: { msg: string } | null;
 };
 
-export type GameState<S extends Spec> = {
+export type GameFrame<S extends Spec> = {
   playerIndex: number;
-  game: S["game"];
+  board: S["board"];
   action: AuthAction<S> | null;
   ctx: Ctx<S>;
 };
 
 export type Client<S extends Spec> = {
   appEmitter: ReadOnlyEmitter<AppState>;
-  gameEmitter: ReadOnlyEmitter<GameState<S>>;
+  gameEmitter: ReadOnlyEmitter<GameFrame<S>>;
   serverActions: ActionFns<ServerActions<S>>;
-  cartActions: ActionFns<S["actions"]>;
-  gameMeter: Meter<GameState<S> | null>;
-  cart: Cart<S>;
+  gameActions: ActionFns<S["actions"]>;
+  gameMeter: Meter<GameFrame<S> | null>;
+  game: Game<S>;
 };
 
 export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
-  cart: Cart<S>
+  game: Game<S>
 ): Client<S> {
   function getInitialAppState(connected = false): AppState {
     return {
@@ -65,19 +65,19 @@ export function createClient<S extends Spec>(
   const appEmitter = createEmitter(getInitialAppState());
   const setApp = createSetFn(appEmitter);
 
-  const _ctx = getCtx(cart);
-  const _game = cart.getInitialGame(_ctx);
-  function getInitialGameState(): GameState<S> {
+  const _ctx = getCtx(game);
+  const _board = game.getInitialBoard(_ctx);
+  function getInitialGameFrame(): GameFrame<S> {
     return {
       playerIndex: 0,
-      game: _game,
+      board: _board,
       action: null,
       ctx: _ctx,
     };
   }
 
-  const gameMeter = createMeter<GameState<S> | null>(null);
-  const gameEmitter = createEmitter(getInitialGameState());
+  const gameMeter = createMeter<GameFrame<S> | null>(null);
+  const gameEmitter = createEmitter(getInitialGameFrame());
   withSelector(
     gameMeter.emitter,
     (x) => x.state,
@@ -111,33 +111,35 @@ export function createClient<S extends Spec>(
         }
       }
 
-      if (res.serverErr || res.cartErr) {
+      if (res.serverErr || res.gameErr) {
         setApp({
-          err: { msg: (res.serverErr || res.cartErr) as string },
+          err: { msg: (res.serverErr || res.gameErr) as string },
         });
       } else if (currAppState.err !== null) {
         setApp({ err: null });
       }
 
       // > Game
-      if (res.cartUpdate) {
-        const { cartUpdate } = res;
+      if (res.gameUpdate) {
+        const { gameUpdate } = res;
 
         const meterState = gameMeter.emitter.get();
-        const latestMeterGame = meterState.states.at(-1) || meterState.state;
+        const latestMeterBoard = meterState.states.at(-1) || meterState.state;
 
-        const patchedGames = cartUpdate.games.map((game, idx) => {
-          const prev = cartUpdate.games[idx - 1] || latestMeterGame?.game || {};
+        const patchedBoards = gameUpdate.boards.map((game, idx) => {
+          const prev =
+            gameUpdate.boards[idx - 1] || latestMeterBoard?.board || {};
           return deepPatch(game, prev);
         });
 
-        if (latestMeterGame === null) patchedGames.unshift(cartUpdate.prevGame);
+        if (latestMeterBoard === null)
+          patchedBoards.unshift(gameUpdate.prevBoard);
 
-        const meterUpdates = patchedGames.map((game, idx) => ({
-          game,
-          action: idx === 0 ? cartUpdate.action || null : null,
-          playerIndex: cartUpdate.playerIndex,
-          ctx: cartUpdate.ctx,
+        const meterUpdates = patchedBoards.map((board, idx) => ({
+          board,
+          action: idx === 0 ? gameUpdate.action || null : null,
+          playerIndex: gameUpdate.playerIndex,
+          ctx: gameUpdate.ctx,
         }));
 
         setApp({
@@ -152,7 +154,7 @@ export function createClient<S extends Spec>(
   const serverActions = createServerActionFns(actionKeys, socket) as ActionFns<
     ServerActions<S>
   >;
-  const cartActions = createCartActionFns(cart, socket) as ActionFns<
+  const gameActions = createGameActionFns(game, socket) as ActionFns<
     S["actions"]
   >;
 
@@ -162,8 +164,8 @@ export function createClient<S extends Spec>(
     appEmitter,
     gameEmitter,
     serverActions,
-    cartActions,
+    gameActions,
     gameMeter,
-    cart,
+    game,
   };
 }

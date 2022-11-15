@@ -1,12 +1,12 @@
 import { useState } from "preact/hooks";
-import { useGame, cartActions } from "@src/control";
+import { useGame, gameActions } from "@src/control";
 import { checkBid } from "../../game/logic";
 
 export function BidInput() {
+  const { board, ctx } = useGame();
   const [bid, setBid] = useState(0);
-  const { game, ctx } = useGame();
 
-  const bidErr = checkBid(bid, game, ctx.options);
+  const bidErr = checkBid(bid, board, ctx.options);
 
   return (
     <div class="flex flex-col gap-[16px] text-center animate-fadeIn">
@@ -23,7 +23,7 @@ export function BidInput() {
         <button
           style={{ minWidth: "36px", minHeight: "36px" }}
           onClick={() => setBid(bid + 1)}
-          disabled={bid === game.round}
+          disabled={bid === board.round}
         >
           +
         </button>
@@ -32,7 +32,7 @@ export function BidInput() {
         style={{ minWidth: "100px" }}
         disabled={!!bidErr}
         onClick={() => {
-          cartActions.bid(bid);
+          gameActions.bid(bid);
         }}
       >
         Bid

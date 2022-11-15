@@ -1,7 +1,9 @@
 import type { Socket, SocketServer } from "@lib/socket";
+
 import type { Spec } from "../core/spec";
-import type { Cart } from "../core/cart";
-import type { CartUpdate } from "../core/store";
+import type { Game } from "../core/game";
+import type { GameUpdate } from "../core/store";
+
 import { createRoutines, RoomStatus, SocketMeta, Sockets } from "./routines";
 
 export type ServerApi<S extends Spec> = SocketServer<
@@ -20,7 +22,7 @@ export type ClientSocket<S extends Spec> = Socket<
 >;
 
 export type ServerInputs<S extends Spec> =
-  | { to: "cart"; msg: S["actions"] }
+  | { to: "game"; msg: S["actions"] }
   | { to: "server"; msg: ServerActions<S> };
 
 export type ServerActions<S extends Spec> =
@@ -39,9 +41,9 @@ export type ServerActions<S extends Spec> =
 export type ServerOutputs<S extends Spec> = {
   loc?: RoomStatus | null;
   sockets?: Sockets;
-  cartUpdate?: CartUpdate<S>;
+  gameUpdate?: GameUpdate<S>;
   serverErr?: string;
-  cartErr?: string;
+  gameErr?: string;
 };
 
 export const actionKeys = {
@@ -54,7 +56,7 @@ export const actionKeys = {
 
 // ---
 
-export function createServer<S extends Spec>(cart: Cart<S>) {
+export function createServer<S extends Spec>(cart: Game<S>) {
   const {
     setMeta,
     joinRoom,
@@ -109,9 +111,9 @@ export function createServer<S extends Spec>(cart: Cart<S>) {
         socket.send({ serverErr: "Invalid server action type." });
       }
 
-      if (to === "cart") {
-        const cartErr = submitAction(socket, msg);
-        if (cartErr) socket.send({ cartErr });
+      if (to === "game") {
+        const gameErr = submitAction(socket, msg);
+        if (gameErr) socket.send({ gameErr });
       }
     },
   };

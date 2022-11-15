@@ -1,4 +1,4 @@
-import { useGame, cartActions } from "@src/control";
+import { useGame, gameActions } from "@src/control";
 
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
@@ -9,11 +9,11 @@ import { receive } from "@lib/globalUi";
 import { delay } from "@lib/async/task";
 
 export const TableCenter = () => {
-  const { game, playerIndex } = useGame();
-  const { phase, round, trumpCard, bids } = game;
+  const { board, playerIndex } = useGame();
+  const { phase, round, trumpCard, bids } = board;
 
   const vnode = (() => {
-    const isMyTurn = playerIndex === game.player;
+    const isMyTurn = playerIndex === board.player;
 
     if (phase === "roundStart") {
       return <RoundStart num={round} />;
@@ -29,7 +29,7 @@ export const TableCenter = () => {
           Waiting for dealer to select trump...
         </h3>
       ) : (
-        <SelectInput select={cartActions.select} />
+        <SelectInput select={gameActions.select} />
       );
     }
 

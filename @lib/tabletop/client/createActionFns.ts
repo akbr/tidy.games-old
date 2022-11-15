@@ -1,4 +1,4 @@
-import { Cart, Spec } from "../core";
+import { Game, Spec } from "../core";
 
 export type ActionFns<A extends { type: string; data?: any }> = {
   [T in A as T["type"]]: undefined extends T["data"]
@@ -6,18 +6,18 @@ export type ActionFns<A extends { type: string; data?: any }> = {
     : (data: T["data"]) => boolean;
 };
 
-export function createCartActionFns<S extends Spec>(
-  cart: Cart<S>,
+export function createGameActionFns<S extends Spec>(
+  game: Game<S>,
   socket: { send: Function }
 ) {
   const actions: Record<string, any> = {};
-  Object.keys(cart.actionKeys).forEach((type) => {
+  Object.keys(game.actionKeys).forEach((type) => {
     actions[type] = (data: any) => {
       const action = {
         type,
         data,
       };
-      socket.send({ to: "cart", msg: action });
+      socket.send({ to: "game", msg: action });
       return true;
     };
   });

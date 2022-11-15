@@ -1,3 +1,3 @@
 export * from "./spec";
-export * from "./chart";
-export * from "./cart";
+export * from "./reducer";
+export * from "./game";

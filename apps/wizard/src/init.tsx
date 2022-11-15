@@ -1,13 +1,12 @@
-import { setViews, serverActions, cartActions } from "./control";
+import { setViews, serverActions, gameActions } from "./control";
 import { Game } from "./views/Game";
 
-serverActions.join();
-serverActions.addBot();
-serverActions.addBot();
-serverActions.addBot();
-serverActions.start({ seed: "test" });
-
-cartActions.bid(0);
+const { join, addBot, start } = serverActions;
+join();
+addBot();
+addBot();
+addBot();
+start({ seed: "test" });
 
 setViews(
   document.body,

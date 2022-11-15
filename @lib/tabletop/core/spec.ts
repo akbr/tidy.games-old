@@ -1,11 +1,11 @@
 export type Phases = string;
-export type Game = Record<string, any>;
+export type Board = Record<string, any>;
 export type Actions = { type: string; data?: any };
 export type Options = Record<string, any> | null;
-export type Refinements = Record<string, Partial<Game>>;
+export type Refinements = Record<string, Partial<Board>>;
 
 export type Spec = {
-  game: { phase: string } & Game;
+  board: { phase: string } & Board;
   actions: Actions;
   options: Options;
 };
@@ -13,15 +13,15 @@ export type Spec = {
 export type CreateSpec<
   I extends {
     phases: string;
-    game: { phase?: never } & Game;
+    board: { phase?: never } & Board;
     actions: Actions;
-    refineByPhase?: Record<string, { phase?: never } & Partial<I["game"]>>;
+    refineByPhase?: Record<string, { phase?: never } & Partial<I["board"]>>;
     options?: Options;
   }
 > = {
-  game: CreateGameStates<
+  board: CreateGameStates<
     I["phases"],
-    I["game"],
+    I["board"],
     I["refineByPhase"] extends Record<string, any> ? I["refineByPhase"] : {}
   >;
   actions: I["actions"];
@@ -32,8 +32,8 @@ export type CreateSpec<
 type Fill<Desired, Fallback> = undefined extends Desired ? Fallback : Desired;
 type CreateGameStates<
   Phase extends string,
-  BaseGame extends Game,
+  BaseBoard extends Board,
   Refinements extends Record<string, any> = Record<string, any>
 > = Phase extends string
-  ? { phase: Phase } & BaseGame & Refinements[Phase]
+  ? { phase: Phase } & BaseBoard & Refinements[Phase]
   : never;

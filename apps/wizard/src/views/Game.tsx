@@ -35,7 +35,7 @@ function Outer({ children }: { children: ComponentChildren }) {
 function Table({ children }: { children: ComponentChildren }) {
   useRefreshOnResize();
 
-  const [playerIndex, hands] = useGame((s) => [s.playerIndex, s.game.hands]);
+  const [playerIndex, hands] = useGame((s) => [s.playerIndex, s.board.hands]);
 
   const numCards = hands[playerIndex]?.length || 1;
 

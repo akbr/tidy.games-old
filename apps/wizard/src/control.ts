@@ -1,14 +1,14 @@
 import { initPreactApp } from "@lib/tabletop/initPreactApp";
-import { wizardCart } from "./game/cart";
+import { wizardGame } from "./game/game";
 
-const bundle = initPreactApp(wizardCart);
+const bundle = initPreactApp(wizardGame);
 
 export const {
   client,
-  cart,
+  game,
   gameMeter,
   serverActions,
-  cartActions,
+  gameActions,
   dialogEmitter,
   setViews,
   setDialog,

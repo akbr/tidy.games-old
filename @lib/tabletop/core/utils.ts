@@ -4,13 +4,13 @@ export function applyPatches<S extends Spec>({
   prev,
   patches,
 }: {
-  prev: S["game"];
-  patches: Partial<S["game"]>[];
+  prev: S["board"];
+  patches: Partial<S["board"]>[];
 }) {
-  const games: S["game"][] = [];
+  const boards: S["board"][] = [];
   patches.forEach((patch, idx) => {
-    const prior = games[idx - 1] || prev;
-    games.push({ ...prior, ...patch });
+    const prior = boards[idx - 1] || prev;
+    boards.push({ ...prior, ...patch });
   });
-  return games;
+  return boards;
 }

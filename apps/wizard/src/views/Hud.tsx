@@ -35,7 +35,7 @@ function AnimateIn({ children }: { children: ComponentChildren }) {
 }
 
 function RoundDisplay() {
-  const round = useGame((x) => x.game.round);
+  const round = useGame((x) => x.board.round);
   return (
     <AnimateIn>
       <div>Round: {round}</div>
@@ -45,9 +45,9 @@ function RoundDisplay() {
 
 function TrumpDisplay() {
   const [phase, trumpCard, trumpSuit] = useGame((s) => [
-    s.game.phase,
-    s.game.trumpCard,
-    s.game.trumpSuit,
+    s.board.phase,
+    s.board.trumpCard,
+    s.board.trumpSuit,
   ]);
 
   const showTrumpDisplay =
@@ -83,7 +83,7 @@ function TrumpDisplay() {
 }
 
 function BidDisplay() {
-  const [bids, round] = useGame((x) => [x.game.bids, x.game.round]);
+  const [bids, round] = useGame((x) => [x.board.bids, x.board.round]);
 
   const showBidDisplay = !bids.includes(null);
   if (!showBidDisplay) return null;

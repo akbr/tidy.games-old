@@ -8,9 +8,9 @@ import { useGame, waitFor } from "@src/control";
 export const Trick = () => {
   const ref = useRef(null);
 
-  const { game, ctx, playerIndex } = useGame();
+  const { board, ctx, playerIndex } = useGame();
 
-  const { phase, trickWinner, trick, trickLeader, player } = game;
+  const { phase, trickWinner, trick, trickLeader, player } = board;
 
   const effect = useShallowRef(
     (() => {

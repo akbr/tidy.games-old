@@ -1,17 +1,17 @@
 import { createLocalSocketPair } from "@lib/socket";
 import { Spec } from "../core/spec";
-import { BotFn } from "../core/cart";
-import { CartStore } from "../core/store";
+import { BotFn } from "../core/game";
+import { GameStore } from "../core/store";
 import { ServerSocket, ServerApi } from "./createServer";
 
-export interface CartHost<S extends Spec> {
+export interface GameHost<S extends Spec> {
   submit: (player: number, action: S["actions"]) => string | void;
   setSocket: (player: number, socket: ServerSocket<S> | null) => string | void;
 }
 
-export const createCartHost = <S extends Spec>(
-  store: CartStore<S>
-): CartHost<S> => {
+export const createGameHost = <S extends Spec>(
+  store: GameStore<S>
+): GameHost<S> => {
   const sockets: (ServerSocket<S> | undefined)[] = [];
   const actionQueue: [number, S["actions"]][] = [];
 
@@ -29,11 +29,11 @@ export const createCartHost = <S extends Spec>(
       working = true;
 
       if (typeof result === "string") {
-        sockets[playerIndex]?.send({ cartErr: result });
+        sockets[playerIndex]?.send({ gameErr: result });
       } else {
         sockets.forEach((socket, idx) => {
-          const cartUpdate = store.get(idx);
-          socket && socket.send({ cartUpdate });
+          const gameUpdate = store.get(idx);
+          socket && socket.send({ gameUpdate });
         });
       }
       working = false;
@@ -49,8 +49,8 @@ export const createCartHost = <S extends Spec>(
       sockets[playerIndex] = socket ? socket : undefined;
 
       if (socket) {
-        const cartUpdate = store.get(playerIndex);
-        socket.send({ cartUpdate });
+        const gameUpdate = store.get(playerIndex);
+        socket.send({ gameUpdate });
       }
     },
   };
@@ -63,16 +63,16 @@ export const createBotSocket = <S extends Spec>(
   const [clientSocket, serverSocket] = createLocalSocketPair(server);
 
   const botSend = (action: S["actions"]) =>
-    clientSocket.send({ to: "cart", msg: action });
+    clientSocket.send({ to: "game", msg: action });
 
   clientSocket.onmessage = (res) => {
-    if (!res.cartUpdate) return;
+    if (!res.gameUpdate) return;
 
-    const { cartUpdate } = res;
-    const { games, ctx, playerIndex } = cartUpdate;
+    const { gameUpdate } = res;
+    const { boards, ctx, playerIndex } = gameUpdate;
 
-    games.forEach((game) => {
-      const action = botFn(game, ctx, playerIndex);
+    boards.forEach((board) => {
+      const action = botFn(board, ctx, playerIndex);
       if (action) botSend(action);
     });
   };

@@ -1,19 +1,19 @@
 import { is } from "@lib/compare";
 import type { Spec } from "./spec";
-import { AuthAction, Ctx, getChartUpdate, ChartUpdate } from "./chart";
-import type { Cart } from "./cart";
+import { AuthAction, Ctx, getReducerUpdate, ReducerUpdate } from "./reducer";
+import { Game } from "./game";
 
-export type CartUpdate<S extends Spec> = {
+export type GameUpdate<S extends Spec> = {
   playerIndex: number;
-  prevGame: S["game"];
+  prevBoard: S["board"];
   action?: AuthAction<S>;
-  games: S["game"][];
+  boards: S["board"][];
   final: boolean;
   ctx: Ctx<S>;
 };
 
-export type CartStore<S extends Spec> = {
-  get: (player?: number) => CartUpdate<S>;
+export type GameStore<S extends Spec> = {
+  get: (player?: number) => GameUpdate<S>;
   submit: (action: S["actions"], player: number) => string | void;
 };
 
@@ -23,35 +23,37 @@ type InputCtx<S extends Spec> = {
   seed?: Ctx<S>["seed"];
 };
 
-export function createCartStore<S extends Spec>(
-  cart: Cart<S>,
+export function createGameStore<S extends Spec>(
+  game: Game<S>,
   initCtx: InputCtx<S>
-): CartStore<S> | string {
-  const ctx = validateContext(cart, initCtx);
+): GameStore<S> | string {
+  const ctx = validateContext(game, initCtx);
   if (is.string(ctx)) return ctx;
 
-  const initialGame = cart.getInitialGame(ctx);
+  const initialGame = game.getInitialBoard(ctx);
   if (is.string(initialGame)) return initialGame;
 
-  const initialUpdate = getChartUpdate(cart.chart, ctx, initialGame);
+  const initialUpdate = getReducerUpdate(game.reducer, ctx, initialGame);
   if (is.string(initialUpdate))
     return `Error on initialUpdate: ${initialUpdate}`;
 
   let actions: AuthAction<S>[] = [];
-  let prevGame = initialGame;
-  let prevChartUpdate: ChartUpdate<S> = initialUpdate;
+  let prevBoard = initialGame;
+  let prevReducerReducerUpdate: ReducerUpdate<S> = initialUpdate;
 
   return {
     get: (player = -1) => {
-      const { adjustGame, adjustAction } = cart;
-      const { games, final } = prevChartUpdate;
+      const { adjustBoard, adjustAction } = game;
+      const { boards, final } = prevReducerReducerUpdate;
       const lastAction = actions.at(-1);
 
-      const adjPrevGame = adjustGame ? adjustGame(prevGame, player) : prevGame;
+      const adjPrevBoard = adjustBoard
+        ? adjustBoard(prevBoard, player)
+        : prevBoard;
 
-      const adjGames = adjustGame
-        ? games.map((g) => adjustGame(g, player))
-        : games;
+      const adjBoards = adjustBoard
+        ? boards.map((g) => adjustBoard(g, player))
+        : boards;
 
       const adjAction =
         adjustAction && lastAction
@@ -61,36 +63,37 @@ export function createCartStore<S extends Spec>(
       return {
         playerIndex: player,
         action: adjAction,
-        prevGame: adjPrevGame,
-        games: adjGames,
+        prevBoard: adjPrevBoard,
+        boards: adjBoards,
         final,
         ctx,
       };
     },
+
     submit: (inputAction, player) => {
       const action = { ...inputAction, player, time: Date.now() };
-      const prev = prevChartUpdate.games.at(-1)!;
-      const update = getChartUpdate(cart.chart, ctx, prev, action);
+      const prev = prevReducerReducerUpdate.boards.at(-1)!;
+      const update = getReducerUpdate(game.reducer, ctx, prev, action);
 
       if (is.string(update)) return update;
-      if (update.games.length === 0)
+      if (update.boards.length === 0)
         return "Action returned no error but caused no state change.";
 
       actions.push(action);
-      prevGame = prev;
-      prevChartUpdate = update;
+      prevBoard = prev;
+      prevReducerReducerUpdate = update;
     },
   };
 }
 
 function validateContext<S extends Spec>(
-  cart: Cart<S>,
+  game: Game<S>,
   ctx: InputCtx<S>
 ): Ctx<S> | string {
-  const [min, max] = cart.meta.players;
+  const [min, max] = game.meta.players;
   const validNumPlayers = ctx.numPlayers >= min && ctx.numPlayers <= max;
   if (!validNumPlayers) return "Invalid number of players";
-  const options = cart.getOptions(ctx.numPlayers, ctx.options);
+  const options = game.getOptions(ctx.numPlayers, ctx.options);
   return {
     ...ctx,
     seed: ctx.seed ? ctx.seed : `auto_${Date.now()}`,

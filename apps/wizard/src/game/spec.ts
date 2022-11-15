@@ -15,7 +15,7 @@ export type WizardSpec = CreateSpec<{
     | "trickWon"
     | "roundEnd"
     | "end";
-  game: {
+  board: {
     round: number;
     player: number | null;
     dealer: number;

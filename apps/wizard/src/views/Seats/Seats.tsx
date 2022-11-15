@@ -12,8 +12,8 @@ import { useApp, useGame, waitFor } from "@src/control";
 
 export const Seats = () => {
   const sockets = useApp((x) => x.sockets);
-  const { game, ctx, playerIndex } = useGame();
-  const { phase, bids, actuals, trickLeader } = game;
+  const { board, ctx, playerIndex } = useGame();
+  const { phase, bids, actuals, trickLeader } = board;
 
   if (phase === "bidded") waitFor(1000);
 
@@ -37,7 +37,7 @@ export const Seats = () => {
         showBidDisplay={!biddingActive && bid !== null}
         shouldPop={phase === "roundEnd"}
         isLeadPlayer={trickLeader === playerIdx}
-        isWaiting={game.player === playerIdx}
+        isWaiting={board.player === playerIdx}
       />
     );
   });

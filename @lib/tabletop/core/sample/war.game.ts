@@ -1,11 +1,11 @@
 import type { CreateSpec } from "../spec";
-import type { Cart } from "../cart";
+import type { Game } from "../game";
 import { randomIntBetween } from "@lib/random";
-import { withAction } from "../chart";
+import { withAction } from "../reducer";
 
 export type WarSpec = CreateSpec<{
   phases: "start" | "deal" | "play" | "played" | "end";
-  game: {
+  board: {
     activePlayer: number | null;
     hands: number[][];
     table: number[];
@@ -13,7 +13,7 @@ export type WarSpec = CreateSpec<{
   actions: { type: "play"; data: number };
 }>;
 
-const getInitialGame: Cart<WarSpec>["getInitialGame"] = ({ numPlayers }) => ({
+const getInitialBoard: Game<WarSpec>["getInitialBoard"] = ({ numPlayers }) => ({
   phase: "start",
   activePlayer: null,
   hands: Array.from({ length: numPlayers }).map(() => []),
@@ -21,7 +21,7 @@ const getInitialGame: Cart<WarSpec>["getInitialGame"] = ({ numPlayers }) => ({
   scores: [],
 });
 
-const chart: Cart<WarSpec>["chart"] = {
+const reducer: Game<WarSpec>["reducer"] = {
   start: (g) => ({ ...g, phase: "deal" }),
   deal: (g, { seed }) => {
     const hands = g.hands.map((hand, idx) => [
@@ -53,15 +53,15 @@ const chart: Cart<WarSpec>["chart"] = {
   end: () => true,
 };
 
-export const warCart: Cart<WarSpec> = {
+export const warGame: Game<WarSpec> = {
   meta: {
     name: "War",
     players: [2, 4],
   },
   getOptions: () => null,
-  getInitialGame,
-  chart,
-  adjustGame: (g, player) => {
+  getInitialBoard,
+  reducer,
+  adjustBoard: (g, player) => {
     const strippedHands = g.hands.map((val, i) => (i === player ? val : []));
     return { ...g, hands: strippedHands };
   },

@@ -133,6 +133,6 @@ export const _checkBid = (
 
 export const checkBid = (
   bid: number,
-  { round, bids, player, dealer }: WizardSpec["game"],
+  { round, bids, player, dealer }: WizardSpec["board"],
   { canadian }: WizardSpec["options"]
 ) => _checkBid(bid, round, canadian, getTotalBids(bids), player === dealer);

@@ -1,16 +1,16 @@
 import { createUseEmitter } from "@lib/emitter";
-import { createServer, createClient, Spec, Cart } from ".";
+import { createServer, createClient, Spec, Game } from ".";
 import { createViewManager } from "./preact";
 
 export function initPreactApp<S extends Spec>(
-  cart: Cart<S>,
+  game: Game<S>,
   { dev } = { dev: location.hostname === "localhost" }
 ) {
   const server = dev
-    ? createServer(cart)
+    ? createServer(game)
     : location.origin.replace(/^http/, "ws") + location.pathname;
 
-  const client = createClient(server, cart);
+  const client = createClient(server, game);
 
   client.gameMeter.toggleHistory(dev);
 

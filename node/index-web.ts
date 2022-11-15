@@ -2,7 +2,7 @@ import { createServer } from "@lib/tabletop";
 import { createExpressServer } from "./express-server";
 import { mountWSServer } from "./ws-server";
 
-import { wizardCart } from "../apps/wizard/src/game/cart";
+import { wizardCart } from "../apps/wizard/src/game/game";
 import { condottiereCart } from "../apps/condottiere/src/game/cart";
 
 const express = createExpressServer();

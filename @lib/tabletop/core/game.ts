@@ -1,17 +1,16 @@
 import type { Spec } from "./spec";
-import type { Ctx, Chart, AuthAction } from "./chart";
+import type { Reducer, Ctx, AuthAction } from "./reducer";
 
-export type Cart<S extends Spec> = {
+export type Game<S extends Spec> = {
   meta: {
     name: string;
     players: [number, number];
   };
-  getNumPlayers: (numPlayers?: number) => number;
   getOptions: (numPlayers: number, options?: S["options"]) => S["options"];
-  getInitialGame: (ctx: Ctx<S>) => S["game"];
-  chart: Chart<S>;
+  getInitialBoard: (ctx: Ctx<S>) => S["board"];
+  reducer: Reducer<S>;
   actionKeys: ActionKeys<S["actions"]>;
-  adjustGame?: (game: S["game"], player: number) => S["game"];
+  adjustBoard?: (board: S["board"], player: number) => S["board"];
   adjustAction?: (action: AuthAction<S>, player: number) => AuthAction<S>;
   botFn?: BotFn<S>;
 };
@@ -21,15 +20,15 @@ export type ActionKeys<Actions extends { type: string }> = {
 };
 
 export type BotFn<S extends Spec> = (
-  game: S["game"],
+  board: S["board"],
   ctx: Ctx<S>,
   playerIndex: number
 ) => S["actions"] | void;
 
 // ---
 
-export function getCtx<S extends Spec>(cart: Cart<S>, seed = ""): Ctx<S> {
-  const numPlayers = cart.getNumPlayers();
-  const options = cart.getOptions(numPlayers);
+export function getCtx<S extends Spec>(game: Game<S>, seed = ""): Ctx<S> {
+  const numPlayers = game.meta.players[0];
+  const options = game.getOptions(numPlayers);
   return { numPlayers, options, seed };
 }

@@ -1,4 +1,4 @@
-import { useApp, useGame, cart, setDialog, serverActions } from "@src/control";
+import { useApp, useGame, game, setDialog, serverActions } from "@src/control";
 import { Twemoji } from "@shared/components/Twemoji";
 
 import { ScoreTable } from "./ScoreTable";
@@ -38,7 +38,7 @@ function OptionsButton() {
 }
 
 function ScoresButton() {
-  const scores = useGame((x) => x.game.scores);
+  const scores = useGame((x) => x.board.scores);
 
   return scores.length <= 0 ? null : (
     <div
@@ -64,7 +64,7 @@ function OptionsDialog() {
   return (
     <>
       <div class="flex flex-col gap-2">
-        <h2>{cart.meta.name}</h2>
+        <h2>{game.meta.name}</h2>
         <div>
           <span class="font-bold">Room:</span> {loc.id}
         </div>
@@ -95,7 +95,7 @@ function OptionsDialog() {
 
 function ScoreTableDialog() {
   const loc = useApp((x) => x.loc);
-  const scores = useGame((x) => x.game.scores);
+  const scores = useGame((x) => x.board.scores);
 
-  return <ScoreTable scores={scores} room={room} />;
+  return <ScoreTable scores={scores} room={loc} />;
 }

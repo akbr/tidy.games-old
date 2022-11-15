@@ -23,19 +23,19 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
   const { id, playerIndex } = useEmitter(client.appEmitter, (x) => x.loc);
   const sockets = useEmitter(client.appEmitter, (x) => x.sockets);
 
-  const { cart, serverActions } = client;
+  const { game, serverActions } = client;
   const { addBot, start, leave } = serverActions;
 
   const numPlayers = sockets.length;
 
-  const [options, setOptions] = useState(cart.getOptions(numPlayers));
+  const [options, setOptions] = useState(game.getOptions(numPlayers));
 
   useEffect(() => {
-    setOptions(cart.getOptions(numPlayers, options));
+    setOptions(game.getOptions(numPlayers, options));
   }, [numPlayers]);
 
   const isAdmin = playerIndex === 0;
-  const gameReady = sockets.length >= cart.meta.players[0];
+  const gameReady = sockets.length >= game.meta.players[0];
 
   /**
    *   const updateOptions = (nextOptions: S["options"]) =>
@@ -53,9 +53,9 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px] mb-2">{cart.meta.name}</div>
+      <div class="text-center font-bold text-[64px] mb-2">{game.meta.name}</div>
       <ShareLink roomId={id} />
-      <Field legend={`🪑 Players (${sockets.length}/${cart.meta.players[1]})`}>
+      <Field legend={`🪑 Players (${sockets.length}/${game.meta.players[1]})`}>
         <div class="flex justify-center gap-1">
           {sockets.map((player, idx) => {
             player = player || {};

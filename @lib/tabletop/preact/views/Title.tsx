@@ -9,7 +9,7 @@ export default function Title<S extends Spec>({ client }: AppProps<S>) {
   const connected = useEmitter(client.appEmitter, (x) => x.connected);
   const [code, setCode] = useState("");
 
-  const { meta } = client.cart;
+  const { meta } = client.game;
   const { join } = client.serverActions;
 
   return (

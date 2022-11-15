@@ -1,18 +1,18 @@
 import { is } from "@lib/compare";
 
 import type { Spec } from "../core/spec";
-import type { Cart } from "../core/cart";
-import { CartStore, createCartStore } from "../core/store";
+import type { Game } from "../core/game";
+import { GameStore, createGameStore } from "../core/store";
 
 import type { ServerSocket, ServerApi, ServerActions } from "./createServer";
 import { getRandomRoomID, getSeatNumber } from "./utils";
-import { CartHost, createBotSocket, createCartHost } from "./wrappers";
+import { GameHost, createBotSocket, createGameHost } from "./wrappers";
 
 export type Room<S extends Spec> = {
   id: string;
   seats: (ServerSocket<S> | null)[];
-  store: CartStore<S> | null;
-  host?: CartHost<S>;
+  store: GameStore<S> | null;
+  host?: GameHost<S>;
 };
 
 export type RoomStatus = {
@@ -27,7 +27,7 @@ export type SocketMeta = {
 };
 export type Sockets = (SocketMeta | null)[];
 
-export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
+export const createRoutines = <S extends Spec>(game: Game<S>) => {
   const rooms = new Map<string, Room<S>>();
   const sockets = {
     room: new Map<ServerSocket<S>, string>(),
@@ -77,7 +77,7 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
     const room = id ? rooms.get(id) || createRoom(id) : createRoom();
     const seatIndex = getSeatNumber(
       room.seats,
-      cart.meta.players,
+      game.meta.players,
       requestedSeat
     );
 
@@ -122,12 +122,12 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
 
     const ctx = {
       numPlayers,
-      options: cart.getOptions(numPlayers, options),
+      options: game.getOptions(numPlayers, options),
       seed,
     };
-    const store = createCartStore(cart, ctx);
+    const store = createGameStore(game, ctx);
     if (is.string(store)) return store;
-    room.host = createCartHost(store);
+    room.host = createGameHost(store);
 
     broadcastRoomStatus(room);
     room.seats.forEach((socket, idx) => {
@@ -136,11 +136,11 @@ export const createRoutines = <S extends Spec>(cart: Cart<S>) => {
   }
 
   function addBot(socket: ServerSocket<S>, server: ServerApi<S>) {
-    if (!cart.botFn) return "Game has no botFn.";
+    if (!game.botFn) return "Game has no botFn.";
     const room = getRoomOf(socket);
     if (!room) return "Socket not in a room";
 
-    const botSocket = createBotSocket(cart.botFn, server);
+    const botSocket = createBotSocket(game.botFn, server);
     sockets.bot.add(botSocket);
     sockets.meta.set(botSocket, { avatar: "🤖", name: "BOT" });
 
