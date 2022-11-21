@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { style } from "@lib/style";
-import { waitFor } from "@src/control";
+import { waitFor } from "~src/control";
 
 const roundEffect = ($el: HTMLElement) =>
   style(

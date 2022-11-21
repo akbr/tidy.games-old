@@ -7,7 +7,7 @@ import { randomBetween } from "@lib/random";
 
 import { Card, splitCard } from "@shared/components/Card";
 
-import { waitFor } from "@src/control";
+import { waitFor } from "~src/control";
 
 const revealEffect = ($card: HTMLElement, suit: string) => {
   const [width, height] = getNearestDimensions($card.parentElement!);

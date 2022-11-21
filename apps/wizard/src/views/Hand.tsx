@@ -8,9 +8,9 @@ import {
   PositionHandCard,
   PositionHandCardProps,
 } from "@shared/components/PositionHandCard";
-
-import { useGame, gameActions } from "@src/control";
 import { getHandHeight } from "@shared/domEffects/positionHand";
+
+import { useGame, gameActions } from "~src/control";
 
 const shouldDrop: PositionHandCardProps["shouldDrop"] = (_, dy) => dy < -50;
 
@@ -27,7 +27,8 @@ const onDrop: PositionHandCardProps["onDrop"] = ($el, card, numCards) => {
 };
 
 export function Hand() {
-  const [hand, err] = useGame((x) => [x.board.hands[x.playerIndex], x.err]);
+  const hand = useGame((x) => x.board.hands[x.playerIndex]);
+  const err = useGame((x) => x.err);
 
   return (
     <section id="hand" class="absolute top-0 left-0">

@@ -3,7 +3,7 @@ import { useShallowRef } from "@lib/hooks";
 import { positionTrick } from "@shared/domEffects/positionTrick";
 import { Card } from "@shared/components/Card";
 
-import { useGame, waitFor } from "@src/control";
+import { useGame, waitFor } from "~src/control";
 
 export const Trick = () => {
   const ref = useRef(null);

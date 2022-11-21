@@ -3,8 +3,8 @@ import { useShallowRef } from "@lib/hooks";
 import { style } from "@lib/style";
 import { delay, seq } from "@lib/async/task";
 
-import { getScore } from "../../game/logic";
-import { waitFor } from "@src/control";
+import { getScore } from "~src/game/logic";
+import { waitFor } from "~src/control";
 
 type BidsDisplayProps = {
   bid: number;

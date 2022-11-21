@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
-import { useGame, gameActions } from "@src/control";
-import { checkBid } from "../../game/logic";
+import { useGame, gameActions } from "~src/control";
+import { checkBid } from "~src/game/logic";
 
 export function BidInput() {
   const { board, ctx } = useGame();
@@ -30,7 +30,7 @@ export function BidInput() {
       </div>
       <button
         style={{ minWidth: "100px" }}
-        disabled={!!bidErr}
+        disabled={Boolean(bidErr)}
         onClick={() => {
           gameActions.bid(bid);
         }}

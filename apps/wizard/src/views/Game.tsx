@@ -1,5 +1,11 @@
+import { ComponentChildren, h } from "preact";
+import { useLayoutEffect, useRef } from "preact/hooks";
+
+import { style } from "@lib/style";
+import { useRefreshOnResize } from "@lib/hooks";
+import { getNearestDimensions } from "@lib/dom";
+
 import { getHandHeight } from "@shared/domEffects/positionHand";
-import { useGame } from "@src/control";
 
 import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
@@ -7,11 +13,8 @@ import { Seats } from "./Seats/Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
-import { useRefreshOnResize } from "@lib/hooks";
-import { ComponentChildren, h } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
-import { getNearestDimensions } from "@lib/dom";
-import style from "@lib/style";
+
+import { useGame } from "~src/control";
 
 export const Game = () => {
   return (

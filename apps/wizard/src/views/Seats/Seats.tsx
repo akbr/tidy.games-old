@@ -1,15 +1,16 @@
+import { useEffect } from "preact/hooks";
+
 import { rotateIndex } from "@lib/array";
 
 import { Badge, BadgeProps } from "@shared/components/Badge";
 import { SpeechBubble, getBubblePos } from "@shared/components/SpeechBubble";
 import { PositionSeats } from "@shared/components/PositionSeats";
-import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 import { Twemoji } from "@shared/components/Twemoji";
+import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 
 import { BidDisplay } from "./BidDisplay";
 
-import { useGame, waitFor } from "@src/control";
-import { useEffect } from "preact/hooks";
+import { useGame, waitFor } from "~src/control";
 
 export const Seats = () => {
   const { board, ctx, playerIndex, socketsStatus } = useGame();

@@ -33,7 +33,7 @@ export function useEmitter<T>(emitter: ReadOnlyEmitter<T>): T;
 export function useEmitter<T, U>(
   emitter: ReadOnlyEmitter<T>,
   selector: Selector<T, U>,
-  isEqual?: <T, U>(objA: T, objB: U) => boolean
+  isEqual?: (objA: U, objB: U) => boolean
 ): U;
 
 export function useEmitter(emitter: any, selector?: any, isEqual?: any): any {

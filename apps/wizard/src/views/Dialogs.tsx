@@ -1,7 +1,6 @@
-import { ScoreTable } from "./ScoreTable";
 import { OptionsDisplay } from "./Options";
 
-import { useGame, game, setDialog, serverActions } from "@src/control";
+import { useGame, game, setDialog, serverActions } from "~src/control";
 
 export function OptionsDialog() {
   const [id, ctx, playerIndex] = useGame((x) => [x.id, x.ctx, x.playerIndex]);

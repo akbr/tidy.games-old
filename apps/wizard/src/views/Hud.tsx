@@ -1,10 +1,10 @@
 import { ComponentChildren } from "preact";
 
-import { useGame } from "@src/control";
-import { getTotalBids } from "@src/game/logic";
-
 import { Twemoji } from "@shared/components/Twemoji";
 import { MiniCard, splitCard } from "@shared/components/Card";
+
+import { getTotalBids } from "~src/game/logic";
+import { useGame } from "~src/control";
 
 export const Hud = () => {
   return (
@@ -24,7 +24,7 @@ function Position({ children }: { children: ComponentChildren }) {
 
 function Container({ children }: { children: ComponentChildren }) {
   return (
-    <div class="flex flex-col gap-1.5 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
+    <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
       {children}
     </div>
   );

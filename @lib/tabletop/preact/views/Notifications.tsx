@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "preact/hooks";
+import { useState, useLayoutEffect } from "preact/hooks";
 
 import { useEmitter } from "@lib/emitter";
 
@@ -6,10 +6,16 @@ import { Spec } from "../../core/spec";
 import { AppProps } from "../types";
 
 export function Notifications<S extends Spec>(props: AppProps<S>) {
+  const err = useEmitter(
+    props.client.emitter,
+    (x) => x.err,
+    (x, y) => x === y
+  );
   const connected = useEmitter(props.client.emitter, (x) => x.connected);
 
   return (
     <section id="errors" class="absolute bottom-2 left-2 z-50">
+      <ErrorReciever err={err} />
       <ConnectionWarning connected={connected} />
     </section>
   );
@@ -18,49 +24,40 @@ export function Notifications<S extends Spec>(props: AppProps<S>) {
 export default Notifications;
 
 function ConnectionWarning({ connected }: { connected: boolean }) {
-  const [show, setShow] = useState(false);
-  const timerId = useRef<any>();
+  if (connected) return null;
 
-  useEffect(() => {
-    if (!connected) {
-      timerId.current = setTimeout(() => {
-        setShow(true);
-      }, 2000);
-    } else {
-      clearTimeout(timerId.current);
-      setShow(false);
-    }
-  }, [connected]);
-
-  return show ? (
+  return (
     <div class="inline-block bg-yellow-600 p-2 rounded-lg text-white">
       WebSocket not connected.
       <button onClick={() => location.reload()}>Reload 🔄</button>
     </div>
-  ) : null;
+  );
 }
 
-function ErrorReciever<S extends Spec>({ client }: AppProps<S>) {
-  const err = useEmitter(client.emitter, (x) => x.err); // This breaks b/c it shallow checks
-  const [show, setShow] = useState(true);
+function ErrorReciever({ err }: { err: { msg: string } | null }) {
+  const [errs, setErr] = useState<
+    {
+      msg: string;
+    }[]
+  >([]);
 
   useLayoutEffect(() => {
-    const t = setTimeout(() => {
-      setShow(false);
-    }, 1000);
-    return () => {
-      clearTimeout(t);
-      setShow(true);
-    };
+    if (!err) return;
+    setTimeout(() => {
+      setErr((errs) => errs.filter((x) => x !== err));
+    }, 2500);
+    setErr((errs) => [...errs, err]);
   }, [err]);
 
-  if (!err) return null;
+  if (errs.length === 0) return null;
 
   return (
-    <div class="flex flex-col gap-4" style={{ opacity: show ? 1 : 0 }}>
-      <div class="inline-block bg-red-600 p-2 rounded-lg text-white">
-        {err.msg}
-      </div>
+    <div class="flex flex-col gap-4">
+      {errs.map((err) => (
+        <div class="inline-block bg-red-600 p-2 rounded-lg text-white">
+          {err.msg}
+        </div>
+      ))}
     </div>
   );
 }

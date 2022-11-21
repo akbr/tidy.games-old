@@ -1,12 +1,10 @@
-import { useGame, gameActions } from "@src/control";
-
 import { RoundStart } from "./RoundStart";
 import { TrumpReveal } from "./TrumpReveal";
 import { BidInput } from "./BidInput";
 import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
-import { receive } from "@lib/globalUi";
-import { delay } from "@lib/async/task";
+
+import { useGame, gameActions } from "~src/control";
 
 export const TableCenter = () => {
   const { board, playerIndex } = useGame();
@@ -49,7 +47,6 @@ export const TableCenter = () => {
     }
 
     if (phase === "bidsEnd") {
-      receive(delay(2000));
       return <BidsEnd bids={bids} round={round} />;
     }
 

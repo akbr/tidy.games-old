@@ -4,7 +4,7 @@ import { Twemoji } from "@shared/components/Twemoji";
 
 import { getScore } from "../game/logic";
 
-import { useGame } from "@src/control";
+import { useGame } from "~src/control";
 
 export const convert = (scores: number[][]) => {
   let rows: number[][][] = [];

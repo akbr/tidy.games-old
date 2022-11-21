@@ -90,7 +90,8 @@ export const wizardReducer: Reducer<WizardSpec> = {
 
   bid: withAction(
     (a, b, c) => {
-      if (a.type !== b.phase || a.player !== b.player) return "Action mismatch";
+      if (a.type !== b.phase || a.player !== b.player)
+        return "Wrong action. (Waiting on a bid.)";
       const bidErr = checkBid(a.data, b, c.options);
       if (bidErr) return bidErr;
       return a;
@@ -114,7 +115,8 @@ export const wizardReducer: Reducer<WizardSpec> = {
 
   play: withAction(
     (a, b) => {
-      if (a.type !== b.phase || a.player !== b.player) return "Action mismatch";
+      if (a.type !== b.phase || a.player !== b.player)
+        return "Wrong action. (Waiting on a card.)";
       const hand = b.hands[a.player];
       if (!hand.includes(a.data)) return "You don't have that card.";
       if (!getPlayableCards(hand, b.trick).includes(a.data))

@@ -40,19 +40,27 @@ export function PositionHandCard({
   const resizeToken = useRefreshOnResize();
   const [state, setState] = useState<"idle" | "playing">("idle");
 
+  // Hand positioning
   useLayoutEffect(
     function positionInHand() {
       const $el = elRef.current!;
       const $card = $el.firstChild as HTMLElement;
       const { width } = $card.getBoundingClientRect();
-      const [cW, cH] = getNearestDimensions($el);
-      handPosRef.current = getHandCardPosition(idx, numCards, width, cW, cH);
+      const [containerWidth, containerHeight] = getNearestDimensions($el);
+      handPosRef.current = getHandCardPosition(
+        idx,
+        numCards,
+        width,
+        containerWidth,
+        containerHeight
+      );
       const [x, y, z] = handPosRef.current;
       style($el, { x, y, zIndex: z });
     },
     [resizeToken, numCards, card]
   );
 
+  // Triggers action when is "played"
   useLayoutEffect(
     function onStateChange() {
       if (state === "playing")
@@ -67,20 +75,22 @@ export function PositionHandCard({
     [state]
   );
 
+  // Reverts card on error
   useLayoutEffect(
     function onErr() {
-      if (errRef && state === "playing") {
-        const $el = elRef.current!;
-        const [x, y, z] = handPosRef.current;
+      const relevantError = errRef && state === "playing";
+      if (!relevantError) return;
+      const $el = elRef.current!;
+      const [x, y, z] = handPosRef.current;
 
-        style($el, { rotate: 360 });
-        style($el, { x, y, rotate: 0, zIndex: z }, { duration: 300 });
-        setState("idle");
-      }
+      style($el, { rotate: 360 });
+      style($el, { x, y, rotate: 0, zIndex: z }, { duration: 300 });
+      setState("idle");
     },
     [errRef]
   );
 
+  // Drag handlers
   const bind = useDrag(({ down, movement }) => {
     const $el = elRef.current!;
     dragPosRef.current = movement;

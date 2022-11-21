@@ -1,7 +1,7 @@
 import { useState, useEffect } from "preact/hooks";
 import { debounce } from "@lib/async";
 
-export function useRefreshOnResize(debounceMs = 150) {
+export function useRefreshOnResize(debounceMs = 250) {
   const [_, set] = useState(Symbol());
   useEffect(() => {
     const update = debounce(() => set(Symbol()), debounceMs, false);
