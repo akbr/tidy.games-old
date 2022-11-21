@@ -9,7 +9,7 @@ import { getSeatPosition, getSeatDirectionVector } from "./positionSeats";
 
 type Dimensions = { width: number; height: number };
 const CHILD_DIMENSIONS = [80, 112];
-const buffer = [1.3, 1.3];
+const buffer = [0.8, 0.8];
 
 export const getHeldPosition = (
   numPlayers: number,
@@ -60,7 +60,15 @@ export const getPlayedPosition = (
 
 export const getWaggle = (amt: number, amt2: number) => {
   const getAmt = () => randomBetween(amt, amt2);
-  return { rotate: [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4] };
+  return [
+    { rotate: 0 },
+    { rotate: getAmt() },
+    { rotate: 0 },
+    { rotate: -getAmt() },
+    { rotate: 0 },
+    { rotate: getAmt() },
+    { rotate: -getAmt() / 4 },
+  ];
 };
 
 export type TrickProps = {
@@ -92,14 +100,14 @@ export const positionTrick = (
   ) as (HTMLElement | undefined)[];
   const cardElsByPerspective = rotateArray(cardElsByPlayer, -perspective);
 
-  const dimensions = getNearestDimensions($trickContainer);
+  const [width, height] = getNearestDimensions($trickContainer);
 
   // Base styling
   // ------------
   cardElsByPerspective.forEach(($card, idx) => {
     if (!$card) return;
     style($card, {
-      ...getPlayedPosition(numPlayers, idx, dimensions),
+      ...getPlayedPosition(numPlayers, idx, { width, height }),
       rotate: 0,
     });
   });
@@ -110,14 +118,16 @@ export const positionTrick = (
     const $played = cardElsByPlayer[effect.player]!;
     const idx = cardElsByPerspective.indexOf($played);
     style($played, {
-      ...getHeldPosition(numPlayers, idx, dimensions),
+      ...getHeldPosition(numPlayers, idx, { width, height }),
       rotate: randomBetween(-40, 40),
+      opacity: 0,
     });
     return style(
       $played,
       {
-        ...getPlayedPosition(numPlayers, idx, dimensions),
+        ...getPlayedPosition(numPlayers, idx, { width, height }),
         rotate: 0,
+        opacity: 1,
       },
       {
         duration: randomBetween(400, 600),
@@ -139,13 +149,13 @@ export const positionTrick = (
   const winningPlayed = getPlayedPosition(
     numPlayers,
     cardElsByPerspective.indexOf($winningCard),
-    dimensions
+    { width, height }
   );
 
   const winningHold = getHeldPosition(
     numPlayers,
     cardElsByPerspective.indexOf($winningCard),
-    dimensions
+    { width, height }
   );
 
   return seq([
@@ -156,25 +166,31 @@ export const positionTrick = (
       }),
     () =>
       all(
-        losingCards.map(($card) =>
-          style(
-            $card,
-            {
-              ...winningPlayed,
-              rotate: randomBetween(-30, 30),
-            },
-            { duration: 300, delay: 375 }
-          )
+        losingCards.map(
+          ($card) =>
+            style(
+              $card,
+              {
+                ...winningPlayed,
+                rotate: randomBetween(-30, 30),
+              },
+              { duration: 300, delay: 375 }
+            )!
         )
       ),
     () =>
-      style(
-        cardEls,
-        {
-          ...winningHold,
-          rotate: 45,
-        },
-        { duration: 275, delay: 325 }
+      all(
+        cardEls.map(
+          ($card) =>
+            style(
+              $card,
+              {
+                ...winningHold,
+                rotate: 45,
+              },
+              { duration: 275, delay: 325 }
+            )!
+        )
       ),
     () => delay(500),
   ]);

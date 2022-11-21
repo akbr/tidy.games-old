@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { useClientLobby } from "../createHooks";
 
 import { Badge } from "@shared/components/Badge";
 import { Field } from "@shared/components/Field";
@@ -8,7 +9,6 @@ import { AppProps } from "../types";
 import type { Spec } from "../../core";
 import type { SocketMeta } from "../../server";
 import { avatars } from "../../server/";
-import { useEmitter } from "@lib/emitter";
 
 export const getRoomURL = (roomId = "") => {
   const host = window.location.hostname.replace("www.", "");
@@ -20,13 +20,16 @@ export const getRoomURL = (roomId = "") => {
 };
 
 export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
-  const { id, playerIndex } = useEmitter(client.appEmitter, (x) => x.loc);
-  const sockets = useEmitter(client.appEmitter, (x) => x.sockets);
+  const [id, playerIndex, socketsStatus] = useClientLobby(client)((x) => [
+    x.id,
+    x.playerIndex,
+    x.socketsStatus,
+  ]);
 
   const { game, serverActions } = client;
   const { addBot, start, leave } = serverActions;
 
-  const numPlayers = sockets.length;
+  const numPlayers = socketsStatus.length;
 
   const [options, setOptions] = useState(game.getOptions(numPlayers));
 
@@ -35,7 +38,7 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
   }, [numPlayers]);
 
   const isAdmin = playerIndex === 0;
-  const gameReady = sockets.length >= game.meta.players[0];
+  const gameReady = socketsStatus.length >= game.meta.players[0];
 
   /**
    *   const updateOptions = (nextOptions: S["options"]) =>
@@ -55,9 +58,11 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
     <div class="flex flex-col h-full justify-center items-center gap-4">
       <div class="text-center font-bold text-[64px] mb-2">{game.meta.name}</div>
       <ShareLink roomId={id} />
-      <Field legend={`🪑 Players (${sockets.length}/${game.meta.players[1]})`}>
+      <Field
+        legend={`🪑 Players (${socketsStatus.length}/${game.meta.players[1]})`}
+      >
         <div class="flex justify-center gap-1">
-          {sockets.map((player, idx) => {
+          {socketsStatus.map((player, idx) => {
             player = player || {};
             let isPlayer = idx === playerIndex;
             let style = {
@@ -127,8 +132,11 @@ function ShareLink({ roomId }: { roomId: string }) {
 }
 
 function SetMetaDialog<S extends Spec>({ client, setDialog }: AppProps<S>) {
-  const { playerIndex, id } = useEmitter(client.appEmitter, (x) => x.loc);
-  const sockets = useEmitter(client.appEmitter, (x) => x.sockets);
+  const [id, playerIndex, socketsStatus] = useClientLobby(client)((x) => [
+    x.id,
+    x.playerIndex,
+    x.socketsStatus,
+  ]);
 
   if (id === "") {
     setDialog(null);
@@ -137,7 +145,7 @@ function SetMetaDialog<S extends Spec>({ client, setDialog }: AppProps<S>) {
 
   return (
     <SetMeta
-      meta={sockets[playerIndex]}
+      meta={socketsStatus[playerIndex]}
       set={client.serverActions.setMeta}
       close={() => setDialog(null)}
     />

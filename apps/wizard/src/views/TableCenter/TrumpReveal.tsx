@@ -10,7 +10,7 @@ import { Card, splitCard } from "@shared/components/Card";
 import { waitFor } from "@src/control";
 
 const revealEffect = ($card: HTMLElement, suit: string) => {
-  const { width, height } = getNearestDimensions($card.parentElement!);
+  const [width, height] = getNearestDimensions($card.parentElement!);
   const $suit = $card.querySelector("#suit")!;
   const isWild = ["w", "j"].includes(suit);
 

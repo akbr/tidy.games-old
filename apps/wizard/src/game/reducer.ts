@@ -121,6 +121,7 @@ export const wizardReducer: Reducer<WizardSpec> = {
         return "Illegal play.";
       return a;
     },
+
     (b, a) => {
       const nextHands = b.hands.map((hand, i) =>
         i === a.player! ? hand.filter((card) => card !== a.data) : hand

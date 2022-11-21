@@ -1,12 +1,12 @@
 import { useState } from "preact/hooks";
+import { useClientTitle } from "../createHooks";
 
 import type { Spec } from "@lib/tabletop/core/spec";
 import { Field } from "./Utils";
 import { AppProps } from "../types";
-import { useEmitter } from "@lib/emitter";
 
 export default function Title<S extends Spec>({ client }: AppProps<S>) {
-  const connected = useEmitter(client.appEmitter, (x) => x.connected);
+  const connected = useClientTitle(client)((x) => x.connected);
   const [code, setCode] = useState("");
 
   const { meta } = client.game;

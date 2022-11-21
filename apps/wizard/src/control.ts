@@ -1,4 +1,4 @@
-import { initPreactApp } from "@lib/tabletop/initPreactApp";
+import { initPreactApp } from "@lib/tabletop/preact/initPreactApp";
 import { wizardGame } from "./game/game";
 
 const bundle = initPreactApp(wizardGame);
@@ -12,7 +12,8 @@ export const {
   dialogEmitter,
   setViews,
   setDialog,
-  useApp,
+  useTitle,
+  useLobby,
   useGame,
 } = bundle;
 

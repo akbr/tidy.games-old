@@ -1,9 +1,9 @@
-import { useApp, useGame, game, setDialog, serverActions } from "@src/control";
-import { Twemoji } from "@shared/components/Twemoji";
-
-import { ScoreTable } from "./ScoreTable";
-import { OptionsDisplay } from "./Options";
 import { ComponentChildren } from "preact";
+import { Twemoji } from "@shared/components/Twemoji";
+import { OptionsDialog } from "./Dialogs";
+import { ScoreTable } from "./ScoreTable";
+
+import { useGame, setDialog } from "@src/control";
 
 export const UiButtons = () => {
   return (
@@ -44,58 +44,10 @@ function ScoresButton() {
     <div
       class="cursor-pointer"
       onClick={() => {
-        setDialog(ScoreTableDialog);
+        setDialog(ScoreTable);
       }}
     >
       <Twemoji char={"🗒️"} size={36} />
     </div>
   );
-}
-
-function OptionsDialog() {
-  const loc = useApp((x) => x.loc);
-  const [ctx, playerIndex] = useGame((x) => [x.ctx, x.playerIndex]);
-
-  if (loc.id === "" || !ctx) {
-    setDialog(null);
-    return null;
-  }
-
-  return (
-    <>
-      <div class="flex flex-col gap-2">
-        <h2>{game.meta.name}</h2>
-        <div>
-          <span class="font-bold">Room:</span> {loc.id}
-        </div>
-        <div>
-          <span class="font-bold">Player:</span> {playerIndex}
-        </div>
-        <div class="flex flex-col max-w-xs gap-0.5">
-          <div class="font-bold">Ruleset</div>
-          <div class="text-sm pl-2">
-            <OptionsDisplay options={ctx.options} />
-          </div>
-        </div>
-      </div>
-      <br />
-      <div class="text-center">
-        <button
-          onClick={() => {
-            serverActions.leave();
-            setDialog(null);
-          }}
-        >
-          🛑 Leave game
-        </button>
-      </div>
-    </>
-  );
-}
-
-function ScoreTableDialog() {
-  const loc = useApp((x) => x.loc);
-  const scores = useGame((x) => x.board.scores);
-
-  return <ScoreTable scores={scores} room={loc} />;
 }

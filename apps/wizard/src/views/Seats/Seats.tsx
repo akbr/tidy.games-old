@@ -8,20 +8,21 @@ import { Twemoji } from "@shared/components/Twemoji";
 
 import { BidDisplay } from "./BidDisplay";
 
-import { useApp, useGame, waitFor } from "@src/control";
+import { useGame, waitFor } from "@src/control";
+import { useEffect } from "preact/hooks";
 
 export const Seats = () => {
-  const sockets = useApp((x) => x.sockets);
-  const { board, ctx, playerIndex } = useGame();
+  const { board, ctx, playerIndex, socketsStatus } = useGame();
   const { phase, bids, actuals, trickLeader } = board;
 
-  if (phase === "bidded") waitFor(1000);
+  useEffect(() => {
+    if (phase === "bidded") waitFor(1000);
+  }, [phase]);
 
-  const biddingActive =
-    phase === "bid" || phase === "bidded" || phase == "bidsEnd";
+  const biddingActive = ["bid", "bidded", "bidsEnd"].includes(phase);
 
   let seats = Array.from({ length: ctx.numPlayers }).map((_, playerIdx) => {
-    const { name, avatar } = sockets[playerIdx] || {};
+    const { name, avatar } = socketsStatus[playerIdx] || {};
     const vIdx = rotateIndex(ctx.numPlayers, playerIdx, -playerIndex);
     const bid = bids[playerIdx];
 
@@ -90,7 +91,7 @@ export const Seat = ({
             class="absolute animate-fadeIn"
             style={{ left: 0, top: 0, transform: "translate(-50%, -50%)" }}
           >
-            <Twemoji char={"🚩"} size={18} />
+            <Twemoji char={"🚩"} size={24} />
           </div>
         )}
         {isWaiting && (
@@ -100,7 +101,7 @@ export const Seat = ({
             style={{ left: "100%", top: 0, transform: "translate(-50%, -50%)" }}
           >
             <div class="animate-bounce">
-              <Twemoji char={"⏳"} size={18} />
+              <Twemoji char={"⏳"} size={24} />
             </div>
           </div>
         )}

@@ -2,19 +2,33 @@ import { is } from "@lib/compare";
 import type { Spec } from "./spec";
 import { AuthAction, Ctx, getReducerUpdate, ReducerUpdate } from "./reducer";
 import { Game } from "./game";
+import { l } from "vitest/dist/index-5f09f4d0";
 
 export type GameUpdate<S extends Spec> = {
-  playerIndex: number;
   prevBoard: S["board"];
   action?: AuthAction<S>;
-  boards: S["board"][];
+  boardSet: S["board"][];
   final: boolean;
   ctx: Ctx<S>;
 };
 
+export type History<S extends Spec> = {
+  startTime: number;
+  ctx: Ctx<S>;
+  actions: AuthAction<S>[];
+};
+
+export type HistoryResults<S extends Spec> = {
+  boardSets: S["board"][][];
+  final: boolean;
+};
+
+export type FullHistory<S extends Spec> = History<S> & HistoryResults<S>;
+
 export type GameStore<S extends Spec> = {
   get: (player?: number) => GameUpdate<S>;
   submit: (action: S["actions"], player: number) => string | void;
+  getHistory: () => History<S>;
 };
 
 type InputCtx<S extends Spec> = {
@@ -23,28 +37,66 @@ type InputCtx<S extends Spec> = {
   seed?: Ctx<S>["seed"];
 };
 
+export function getHistoryResults<S extends Spec>(
+  game: Game<S>,
+  history: History<S>
+): HistoryResults<S> | string {
+  const { ctx, actions } = history;
+
+  const initialBoard = game.getInitialBoard(ctx);
+  if (is.string(initialBoard)) return initialBoard;
+
+  const initialUpdate = getReducerUpdate(game.reducer, ctx, initialBoard);
+  if (is.string(initialUpdate))
+    return `Error on initialUpdate: ${initialUpdate}`;
+
+  const boardSets = [[initialBoard, ...initialUpdate.boardSet]];
+  let final = initialUpdate.final;
+  const actionQueue = [...actions];
+  while (actionQueue.length > 0) {
+    const action = actionQueue.shift()!;
+    const prevBoard = boardSets.at(-1)!.at(-1)!;
+    const res = getReducerUpdate(game.reducer, ctx, prevBoard, action);
+    if (is.string(res)) return res;
+    if (res.final && actionQueue.length > 0) return `Premtature final`;
+    final = res.final;
+    boardSets.push(res.boardSet);
+  }
+
+  return {
+    boardSets,
+    final,
+  };
+}
+
 export function createGameStore<S extends Spec>(
   game: Game<S>,
-  initCtx: InputCtx<S>
+  initCtx: InputCtx<S>,
+  initActions?: AuthAction<S>[]
 ): GameStore<S> | string {
   const ctx = validateContext(game, initCtx);
   if (is.string(ctx)) return ctx;
 
-  const initialGame = game.getInitialBoard(ctx);
-  if (is.string(initialGame)) return initialGame;
+  let actions: AuthAction<S>[] = initActions ? [...initActions] : [];
+  let startTime = Date.now();
+  let historyResults = getHistoryResults(game, {
+    startTime,
+    ctx,
+    actions,
+  });
 
-  const initialUpdate = getReducerUpdate(game.reducer, ctx, initialGame);
-  if (is.string(initialUpdate))
-    return `Error on initialUpdate: ${initialUpdate}`;
+  if (is.string(historyResults)) return historyResults;
 
-  let actions: AuthAction<S>[] = [];
-  let prevBoard = initialGame;
-  let prevReducerReducerUpdate: ReducerUpdate<S> = initialUpdate;
+  let final = historyResults.final;
+  let boardSet = historyResults.boardSets.at(-1)!;
+
+  //@ts-ignore
+  historyResults = null; // Garbage collection
 
   return {
     get: (player = -1) => {
       const { adjustBoard, adjustAction } = game;
-      const { boards, final } = prevReducerReducerUpdate;
+      const prevBoard = boardSet.at(-1)!;
       const lastAction = actions.at(-1);
 
       const adjPrevBoard = adjustBoard
@@ -52,8 +104,8 @@ export function createGameStore<S extends Spec>(
         : prevBoard;
 
       const adjBoards = adjustBoard
-        ? boards.map((g) => adjustBoard(g, player))
-        : boards;
+        ? boardSet.map((g) => adjustBoard(g, player))
+        : boardSet;
 
       const adjAction =
         adjustAction && lastAction
@@ -64,7 +116,7 @@ export function createGameStore<S extends Spec>(
         playerIndex: player,
         action: adjAction,
         prevBoard: adjPrevBoard,
-        boards: adjBoards,
+        boardSet: adjBoards,
         final,
         ctx,
       };
@@ -72,17 +124,22 @@ export function createGameStore<S extends Spec>(
 
     submit: (inputAction, player) => {
       const action = { ...inputAction, player, time: Date.now() };
-      const prev = prevReducerReducerUpdate.boards.at(-1)!;
-      const update = getReducerUpdate(game.reducer, ctx, prev, action);
+      const prevBoard = boardSet.at(-1)!;
+      const res = getReducerUpdate(game.reducer, ctx, prevBoard, action);
 
-      if (is.string(update)) return update;
-      if (update.boards.length === 0)
+      if (is.string(res)) return res;
+      if (res.boardSet.length === 0)
         return "Action returned no error but caused no state change.";
 
       actions.push(action);
-      prevBoard = prev;
-      prevReducerReducerUpdate = update;
+      boardSet = res.boardSet;
     },
+
+    getHistory: () => ({
+      startTime,
+      ctx,
+      actions,
+    }),
   };
 }
 

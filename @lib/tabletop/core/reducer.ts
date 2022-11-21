@@ -56,7 +56,7 @@ export type Reducer<S extends Spec> = Partial<{
 }>;
 
 export type ReducerUpdate<S extends Spec> = {
-  boards: S["board"][];
+  boardSet: S["board"][];
   final: boolean;
 };
 
@@ -66,13 +66,13 @@ export function getReducerUpdate<S extends Spec>(
   inputBoard: S["board"],
   action?: AuthAction<S>
 ): ReducerUpdate<S> | string {
-  const boards: S["board"][] = [];
+  const boardSet: S["board"][] = [];
 
   let final = false;
   let iterarting = true;
 
   while (iterarting) {
-    const priorGame = boards.at(-1) || inputBoard;
+    const priorGame = boardSet.at(-1) || inputBoard;
     const phase = priorGame.phase as S["board"]["phase"];
 
     const chartFn = reducer[phase];
@@ -107,14 +107,14 @@ export function getReducerUpdate<S extends Spec>(
 
     const game = result;
     if (Array.isArray(game)) {
-      boards.push(...game);
+      boardSet.push(...game);
     } else {
-      boards.push(game);
+      boardSet.push(game);
     }
   }
 
   return {
-    boards,
+    boardSet,
     final,
   };
 }

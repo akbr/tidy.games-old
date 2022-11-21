@@ -1,6 +1,7 @@
 import { createUseEmitter } from "@lib/emitter";
-import { createServer, createClient, Spec, Game } from ".";
-import { createViewManager } from "./preact";
+import { createServer, createClient, Spec, Game } from "..";
+import { createViewManager } from "./createViewManager";
+import { useClientTitle, useClientLobby, useClientGame } from "./createHooks";
 
 export function initPreactApp<S extends Spec>(
   game: Game<S>,
@@ -18,14 +19,18 @@ export function initPreactApp<S extends Spec>(
 
   const viewManager = createViewManager(client);
 
-  const useApp = createUseEmitter(client.appEmitter);
-  const useGame = createUseEmitter(client.gameEmitter);
+  const useClient = createUseEmitter(client.emitter);
+  const useTitle = useClientTitle(client);
+  const useLobby = useClientLobby(client);
+  const useGame = useClientGame(client);
 
   return {
     client,
     ...client,
     ...viewManager,
-    useApp,
+    useClient,
+    useTitle,
+    useLobby,
     useGame,
   };
 }

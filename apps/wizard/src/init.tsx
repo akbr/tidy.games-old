@@ -1,17 +1,10 @@
-import { setViews, serverActions, gameActions } from "./control";
+import { client, serverActions, setViews } from "./control";
 import { Game } from "./views/Game";
 
-const { join, addBot, start } = serverActions;
+setViews(document.body, { Game }, { dev: true });
+
+const { join, addBot, start, leave } = serverActions;
 join();
 addBot();
 addBot();
-addBot();
 start({ seed: "test" });
-
-setViews(
-  document.body,
-  {
-    Game,
-  },
-  { dev: true }
-);

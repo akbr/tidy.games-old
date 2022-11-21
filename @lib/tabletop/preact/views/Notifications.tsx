@@ -6,7 +6,7 @@ import { Spec } from "../../core/spec";
 import { AppProps } from "../types";
 
 export function Notifications<S extends Spec>(props: AppProps<S>) {
-  const connected = useEmitter(props.client.appEmitter, (x) => x.connected);
+  const connected = useEmitter(props.client.emitter, (x) => x.connected);
 
   return (
     <section id="errors" class="absolute bottom-2 left-2 z-50">
@@ -41,7 +41,7 @@ function ConnectionWarning({ connected }: { connected: boolean }) {
 }
 
 function ErrorReciever<S extends Spec>({ client }: AppProps<S>) {
-  const err = useEmitter(client.appEmitter, (x) => x.err); // This breaks b/c it shallow checks
+  const err = useEmitter(client.emitter, (x) => x.err); // This breaks b/c it shallow checks
   const [show, setShow] = useState(true);
 
   useLayoutEffect(() => {

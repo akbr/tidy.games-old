@@ -17,6 +17,7 @@ export type Meter<T> = {
   togglePlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
   toggleHistory: (val: boolean) => void;
   reset: (state: T) => void;
+  unlock: () => void;
 };
 
 export const createMeter = <T>(
@@ -27,7 +28,7 @@ export const createMeter = <T>(
   let idx = 0;
   let playing = true;
   let waitingFor: Task<any>[] = [];
-  let awaitedState: T | null = null;
+  let locked = false;
 
   function getStatus(): MeterStatus<T> {
     return {
@@ -42,10 +43,12 @@ export const createMeter = <T>(
   const { subscribe, get, next } = createEmitter(getStatus());
 
   function update() {
-    next(getStatus());
+    const status = getStatus();
+    next(status);
   }
 
   function updateState(nextIdx: number) {
+    if (locked) return;
     if (nextIdx < 0 || nextIdx > states.length - 1) return;
 
     idx = nextIdx;
@@ -55,21 +58,13 @@ export const createMeter = <T>(
       idx = 0;
     }
 
-    const myState = states[idx];
-    awaitedState = myState;
+    locked = true;
     update();
-
-    Promise.resolve().then(() => {
-      if (myState !== awaitedState) return;
-      awaitedState = null;
-      iterate();
-    });
   }
 
   function iterate(): false | void {
     const isWaiting = waitingFor.length > 0;
-
-    if (isWaiting || awaitedState || !playing) {
+    if (isWaiting || !playing) {
       update();
     } else {
       updateState(idx + 1);
@@ -83,13 +78,15 @@ export const createMeter = <T>(
       });
       waitingFor = [];
     }
+    locked = false;
   }
   return {
     emitter: { subscribe, get },
     reset: (state) => {
       clearWaiting();
       states = [state];
-      updateState(0);
+      idx = 0;
+      update();
     },
     pushStates: (...incoming) => {
       states = [...states, ...incoming];
@@ -122,6 +119,10 @@ export const createMeter = <T>(
       playing = false;
       clearWaiting();
       updateState(nextIdx);
+    },
+    unlock: () => {
+      locked = false;
+      iterate();
     },
   };
 };

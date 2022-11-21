@@ -38,10 +38,10 @@ const scorePopEffect = (
         return style(
           $el,
           {
-            scale: [1, 2, 1, 1, 1],
-            rotate: [0, -25, 0, 0, 0],
-            opacity: [1, 1, 1, 1, 0],
-            y: [0, 0, 0, 0, -15],
+            scale: 1,
+            rotate: 0,
+            opacity: 1,
+            y: 0,
           },
           { duration: 3500 }
         );

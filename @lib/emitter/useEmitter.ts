@@ -16,7 +16,8 @@ export function createUseEmitter<T>(
 ): UseEmitterHook<T> {
   return function <U>(selector?: Selector<T, U>, isEqual = shallow) {
     const curr = emitter.get();
-    const [state, setState] = useState(selector ? selector(curr) : curr);
+    const intial = selector ? selector(curr) : curr;
+    const [state, setState] = useState(intial);
     useLayoutEffect(
       () =>
         selector

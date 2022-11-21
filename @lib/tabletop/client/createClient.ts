@@ -1,18 +1,12 @@
-import {
-  createEmitter,
-  createSetFn,
-  ReadOnlyEmitter,
-  withSelector,
-} from "@lib/emitter";
+import { createEmitter, ReadOnlyEmitter, withSelector } from "@lib/emitter";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
 import { shallow, deepPatch } from "@lib/compare";
 
 import { Spec } from "../core/spec";
 import { AuthAction, Ctx } from "../core/reducer";
-import { Game, getCtx } from "../core/game";
-import { SocketMeta } from "../server";
-import { ServerActions, actionKeys, ServerApi } from "../server/createServer";
+import { Game } from "../core/game";
+import { ServerActions, actionKeys, ServerApi, SocketsStatus } from "../server";
 
 import {
   ActionFns,
@@ -21,30 +15,32 @@ import {
 } from "./createActionFns";
 
 export type AppState = {
-  mode: "title" | "lobby" | "game";
   connected: boolean;
-  loc: {
-    id: string;
-    playerIndex: number;
-    started: boolean;
-  };
-  sockets: (SocketMeta | null)[];
   err: { msg: string } | null;
 };
 
-export type GameFrame<S extends Spec> = {
+export type Room = {
+  id: string;
   playerIndex: number;
+  socketsStatus: SocketsStatus;
+};
+
+export type GameState<S extends Spec> = {
   board: S["board"];
   action: AuthAction<S> | null;
   ctx: Ctx<S>;
 };
 
+export type ClientState<S extends Spec> =
+  | ({ mode: "title" } & AppState)
+  | ({ mode: "lobby" } & AppState & Room)
+  | ({ mode: "game" } & AppState & Room & GameState<S>);
+
 export type Client<S extends Spec> = {
-  appEmitter: ReadOnlyEmitter<AppState>;
-  gameEmitter: ReadOnlyEmitter<GameFrame<S>>;
+  emitter: ReadOnlyEmitter<ClientState<S>>;
   serverActions: ActionFns<ServerActions<S>>;
   gameActions: ActionFns<S["actions"]>;
-  gameMeter: Meter<GameFrame<S> | null>;
+  gameMeter: Meter<GameState<S> | null>;
   game: Game<S>;
 };
 
@@ -52,102 +48,106 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   game: Game<S>
 ): Client<S> {
-  function getInitialAppState(connected = false): AppState {
-    return {
-      connected,
-      mode: "title",
-      loc: { id: "", playerIndex: -1, started: false },
-      sockets: [],
-      err: null,
-    };
-  }
+  // Internal Memory
+  // ---------------
+  let connected = false;
+  let err: { msg: string } | null = null;
+  let room: Room | null = null;
+  let socketsStatus: SocketsStatus = [];
+  let gameState = {} as GameState<S>;
 
-  const appEmitter = createEmitter(getInitialAppState());
-  const setApp = createSetFn(appEmitter);
+  let _started = false;
+  // -----------------
 
-  const _ctx = getCtx(game);
-  const _board = game.getInitialBoard(_ctx);
-  function getInitialGameFrame(): GameFrame<S> {
-    return {
-      playerIndex: 0,
-      board: _board,
-      action: null,
-      ctx: _ctx,
-    };
-  }
+  const emitter = createEmitter({
+    mode: "title",
+    connected,
+    err,
+  } as ClientState<S>);
 
-  const gameMeter = createMeter<GameFrame<S> | null>(null);
-  const gameEmitter = createEmitter(getInitialGameFrame());
+  const gameMeter = createMeter<GameState<S> | null>(null);
   withSelector(
     gameMeter.emitter,
     (x) => x.state,
     (state) => {
-      if (state === null) return;
-      gameEmitter.next(state);
+      if (state) {
+        gameState = state;
+        releaseState();
+        Promise.resolve().then(gameMeter.unlock);
+      }
+      err = null;
     }
   );
 
+  function releaseState() {
+    const state = {
+      mode: !room ? "title" : !_started ? "lobby" : "game",
+      connected,
+      err,
+      ...(room || {}),
+      socketsStatus,
+      ...gameState,
+    } as const;
+
+    emitter.next(state as ClientState<S>);
+  }
+
   const socket = createSocketManager(server, {
-    onopen: () => setApp({ connected: true }),
-    onclose: () => setApp({ connected: false }),
+    onopen: () => {
+      connected = true;
+      releaseState();
+    },
+    onclose: () => {
+      connected = false;
+      releaseState();
+    },
     onmessage: (res) => {
-      const currAppState = appEmitter.get();
+      if (res.serverErr) {
+        err = { msg: res.serverErr };
+      }
 
       if (res.loc === null) {
-        appEmitter.next(getInitialAppState(currAppState.connected));
+        room = null;
         gameMeter.reset(null);
+        releaseState();
         return;
       }
 
-      if (res.loc) {
-        if (!shallow(res.loc, currAppState.loc)) {
-          setApp({ mode: res.loc.started ? "game" : "lobby", loc: res.loc });
-        }
+      if (res.gameErr) {
+        err = { msg: res.gameErr };
       }
 
-      if (res.sockets) {
-        if (!shallow(res.sockets, currAppState.sockets)) {
-          setApp({ sockets: res.sockets });
-        }
+      //TK
+      if (res.historyString) {
+        console.log(`http://localhost:3000/analyze.html#` + res.historyString);
+        return;
       }
 
-      if (res.serverErr || res.gameErr) {
-        setApp({
-          err: { msg: (res.serverErr || res.gameErr) as string },
-        });
-      } else if (currAppState.err !== null) {
-        setApp({ err: null });
-      }
+      const { id, playerIndex, started } = res.loc;
+      const nextLoc = { id, playerIndex };
 
-      // > Game
+      _started = started;
+      socketsStatus = res.socketsStatus || socketsStatus;
+      room = {
+        ...nextLoc,
+        socketsStatus,
+      };
+
       if (res.gameUpdate) {
         const { gameUpdate } = res;
-
-        const meterState = gameMeter.emitter.get();
-        const latestMeterBoard = meterState.states.at(-1) || meterState.state;
-
-        const patchedBoards = gameUpdate.boards.map((game, idx) => {
-          const prev =
-            gameUpdate.boards[idx - 1] || latestMeterBoard?.board || {};
-          return deepPatch(game, prev);
+        let patchedBoards = gameUpdate.boardSet.map((board, idx) => {
+          const prev = gameUpdate.boardSet[idx - 1] || gameUpdate.prevBoard;
+          return deepPatch(board, prev);
         });
-
-        if (latestMeterBoard === null)
-          patchedBoards.unshift(gameUpdate.prevBoard);
-
         const meterUpdates = patchedBoards.map((board, idx) => ({
           board,
           action: idx === 0 ? gameUpdate.action || null : null,
-          playerIndex: gameUpdate.playerIndex,
           ctx: gameUpdate.ctx,
         }));
-
-        setApp({
-          mode: "game",
-        });
-
         gameMeter.pushStates(...meterUpdates);
       }
+
+      releaseState();
     },
   });
 
@@ -161,11 +161,12 @@ export function createClient<S extends Spec>(
   socket.open();
 
   return {
-    appEmitter,
-    gameEmitter,
+    emitter,
     serverActions,
     gameActions,
     gameMeter,
     game,
   };
 }
+
+export default createClient;

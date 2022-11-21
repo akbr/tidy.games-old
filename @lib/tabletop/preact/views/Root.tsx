@@ -33,7 +33,7 @@ export default Root;
 function ModeSwitcher<S extends Spec>(
   props: AppProps<S> & { views: AppViews<S> }
 ) {
-  const mode = useEmitter(props.client.appEmitter, (x) => x.mode);
+  const mode = useEmitter(props.client.emitter, (x) => x.mode);
 
   const {
     Title = DefaultTitle,

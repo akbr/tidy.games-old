@@ -1,12 +1,14 @@
-import { ComponentChildren } from "preact";
-import { useState, useRef, useLayoutEffect } from "preact/hooks";
-import { useDrag } from "@use-gesture/react";
+import { useState } from "preact/hooks";
 
 import { style } from "@lib/style";
+import { getNearestDimensions } from "@lib/dom";
 
 import { Card } from "@shared/components/Card";
-import { getHandCardPosition } from "@shared/domEffects/positionHand";
 import { getPlayedPosition } from "@shared/domEffects/positionTrick";
+import {
+  PositionHandCard,
+  PositionHandCardProps,
+} from "@shared/components/PositionHandCard";
 
 const cards = [
   "2|s",
@@ -34,6 +36,7 @@ const cards = [
 
 export function App() {
   const [err, set] = useState<any>(null);
+
   return (
     <div class="w-full h-full bg-slate-700 text-white">
       <div class="absolute top-0 right-0">
@@ -44,121 +47,37 @@ export function App() {
   );
 }
 
-export function Hand({ cards, resetRef }: { cards: string[]; resetRef: any }) {
-  return (
-    <>
-      {cards.map((id, idx) => (
-        <PositionHandCard idx={idx} numCards={cards.length}>
-          <DragComponent data={id} key={id} cancelRef={resetRef}>
-            <Card card={id} />
-          </DragComponent>
-        </PositionHandCard>
-      ))}
-    </>
-  );
-}
-
-function PositionHandCard({
-  idx,
-  numCards,
-  children,
-}: {
-  idx: number;
-  numCards: number;
-  children: ComponentChildren;
-}) {
-  let [x, y, zIndex] = getHandCardPosition(idx, numCards);
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        transform: `translate(${x}px, ${y}px`,
-        transition: "transform 300ms",
-        zIndex,
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function shouldDrop(mx: number, my: number) {
   return my < -50;
 }
 
-function onDrop(id: string, $el: HTMLElement, [mx, my]: number[]) {
-  const r = $el.getBoundingClientRect();
+const onDrop: PositionHandCardProps["onDrop"] = ($el, card) => {
+  const [width, height] = getNearestDimensions($el);
   const { x, y } = getPlayedPosition(2, 0, {
-    width: window.innerWidth,
-    height: window.innerHeight - 100,
+    width,
+    height,
   });
-  const tx = x;
-  const ty = y;
-  style(
-    $el,
-    {
-      x: mx - r.x + tx,
-      y: my - r.y + ty,
-    },
-    { duration: 250 }
-  );
-}
+  style($el, { x, y }, { duration: 250 })?.finished.then(() => {
+    console.log("playing", card);
+  });
+};
 
-function DragComponent({
-  children,
-  data,
-  cancelRef,
-}: {
-  children: ComponentChildren;
-  data: string;
-  cancelRef?: any;
-}) {
-  const [state, setState] = useState<"free" | "playing">("free");
-  const ref = useRef(null);
-  const bind = useDrag(
-    ({ down, movement: [mx, my], target, cancel }) => {
-      const $el: HTMLElement = ref.current!;
-
-      if (down) {
-        style($el, { x: mx, y: my });
-      }
-
-      if (!down) {
-        const dropped = shouldDrop ? shouldDrop(mx, my) : false;
-        if (onDrop && dropped) {
-          onDrop(data, $el, [mx, my]);
-          cancel();
-          setState("playing");
-        } else {
-          style($el, { x: 0, y: 0, rotate: 0 }, { duration: 250 });
-        }
-      }
-    },
-    { enabled: state === "free" }
-  );
-
-  useLayoutEffect(() => {
-    if (cancelRef && state === "playing") {
-      style(
-        ref.current!,
-        { x: 0, y: 0, rotate: 0 },
-        { duration: 250 }
-      ).finished.then(() => setState("free"));
-    }
-  }, [cancelRef]);
-
+export function Hand({ cards, resetRef }: { cards: string[]; resetRef: any }) {
   return (
-    <div
-      ref={ref}
-      class="absolute"
-      style={{
-        touchAction: "none",
-      }}
-      {...bind()}
-    >
-      {children}
-    </div>
+    <>
+      {cards.map((id, idx) => (
+        <PositionHandCard
+          key={id}
+          idx={idx}
+          numCards={cards.length}
+          card={id}
+          errRef={resetRef}
+          shouldDrop={shouldDrop}
+          onDrop={onDrop}
+        >
+          <Card key={id} card={id} />
+        </PositionHandCard>
+      ))}
+    </>
   );
 }
