@@ -1,5 +1,4 @@
 import type { Spec } from "./spec";
-import type { Reducer, Ctx, AuthAction } from "./reducer";
 
 export type Game<S extends Spec> = {
   meta: {
@@ -11,8 +10,29 @@ export type Game<S extends Spec> = {
   reducer: Reducer<S>;
   actionKeys: ActionKeys<S["actions"]>;
   adjustBoard?: (board: S["board"], player: number) => S["board"];
-  adjustAction?: (action: AuthAction<S>, player: number) => AuthAction<S>;
+  adjustAction?: (action: PlayerAction<S>, player: number) => PlayerAction<S>;
   botFn?: BotFn<S>;
+};
+
+export type Reducer<S extends Spec> = (
+  lastBoard: S["board"],
+  ctx: Ctx<S>,
+  action?: PlayerAction<S>
+) =>
+  | {
+      boards: S["board"][];
+      final: boolean;
+    }
+  | string;
+
+export type Ctx<S extends Spec> = {
+  numPlayers: number;
+  options: S["options"];
+  seed: string;
+};
+
+export type PlayerAction<S extends Spec> = S["actions"] & {
+  player: number;
 };
 
 export type ActionKeys<Actions extends { type: string }> = {

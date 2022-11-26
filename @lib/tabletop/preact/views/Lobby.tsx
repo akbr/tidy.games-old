@@ -5,7 +5,7 @@ import { Badge } from "@shared/components/Badge";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 
-import { AppProps } from "../types";
+import { AppProps, OptionsView } from "../types";
 import type { Spec } from "../../core";
 import type { SocketMeta } from "../../server";
 import { avatars } from "../../server/";
@@ -19,7 +19,11 @@ export const getRoomURL = (roomId = "") => {
   return [location.protocol, "//", host, port, path, hash].join("");
 };
 
-export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
+export default function DefaultLobby<S extends Spec>({
+  client,
+  setDialog,
+  Options,
+}: AppProps<S> & { Options?: OptionsView<S> }) {
   const [id, playerIndex, socketsStatus] = useClientLobby(client)((x) => [
     x.id,
     x.playerIndex,
@@ -40,19 +44,8 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
   const isAdmin = playerIndex === 0;
   const gameReady = socketsStatus.length >= game.meta.players[0];
 
-  /**
-   *   const updateOptions = (nextOptions: S["options"]) =>
-    setOptions(cart.getOptions(numPlayers, nextOptions));
-          {OptionsView && (
-            <Field legend="Options">
-              <OptionsView
-                options={options}
-                updateOptions={updateOptions}
-                numPlayers={numPlayers}
-              />
-            </Field>
-          )}
- */
+  const updateOptions = (nextOptions: S["options"]) =>
+    setOptions(game.getOptions(numPlayers, nextOptions));
 
   return (
     <div class="flex flex-col h-full justify-center items-center gap-4">
@@ -75,7 +68,7 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
                 class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
                 style={style}
                 onClick={() => {
-                  //if (isPlayer) setDialog(SetMetaDialog);
+                  if (isPlayer) setDialog(SetMetaDialog);
                 }}
               >
                 <Badge {...{ ...player, player: idx }}></Badge>
@@ -87,6 +80,15 @@ export default function DefaultLobby<S extends Spec>({ client }: AppProps<S>) {
           })}
         </div>
       </Field>
+      {Options && (
+        <Field legend="Options">
+          <Options
+            numPlayers={numPlayers}
+            options={options}
+            setOptions={updateOptions}
+          />
+        </Field>
+      )}
       {isAdmin ? (
         <>
           <button onClick={() => start({ options })} disabled={!gameReady}>

@@ -1,13 +1,12 @@
 import { Spec } from "../../core";
-import { GameFrame } from "../../client";
 import { JSONDiff } from "@lib/meter/preact";
 
 export function StateDisplay<S extends Spec>({
   curr,
   prev,
 }: {
-  curr: GameFrame<S>;
-  prev?: GameFrame<S>;
+  curr: any;
+  prev?: any;
 }) {
   return (
     <>

@@ -1,4 +1,4 @@
-import { AppViews } from "@lib/tabletop/preact/App";
+import { OptionsView } from "@lib/tabletop";
 import { WizardSpec } from "../game/spec";
 
 export const BidsDescript = () => (
@@ -24,10 +24,10 @@ export const OptionsDisplay = ({
   );
 };
 
-export const OptionsView: AppViews<WizardSpec>["OptionsView"] = ({
+export const Options: OptionsView<WizardSpec> = ({
   numPlayers,
   options,
-  updateOptions,
+  setOptions,
 }) => {
   return (
     <table>
@@ -41,7 +41,7 @@ export const OptionsView: AppViews<WizardSpec>["OptionsView"] = ({
             max={60 / numPlayers}
             value={options.numRounds > 30 ? 30 : options.numRounds}
             onChange={(e: any) =>
-              updateOptions({
+              setOptions({
                 ...options,
                 numRounds: parseInt(e.target.value, 10),
               })
@@ -61,7 +61,7 @@ export const OptionsView: AppViews<WizardSpec>["OptionsView"] = ({
             name="evenBids"
             checked={options.canadian}
             onChange={(e: any) =>
-              updateOptions({ ...options, canadian: e.target.checked })
+              setOptions({ ...options, canadian: e.target.checked })
             }
           />
         </td>
@@ -72,3 +72,4 @@ export const OptionsView: AppViews<WizardSpec>["OptionsView"] = ({
     </table>
   );
 };
+export default Options;

@@ -43,7 +43,8 @@ export function deep(a: any, b: any): boolean {
       return true;
     }
 
-    if (a instanceof Map && b instanceof Map) {
+    /**
+ *     if (a instanceof Map && b instanceof Map) {
       if (a.size !== b.size) return false;
       for (i of a.entries()) if (!b.has(i[0])) return false;
       for (i of a.entries()) if (!deep(i[1], b.get(i[0]))) return false;
@@ -56,6 +57,7 @@ export function deep(a: any, b: any): boolean {
       return true;
     }
 
+ */
     if (a.constructor === RegExp)
       return a.source === b.source && a.flags === b.flags;
     if (a.valueOf !== Object.prototype.valueOf)

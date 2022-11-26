@@ -1,4 +1,4 @@
-import { Reducer, withAction } from "@lib/tabletop";
+import { createPhaseReducer, withAction } from "@lib/tabletop";
 import { rotateIndex } from "@lib/array";
 
 import { WizardSpec } from "./spec";
@@ -33,7 +33,7 @@ export const getNextRound = (
   return nextRound;
 };
 
-export const wizardReducer: Reducer<WizardSpec> = {
+export const wizardReducer = createPhaseReducer<WizardSpec>({
   roundStart: (b, c) => {
     const { hands } = getDeal(c.numPlayers, b.round, c.seed + b.round);
 
@@ -188,4 +188,4 @@ export const wizardReducer: Reducer<WizardSpec> = {
   },
 
   end: () => true,
-};
+});

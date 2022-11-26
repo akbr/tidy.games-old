@@ -7,7 +7,7 @@ export default function DefaultBackrop({
 }) {
   return (
     <section
-      type="Backdrop"
+      id="tabletop-backdrop"
       class="h-full w-full flex justify-center bg-[#2a1b0e]"
     >
       {children}

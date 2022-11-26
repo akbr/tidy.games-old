@@ -11,8 +11,7 @@ import {
 import { createGameStore } from "../core/store";
 import { createBotSocket } from "./createBotSocket";
 import { createGameHost } from "./createGameHost";
-import { getRandomRoomID, getSeatNumber } from "./utils";
-import LZString from "lz-string";
+import { encodeHistory, getRandomRoomID, getSeatNumber } from "./utils";
 
 export function createServer<S extends Spec>(game: Game<S>) {
   // State
@@ -251,9 +250,7 @@ export function createServer<S extends Spec>(game: Game<S>) {
     if (!room) return { serverErr: "You are not in a room." };
     if (!room.store) return { serverErr: "This room's game has not started." };
     const history = room.store.getHistory();
-    const historyString = LZString.compressToEncodedURIComponent(
-      JSON.stringify(history)
-    );
+    const historyString = encodeHistory(history);
     dispatch(socket, { historyString });
   }
 

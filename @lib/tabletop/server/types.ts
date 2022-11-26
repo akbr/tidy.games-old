@@ -1,6 +1,6 @@
 import type { Socket, SocketServer } from "@lib/socket";
 import type { Spec } from "../core/spec";
-import type { GameStore, GameUpdate } from "../core/store";
+import type { GameStore, StoreUpdate } from "../core/store";
 import { GameHost } from "./createGameHost";
 
 export type Loc = {
@@ -39,7 +39,7 @@ export type ServerInputs<S extends Spec> =
 
 export type ServerOutputData<S extends Spec> = {
   socketsStatus?: SocketsStatus;
-  gameUpdate?: GameUpdate<S>;
+  gameUpdate?: StoreUpdate<S>;
   serverErr?: string;
   gameErr?: string;
   historyString?: string;

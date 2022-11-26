@@ -2,10 +2,13 @@ import { createUseEmitter } from "@lib/emitter";
 import { createServer, createClient, Spec, Game } from "..";
 import { createViewManager } from "./createViewManager";
 import { useClientTitle, useClientLobby, useClientGame } from "./createHooks";
+import { attachHashListener } from "../client/plugins";
 
 export function initPreactApp<S extends Spec>(
   game: Game<S>,
-  { dev } = { dev: location.hostname === "localhost" }
+  { dev } = {
+    dev: location.hostname === "localhost" && location.port === "3000",
+  }
 ) {
   const server = dev
     ? createServer(game)
@@ -13,9 +16,9 @@ export function initPreactApp<S extends Spec>(
 
   const client = createClient(server, game);
 
-  client.gameMeter.toggleHistory(dev);
+  client.gameMeter.toggleHistory(true);
 
-  // attachListeners(client);
+  attachHashListener(client);
 
   const viewManager = createViewManager(client);
 

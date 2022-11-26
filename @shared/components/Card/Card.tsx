@@ -54,7 +54,7 @@ export const MiniCard = ({
   return (
     <div class="inline-block">
       <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
-        {showValue && (
+        {showValue && values[value] && (
           <div class="w-4 h-4" style={{ fill: color }}>
             {values[value]()}
           </div>

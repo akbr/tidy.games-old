@@ -1,21 +1,18 @@
 import { is } from "@lib/compare";
 import type { Spec } from "./spec";
-import { AuthAction, Ctx, getReducerUpdate, ReducerUpdate } from "./reducer";
-import { Game } from "./game";
-import { l } from "vitest/dist/index-5f09f4d0";
+import type { Game, PlayerAction, Ctx } from "./game";
 
-export type GameUpdate<S extends Spec> = {
-  prevBoard: S["board"];
-  action?: AuthAction<S>;
-  boardSet: S["board"][];
-  final: boolean;
+export type StoreUpdate<S extends Spec> = {
   ctx: Ctx<S>;
+  prevBoard: S["board"];
+  action?: PlayerAction<S>;
+  boards: S["board"][];
+  final: boolean;
 };
 
 export type History<S extends Spec> = {
-  startTime: number;
   ctx: Ctx<S>;
-  actions: AuthAction<S>[];
+  actions: PlayerAction<S>[];
 };
 
 export type HistoryResults<S extends Spec> = {
@@ -26,7 +23,7 @@ export type HistoryResults<S extends Spec> = {
 export type FullHistory<S extends Spec> = History<S> & HistoryResults<S>;
 
 export type GameStore<S extends Spec> = {
-  get: (player?: number) => GameUpdate<S>;
+  get: (player?: number) => StoreUpdate<S>;
   submit: (action: S["actions"], player: number) => string | void;
   getHistory: () => History<S>;
 };
@@ -46,21 +43,22 @@ export function getHistoryResults<S extends Spec>(
   const initialBoard = game.getInitialBoard(ctx);
   if (is.string(initialBoard)) return initialBoard;
 
-  const initialUpdate = getReducerUpdate(game.reducer, ctx, initialBoard);
+  const initialUpdate = game.reducer(initialBoard, ctx);
+
   if (is.string(initialUpdate))
     return `Error on initialUpdate: ${initialUpdate}`;
 
-  const boardSets = [[initialBoard, ...initialUpdate.boardSet]];
+  const boardSets = [[initialBoard, ...initialUpdate.boards]];
   let final = initialUpdate.final;
   const actionQueue = [...actions];
   while (actionQueue.length > 0) {
     const action = actionQueue.shift()!;
     const prevBoard = boardSets.at(-1)!.at(-1)!;
-    const res = getReducerUpdate(game.reducer, ctx, prevBoard, action);
+    const res = game.reducer(prevBoard, ctx, action);
     if (is.string(res)) return res;
     if (res.final && actionQueue.length > 0) return `Premtature final`;
     final = res.final;
-    boardSets.push(res.boardSet);
+    boardSets.push(res.boards);
   }
 
   return {
@@ -72,31 +70,30 @@ export function getHistoryResults<S extends Spec>(
 export function createGameStore<S extends Spec>(
   game: Game<S>,
   initCtx: InputCtx<S>,
-  initActions?: AuthAction<S>[]
+  initActions?: PlayerAction<S>[]
 ): GameStore<S> | string {
   const ctx = validateContext(game, initCtx);
   if (is.string(ctx)) return ctx;
 
-  let actions: AuthAction<S>[] = initActions ? [...initActions] : [];
-  let startTime = Date.now();
-  let historyResults = getHistoryResults(game, {
-    startTime,
+  let actions: PlayerAction<S>[] = initActions ? [...initActions] : [];
+
+  let initialHistory = getHistoryResults(game, {
     ctx,
     actions,
   });
 
-  if (is.string(historyResults)) return historyResults;
+  if (is.string(initialHistory)) return initialHistory;
 
-  let final = historyResults.final;
-  let boardSet = historyResults.boardSets.at(-1)!;
+  let final = initialHistory.final;
+  let boards = initialHistory.boardSets.at(-1)!;
 
   //@ts-ignore
-  historyResults = null; // Garbage collection
+  initialHistory = null; // Garbage collection
 
   return {
     get: (player = -1) => {
       const { adjustBoard, adjustAction } = game;
-      const prevBoard = boardSet.at(-1)!;
+      const prevBoard = boards.at(-1)!;
       const lastAction = actions.at(-1);
 
       const adjPrevBoard = adjustBoard
@@ -104,8 +101,8 @@ export function createGameStore<S extends Spec>(
         : prevBoard;
 
       const adjBoards = adjustBoard
-        ? boardSet.map((g) => adjustBoard(g, player))
-        : boardSet;
+        ? boards.map((g) => adjustBoard(g, player))
+        : boards;
 
       const adjAction =
         adjustAction && lastAction
@@ -116,27 +113,26 @@ export function createGameStore<S extends Spec>(
         playerIndex: player,
         action: adjAction,
         prevBoard: adjPrevBoard,
-        boardSet: adjBoards,
+        boards: adjBoards,
         final,
         ctx,
       };
     },
 
     submit: (inputAction, player) => {
-      const action = { ...inputAction, player, time: Date.now() };
-      const prevBoard = boardSet.at(-1)!;
-      const res = getReducerUpdate(game.reducer, ctx, prevBoard, action);
+      const action = { ...inputAction, player };
+      const prevBoard = boards.at(-1)!;
+      const res = game.reducer(prevBoard, ctx, action);
 
       if (is.string(res)) return res;
-      if (res.boardSet.length === 0)
+      if (res.boards.length === 0)
         return "Action returned no error but caused no state change.";
 
       actions.push(action);
-      boardSet = res.boardSet;
+      boards = res.boards;
     },
 
     getHistory: () => ({
-      startTime,
       ctx,
       actions,
     }),

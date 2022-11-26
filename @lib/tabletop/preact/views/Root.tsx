@@ -10,6 +10,7 @@ import DefaultLobby from "./Lobby";
 import DefaultGame from "./Game";
 import Notifications from "./Notifications";
 import DialogFeeder from "./DialogFeeder";
+import views from "apps/condottiere/src/views";
 
 export function Root<S extends Spec>(
   props: AppProps<S> & { views: AppViews<S> }
@@ -41,10 +42,15 @@ function ModeSwitcher<S extends Spec>(
     Game = DefaultGame,
   } = props.views;
 
+  const lobbyProps = {
+    ...props,
+    Options: props.views.Options,
+  };
+
   return (
     <>
       {mode === "title" && <Title {...props} />}
-      {mode === "lobby" && <Lobby {...props} />}
+      {mode === "lobby" && <Lobby {...lobbyProps} />}
       {mode === "game" && <Game {...props} />}
     </>
   );

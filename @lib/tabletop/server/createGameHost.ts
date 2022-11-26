@@ -1,5 +1,5 @@
 import { Spec } from "../core/spec";
-import { GameStore, GameUpdate } from "../core/store";
+import { GameStore, StoreUpdate } from "../core/store";
 
 export type GameHost<S extends Spec> = {
   submit: (req: Req<S>) => string | void;
@@ -14,7 +14,7 @@ export type Req<S extends Spec> = {
 export const createGameHost = <S extends Spec>(
   store: GameStore<S>,
   callbacks: {
-    onUpdate: (playerIndex: number, gameUpdate: GameUpdate<S>) => void;
+    onUpdate: (playerIndex: number, gameUpdate: StoreUpdate<S>) => void;
     onErr: (playerIndex: number, gameErr: string) => void;
   }
 ): GameHost<S> => {

@@ -10,6 +10,8 @@ export default defineConfig({
       "~src": path.resolve(__dirname, "./src"),
       "@lib": path.resolve(__dirname, "../../@lib"),
       "@shared": path.resolve(__dirname, "../../@shared"),
+      react: "preact/compat",
+      "react-dom": "preact/compat",
     },
   },
   plugins: [preact()],

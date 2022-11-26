@@ -14,7 +14,7 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
-import { useGame } from "~src/control";
+import { useGame, client } from "~src/control";
 
 export const Game = () => {
   return (
@@ -56,7 +56,12 @@ function Table({ children }: { children: ComponentChildren }) {
   }, [refreshSymbol]);
 
   return (
-    <section ref={ref} id="table" class="relative w-[700px] min-w-[400px]">
+    <section
+      ref={ref}
+      id="table"
+      class="relative w-[700px] min-w-[400px]"
+      onClick={() => client.gameMeter.setIdx((i) => i + 1)}
+    >
       {children}
     </section>
   );

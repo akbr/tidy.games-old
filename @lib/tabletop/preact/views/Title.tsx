@@ -13,7 +13,10 @@ export default function Title<S extends Spec>({ client }: AppProps<S>) {
   const { join } = client.serverActions;
 
   return (
-    <div class="flex flex-col h-full justify-center items-center gap-14 ">
+    <section
+      id="tabletop-title"
+      class="flex flex-col h-full justify-center items-center gap-14"
+    >
       <div class="text-center font-bold text-[64px]">{meta.name}</div>
       <div class="flex flex-col items-center gap-4">
         <Field legend="✨ New game">
@@ -47,6 +50,6 @@ export default function Title<S extends Spec>({ client }: AppProps<S>) {
           </div>
         </Field>
       </div>
-    </div>
+    </section>
   );
 }

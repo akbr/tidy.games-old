@@ -1,7 +1,7 @@
 import { Spec, Client } from "../../";
 
 export function attachLocalStorageMeta<S extends Spec>(client: Client<S>) {
-  client.subscribe(({ frame: { state, room } }) => {
+  client.emitter.subscribe((state) => {
     const isLobby = !state && room;
 
     if (isLobby) {

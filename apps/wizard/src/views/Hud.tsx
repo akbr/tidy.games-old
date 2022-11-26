@@ -8,31 +8,15 @@ import { useGame } from "~src/control";
 
 export const Hud = () => {
   return (
-    <Position>
-      <Container>
+    <section id="hud" class="absolute top-0 right-0 ">
+      <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
         <RoundDisplay />
         <TrumpDisplay />
         <BidDisplay />
-      </Container>
-    </Position>
+      </div>
+    </section>
   );
 };
-
-function Position({ children }: { children: ComponentChildren }) {
-  return <div class="absolute top-0 right-0 "> {children}</div>;
-}
-
-function Container({ children }: { children: ComponentChildren }) {
-  return (
-    <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
-      {children}
-    </div>
-  );
-}
-
-function AnimateIn({ children }: { children: ComponentChildren }) {
-  return <div class="animate-fadeIn">{children}</div>;
-}
 
 function RoundDisplay() {
   const round = useGame((x) => x.board.round);
@@ -100,4 +84,8 @@ function BidDisplay() {
       </div>
     </AnimateIn>
   );
+}
+
+function AnimateIn({ children }: { children: ComponentChildren }) {
+  return <div class="animate-fadeIn">{children}</div>;
 }

@@ -1,27 +1,35 @@
 import { Spec, Client } from "../../";
 
 export function attachHashListener<S extends Spec>(client: Client<S>) {
-  const { get, subscribe } = client;
-
   function reactToHash() {
-    const {
-      frame: { room },
-    } = get();
-    const { id, player } = getHash();
+    const state = client.emitter.get();
 
-    if (room && room.id === id && room.player === player) return;
-    if (id) {
-      client.actions.server.join({ id, seatIndex: player });
+    const hash = getHash();
+
+    if (
+      "id" in state &&
+      state.id === hash.id &&
+      state.playerIndex === hash.player
+    )
+      return;
+
+    if (hash.id) {
+      client.serverActions.join({ id: hash.id, playerIndex: hash.player });
     } else {
-      client.actions.server.leave();
+      client.serverActions.leave();
     }
   }
 
   reactToHash();
   window.onhashchange = () => reactToHash();
 
-  const un = subscribe(({ frame: { room } }) => {
-    replaceHash(room ? { id: room.id, player: room.player } : {});
+  const un = client.emitter.subscribe((s) => {
+    if (s.mode === "title") {
+      replaceHash();
+      return;
+    }
+    const { id, playerIndex } = s;
+    replaceHash({ id, player: playerIndex });
   });
 
   return () => {

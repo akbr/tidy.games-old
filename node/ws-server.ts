@@ -1,4 +1,4 @@
-import { Server } from "ws";
+import { WebSocketServer } from "ws";
 import type { Socket } from "@lib/socket";
 import type { ServerApi } from "@lib/tabletop/server";
 
@@ -6,7 +6,7 @@ export const mountWSServer = (
   expressServer: any,
   roomServers: Record<string, ServerApi<any>>
 ) => {
-  const wss = new Server({ server: expressServer });
+  const wss = new WebSocketServer({ server: expressServer });
   addHeartbeat(wss);
 
   wss.on("connection", function (ws, req) {
@@ -38,7 +38,7 @@ export const mountWSServer = (
   });
 };
 
-function addHeartbeat(wss: Server, ms = 25000) {
+function addHeartbeat(wss: any, ms = 25000) {
   function noop() {}
   function heartbeat() {
     //@ts-ignore
@@ -46,7 +46,7 @@ function addHeartbeat(wss: Server, ms = 25000) {
   }
 
   const interval = setInterval(function ping() {
-    wss.clients.forEach(function each(ws) {
+    wss.clients.forEach(function each(ws: any) {
       //@ts-ignore
       if (ws.isAlive === false) return ws.terminate();
       //@ts-ignore
@@ -55,7 +55,7 @@ function addHeartbeat(wss: Server, ms = 25000) {
     });
   }, ms);
 
-  wss.on("connection", function (ws) {
+  wss.on("connection", function (ws: any) {
     //@ts-ignore
     ws.isAlive = true;
     //@ts-ignore

@@ -14,7 +14,7 @@ export function Notifications<S extends Spec>(props: AppProps<S>) {
   const connected = useEmitter(props.client.emitter, (x) => x.connected);
 
   return (
-    <section id="errors" class="absolute bottom-2 left-2 z-50">
+    <section id="tabletop-notifications" class="absolute bottom-2 left-2 z-50">
       <ErrorReciever err={err} />
       <ConnectionWarning connected={connected} />
     </section>

@@ -60,15 +60,7 @@ export const getPlayedPosition = (
 
 export const getWaggle = (amt: number, amt2: number) => {
   const getAmt = () => randomBetween(amt, amt2);
-  return [
-    { rotate: 0 },
-    { rotate: getAmt() },
-    { rotate: 0 },
-    { rotate: -getAmt() },
-    { rotate: 0 },
-    { rotate: getAmt() },
-    { rotate: -getAmt() / 4 },
-  ];
+  return [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4];
 };
 
 export type TrickProps = {
@@ -94,13 +86,15 @@ export const positionTrick = (
   // Create collections
   // ------------------
   const cardEls = Array.from($trickContainer.children) as HTMLElement[];
+  if (cardEls.length === 0) return;
+
   const cardElsByPlayer = rotateArray(
     Array.from({ length: numPlayers }, (_, idx) => cardEls[idx]),
     leadPlayer
   ) as (HTMLElement | undefined)[];
   const cardElsByPerspective = rotateArray(cardElsByPlayer, -perspective);
 
-  const [width, height] = getNearestDimensions($trickContainer);
+  const [width, height] = getNearestDimensions(cardEls[0]);
 
   // Base styling
   // ------------
@@ -160,10 +154,14 @@ export const positionTrick = (
 
   return seq([
     () =>
-      style($winningCard, getWaggle(10, 20), {
-        duration: 750,
-        delay: 500,
-      }),
+      style(
+        $winningCard,
+        { rotate: getWaggle(10, 20) },
+        {
+          duration: 750,
+          delay: 500,
+        }
+      ),
     () =>
       all(
         losingCards.map(

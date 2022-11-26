@@ -19,9 +19,9 @@ export const createBotSocket = <S extends Spec>(
       gameUpdate,
       loc: { playerIndex },
     } = res;
-    const { boardSet, ctx } = gameUpdate;
+    const { boards, ctx } = gameUpdate;
 
-    boardSet.forEach((board) => {
+    boards.forEach((board) => {
       const action = botFn(board, ctx, playerIndex);
       if (action) botSend(action);
     });

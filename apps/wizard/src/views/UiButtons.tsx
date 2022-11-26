@@ -7,21 +7,17 @@ import { useGame, setDialog } from "~src/control";
 
 export const UiButtons = () => {
   return (
-    <Position>
+    <section id="uiButtons" class="absolute top-0 left-0">
       <Box>
         <OptionsButton />
         <ScoresButton />
       </Box>
-    </Position>
+    </section>
   );
 };
 
-function Position({ children }: { children: ComponentChildren }) {
-  return <div class="absolute top-0 left-0 m-1">{children}</div>;
-}
-
 function Box({ children }: { children: ComponentChildren }) {
-  return <div class="flex gap-2 p-2">{children}</div>;
+  return <div class="flex gap-3 p-3">{children}</div>;
 }
 
 function OptionsButton() {

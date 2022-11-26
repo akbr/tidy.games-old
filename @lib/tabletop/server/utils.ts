@@ -1,4 +1,11 @@
+import {
+  compressToEncodedURIComponent,
+  decompressFromEncodedURIComponent,
+} from "lz-string";
+
 import { randomBetween } from "@lib/random";
+import { Spec } from "../core";
+import { History } from "../core/store";
 
 export const getRandomRoomID = (length = 4) =>
   String.fromCharCode(
@@ -33,4 +40,28 @@ export function getSeatNumber(
   }
 
   return requestedSeat;
+}
+
+export function encodeHistory<S extends Spec>(history: History<S>) {
+  const modHistory = {
+    ...history,
+    actions: history.actions.map(({ type, data, player }) => [
+      type,
+      data,
+      player,
+    ]),
+  };
+  return compressToEncodedURIComponent(JSON.stringify(modHistory));
+}
+
+export function decodeHistory<S extends Spec>(encodedURI: string) {
+  const modHistory = JSON.parse(
+    decompressFromEncodedURIComponent(encodedURI)!
+  ) as any;
+  const actions = modHistory.actions.map(([type, data, player]: any) => ({
+    type,
+    data,
+    player,
+  }));
+  return { ...modHistory, actions } as History<S>;
 }

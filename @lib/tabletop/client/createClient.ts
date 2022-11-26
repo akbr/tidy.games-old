@@ -1,10 +1,10 @@
 import { createEmitter, ReadOnlyEmitter, withSelector } from "@lib/emitter";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
-import { shallow, deepPatch } from "@lib/compare";
+import { deepPatch } from "@lib/compare";
 
 import { Spec } from "../core/spec";
-import { AuthAction, Ctx } from "../core/reducer";
+import { PlayerAction, Ctx } from "../core/game";
 import { Game } from "../core/game";
 import { ServerActions, actionKeys, ServerApi, SocketsStatus } from "../server";
 
@@ -19,7 +19,7 @@ export type AppState = {
   err: { msg: string } | null;
 };
 
-export type Room = {
+type RoomState = {
   id: string;
   playerIndex: number;
   socketsStatus: SocketsStatus;
@@ -27,14 +27,14 @@ export type Room = {
 
 export type GameState<S extends Spec> = {
   board: S["board"];
-  action: AuthAction<S> | null;
+  action: PlayerAction<S> | null;
   ctx: Ctx<S>;
 };
 
 export type ClientState<S extends Spec> =
   | ({ mode: "title" } & AppState)
-  | ({ mode: "lobby" } & AppState & Room)
-  | ({ mode: "game" } & AppState & Room & GameState<S>);
+  | ({ mode: "lobby" } & AppState & RoomState)
+  | ({ mode: "game" } & AppState & RoomState & GameState<S>);
 
 export type Client<S extends Spec> = {
   emitter: ReadOnlyEmitter<ClientState<S>>;
@@ -52,7 +52,8 @@ export function createClient<S extends Spec>(
   // ---------------
   let connected = false;
   let err: { msg: string } | null = null;
-  let room: Room | null = null;
+  let id: string | null = null;
+  let playerIndex: number | null = null;
   let socketsStatus: SocketsStatus = [];
   let gameState = {} as GameState<S>;
 
@@ -73,21 +74,23 @@ export function createClient<S extends Spec>(
       if (state) {
         gameState = state;
         releaseState();
-        Promise.resolve().then(gameMeter.unlock);
+        setTimeout(gameMeter.unlock, 0);
       }
-      err = null;
     }
   );
 
   function releaseState() {
     const state = {
-      mode: !room ? "title" : !_started ? "lobby" : "game",
+      mode: !id ? "title" : !_started ? "lobby" : "game",
       connected,
       err,
-      ...(room || {}),
+      id,
+      playerIndex,
       socketsStatus,
       ...gameState,
-    } as const;
+    };
+
+    err = null;
 
     emitter.next(state as ClientState<S>);
   }
@@ -107,7 +110,8 @@ export function createClient<S extends Spec>(
       }
 
       if (res.loc === null) {
-        room = null;
+        id = null;
+        playerIndex = null;
         gameMeter.reset(null);
         releaseState();
         return;
@@ -123,20 +127,15 @@ export function createClient<S extends Spec>(
         return;
       }
 
-      const { id, playerIndex, started } = res.loc;
-      const nextLoc = { id, playerIndex };
-
-      _started = started;
+      _started = res.loc.started;
+      id = res.loc.id;
+      playerIndex = res.loc.playerIndex;
       socketsStatus = res.socketsStatus || socketsStatus;
-      room = {
-        ...nextLoc,
-        socketsStatus,
-      };
 
       if (res.gameUpdate) {
         const { gameUpdate } = res;
-        let patchedBoards = gameUpdate.boardSet.map((board, idx) => {
-          const prev = gameUpdate.boardSet[idx - 1] || gameUpdate.prevBoard;
+        let patchedBoards = gameUpdate.boards.map((board, idx) => {
+          const prev = gameUpdate.boards[idx - 1] || gameUpdate.prevBoard;
           return deepPatch(board, prev);
         });
         const meterUpdates = patchedBoards.map((board, idx) => ({

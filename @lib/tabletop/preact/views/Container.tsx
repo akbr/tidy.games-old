@@ -7,7 +7,7 @@ export default function DefaultAppContainer({
 }) {
   return (
     <section
-      type="AppContainer"
+      id="tabletop-container"
       class="relative h-full w-full"
       style={{
         background: "radial-gradient(circle,#00850b 20%,#005c09 100%)",
