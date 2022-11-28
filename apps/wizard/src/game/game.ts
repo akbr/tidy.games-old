@@ -29,10 +29,15 @@ export const wizardGame: Game<WizardSpec> = {
     play: null,
     select: null,
   },
-  adjustBoard: (b, playerIndex) => ({
-    ...b,
-    hands: b.hands.map((hand, idx) => (idx === playerIndex ? hand : [])),
-  }),
+  maskPatch: (patch, playerIndex) => {
+    if (patch.hands) {
+      return {
+        hands: patch.hands.map((hand, idx) =>
+          idx === playerIndex ? hand : []
+        ),
+      };
+    }
+  },
   botFn: wizardBotFn,
 };
 export default wizardGame;

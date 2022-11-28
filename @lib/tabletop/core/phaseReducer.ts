@@ -1,11 +1,12 @@
 import type { Spec } from "./spec";
 import type { Ctx, Reducer, PlayerAction } from "./game";
+import { applyPatches } from "./utils";
 
 export type NonStateReturns = true | string;
 
 export type EntryReturn<S extends Spec> =
-  | S["board"]
-  | S["board"][]
+  | Partial<S["board"]>
+  | Partial<S["board"]>[]
   | NonStateReturns;
 
 export type NoActionEntry<S extends Spec, Board extends S["board"]> = (
@@ -46,10 +47,12 @@ export type PhasedReducerDefinition<S extends Spec> = Partial<{
 }>;
 
 export function createPhaseReducer<S extends Spec>(
-  reduferDef: PhasedReducerDefinition<S>
+  reducerDef: PhasedReducerDefinition<S>
 ): Reducer<S> {
   return function reducer(lastBoard, ctx, action) {
+    const patches: Partial<S["board"]>[] = [];
     const boards: S["board"][] = [];
+
     let final = false;
     let iterarting = true;
 
@@ -57,7 +60,7 @@ export function createPhaseReducer<S extends Spec>(
       const mostRecentBoard = boards.at(-1) || lastBoard;
       const phase = mostRecentBoard.phase as S["board"]["phase"];
 
-      const phaseFn = reduferDef[phase];
+      const phaseFn = reducerDef[phase];
       if (!phaseFn) {
         return `No reducer entry point for phase "${phase}".`;
       }
@@ -86,15 +89,15 @@ export function createPhaseReducer<S extends Spec>(
         continue;
       }
 
-      const board = result;
-      if (Array.isArray(board)) {
-        boards.push(...board);
-      } else {
-        boards.push(board);
-      }
+      const patchResult = Array.isArray(result) ? result : [result];
+      patches.push(...patchResult);
+
+      const nextboards = applyPatches(mostRecentBoard, patchResult);
+      boards.push(...nextboards);
     }
 
     return {
+      patches,
       boards,
       final,
     };

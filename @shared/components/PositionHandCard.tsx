@@ -7,11 +7,14 @@ import { useRefreshOnResize } from "@lib/hooks";
 import { getNearestDimensions } from "@lib/dom";
 
 import { getHandCardPosition } from "@shared/domEffects/positionHand";
+import { randomBetween } from "@lib/random";
 
 export type PositionHandCardProps = {
   idx: number;
   numCards: number;
   card: string;
+  isDeal: boolean;
+  waitFor: Function;
   shouldDrop: (mx: number, my: number) => boolean;
   onDrop: (
     $el: HTMLElement,
@@ -27,6 +30,8 @@ export type PositionHandCardProps = {
 export function PositionHandCard({
   idx,
   numCards,
+  isDeal,
+  waitFor,
   card,
   children,
   errRef,
@@ -55,9 +60,14 @@ export function PositionHandCard({
         containerHeight
       );
       const [x, y, z] = handPosRef.current;
-      style($el, { x, y, zIndex: z });
+      if (isDeal) {
+        style($el, { x, y: y + 100, rotate: randomBetween(0, 22), zIndex: z });
+        waitFor(style($el, { x, y, rotate: 0, zIndex: z }, { duration: 750 }));
+      } else {
+        style($el, { x, y, zIndex: z });
+      }
     },
-    [resizeToken, numCards, card]
+    [resizeToken, numCards, card, isDeal]
   );
 
   // Triggers action when is "played"
@@ -83,8 +93,7 @@ export function PositionHandCard({
       const $el = elRef.current!;
       const [x, y, z] = handPosRef.current;
 
-      style($el, { rotate: 360 });
-      style($el, { x, y, rotate: 0, zIndex: z }, { duration: 300 });
+      style($el, { x, y, rotate: [360, 0], zIndex: z }, { duration: 300 });
       setState("idle");
     },
     [errRef]

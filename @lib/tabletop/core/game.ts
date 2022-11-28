@@ -9,7 +9,10 @@ export type Game<S extends Spec> = {
   getInitialBoard: (ctx: Ctx<S>) => S["board"];
   reducer: Reducer<S>;
   actionKeys: ActionKeys<S["actions"]>;
-  adjustBoard?: (board: S["board"], player: number) => S["board"];
+  maskPatch?: (
+    board: Partial<S["board"]>,
+    player: number
+  ) => Partial<S["board"]> | void;
   adjustAction?: (action: PlayerAction<S>, player: number) => PlayerAction<S>;
   botFn?: BotFn<S>;
 };
@@ -21,6 +24,7 @@ export type Reducer<S extends Spec> = (
 ) =>
   | {
       boards: S["board"][];
+      patches: Partial<S["board"]>[];
       final: boolean;
     }
   | string;

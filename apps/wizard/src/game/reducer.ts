@@ -38,7 +38,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
     const { hands } = getDeal(c.numPlayers, b.round, c.seed + b.round);
 
     return {
-      ...b,
       phase: "deal",
       hands,
     };
@@ -52,7 +51,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
     );
 
     return {
-      ...b,
       phase: "trumpReveal",
       trumpCard,
       trumpSuit,
@@ -61,9 +59,8 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
 
   trumpReveal: (b, c) =>
     b.trumpSuit === "w"
-      ? { ...b, phase: "select", player: b.dealer }
+      ? { phase: "select", player: b.dealer }
       : {
-          ...b,
           phase: "bid",
           player: rotateIndex(c.numPlayers, b.dealer, 1),
         },
@@ -76,7 +73,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
       return a;
     },
     (b, a, c) => ({
-      ...b,
       phase: "selected",
       trumpSuit: a.data,
       player: rotateIndex(c.numPlayers, b.dealer, 1),
@@ -84,7 +80,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
   ),
 
   selected: (b) => ({
-    ...b,
     phase: "bid",
   }),
 
@@ -98,17 +93,16 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
     },
     (b, a) => {
       const nextBids = b.bids.map((bid, i) => (i === a.player ? a.data : bid));
-      return { ...b, phase: "bidded", bids: nextBids };
+      return { phase: "bidded", bids: nextBids };
     }
   ),
 
   bidded: (b, c) =>
     b.bids.includes(null)
-      ? { ...b, phase: "bid", player: rotateIndex(c.numPlayers, b.player!, 1) }
-      : { ...b, phase: "bidsEnd", player: null },
+      ? { phase: "bid", player: rotateIndex(c.numPlayers, b.player!, 1) }
+      : { phase: "bidsEnd", player: null },
 
   bidsEnd: (b, c) => ({
-    ...b,
     phase: "play",
     player: rotateIndex(c.numPlayers, b.dealer, 1),
   }),
@@ -130,15 +124,14 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
       );
       const nextTrick = [...b.trick, a.data];
 
-      return { ...b, phase: "played", hands: nextHands, trick: nextTrick };
+      return { phase: "played", hands: nextHands, trick: nextTrick };
     }
   ),
 
   played: (b, c) =>
     b.trick.length < c.numPlayers
-      ? { ...b, phase: "play", player: rotateIndex(c.numPlayers, b.player!, 1) }
+      ? { phase: "play", player: rotateIndex(c.numPlayers, b.player!, 1) }
       : {
-          ...b,
           phase: "trickWon",
           player: null,
           trickWinner: rotateIndex(
@@ -156,7 +149,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
 
     if (roundContinues) {
       return {
-        ...b,
         phase: "play",
         actuals: nextActuals,
         trick: [],
@@ -167,7 +159,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
     }
 
     return {
-      ...b,
       phase: "roundEnd",
       actuals: nextActuals,
       trick: [],
@@ -181,7 +172,6 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
     return gameContinues
       ? getNextRound(c, b)
       : {
-          ...b,
           phase: "end",
           scores: [...b.scores, b.bids, b.actuals] as number[][],
         };

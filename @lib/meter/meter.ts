@@ -12,6 +12,7 @@ export type MeterStatus<T> = {
 export type Meter<T> = {
   emitter: ReadOnlyEmitter<MeterStatus<T>>;
   pushStates: (...states: T[]) => void;
+  resetStates: (...states: T[]) => void;
   setIdx: (idx: number | ((idx: number, length: number) => number)) => void;
   waitFor: (task?: Task<any> | number) => void;
   togglePlay: (toggle: boolean | ((status: boolean) => boolean)) => void;
@@ -90,6 +91,11 @@ export const createMeter = <T>(
     },
     pushStates: (...incoming) => {
       states = [...states, ...incoming];
+      iterate();
+    },
+    resetStates: (...incoming) => {
+      idx = -1;
+      states = [...incoming];
       iterate();
     },
     toggleHistory: (val) => {

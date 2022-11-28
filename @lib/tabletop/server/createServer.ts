@@ -18,7 +18,7 @@ export function createServer<S extends Spec>(game: Game<S>) {
   const roomMap = new Map<string, Room<S>>();
   const botMap = new Set<ServerSocket<S>>();
   const socketMap = {
-    room: new Map<ServerSocket<S>, string>(),
+    room: new Map<ServerSocket<S>, { id: string; hasUpdate: boolean }>(),
     meta: new Map<ServerSocket<S>, SocketMeta>(),
   };
 
@@ -29,7 +29,7 @@ export function createServer<S extends Spec>(game: Game<S>) {
   ) {
     const loc = getLoc(socket);
     if (!loc) {
-      socket.send({ loc: null, serverErr: data.serverErr });
+      socket.send({ loc: null, err: data.err });
       return;
     }
     socket.send({ loc, ...data });
@@ -53,7 +53,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
         if (msg.type === "join") {
           onLeave(socket);
           const serverErr = onJoin(socket, msg.data?.id, msg.data?.playerIndex);
-          if (serverErr) dispatch(socket, serverErr);
+          if (serverErr)
+            dispatch(socket, { err: { type: "serverErr", msg: serverErr } });
           return;
         }
 
@@ -64,33 +65,43 @@ export function createServer<S extends Spec>(game: Game<S>) {
 
         if (msg.type === "addBot") {
           const serverErr = onAddBot(socket, serverApi);
-          if (serverErr) dispatch(socket, serverErr);
+          if (serverErr)
+            dispatch(socket, { err: { type: "serverErr", msg: serverErr } });
           return;
         }
 
         if (msg.type === "start") {
           let serverErr = onStart(socket, msg.data);
-          if (serverErr) dispatch(socket, serverErr);
+          if (serverErr)
+            dispatch(socket, { err: { type: "serverErr", msg: serverErr } });
           return;
         }
 
         if (msg.type === "getHistoryString") {
           let serverErr = getHistoryString(socket);
-          if (serverErr) dispatch(socket, serverErr);
+          if (serverErr)
+            dispatch(socket, { err: { type: "serverErr", msg: serverErr } });
           return;
         }
 
-        dispatch(socket, { serverErr: "Invalid server action type." });
+        dispatch(socket, {
+          err: { type: "serverErr", msg: "Invalid server action type." },
+        });
+
         return;
       }
 
       if (to === "game") {
         const serverErr = onSubmit(socket, msg);
-        if (serverErr) dispatch(socket, serverErr);
+        if (serverErr)
+          dispatch(socket, {
+            err: { type: "serverErr", msg: "Invalid server action type." },
+          });
         return;
       }
-
-      dispatch(socket, { serverErr: "Invalid top-level action type." });
+      dispatch(socket, {
+        err: { type: "serverErr", msg: "Invalid top-level action type." },
+      });
     },
   };
 
@@ -98,8 +109,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
   function getRoom(key?: ServerSocket<S> | string) {
     if (!key) return;
     if (typeof key === "string") return roomMap.get(key);
-    let roomId = socketMap.room.get(key);
-    if (roomId) return roomMap.get(roomId);
+    let roomInfo = socketMap.room.get(key);
+    if (roomInfo) return roomMap.get(roomInfo.id);
   }
 
   function getLoc(socket: ServerSocket<S>) {
@@ -167,22 +178,22 @@ export function createServer<S extends Spec>(game: Game<S>) {
       requestedSeat
     );
 
-    if (typeof seatIndex === "string") return { serverErr: seatIndex };
+    if (typeof seatIndex === "string") return seatIndex;
 
     room.sockets[seatIndex] = socket;
-    socketMap.room.set(socket, room.id);
+    socketMap.room.set(socket, { id: room.id, hasUpdate: false });
 
     broadcastSocketsUpdate(room);
   }
 
   function onAddBot(socket: ServerSocket<S>, server: ServerApi<S>) {
     if (!game.botFn) {
-      return { serverErr: "Game has no botFn." };
+      return "Game has no botFn.";
     }
 
     const room = getRoom(socket);
     if (!room) {
-      return { serverErr: "Socket not in a room" };
+      return "Socket not in a room";
     }
 
     const botSocket = createBotSocket(game.botFn, server);
@@ -202,10 +213,10 @@ export function createServer<S extends Spec>(game: Game<S>) {
     startOptions?: Extract<ServerActions<S>, { type: "start" }>["data"]
   ) {
     const room = getRoom(socket);
-    if (!room) return { serverErr: "You're not in a room!" };
+    if (!room) return "You're not in a room!";
 
     if (room.sockets.indexOf(socket) !== 0)
-      return { serverErr: "You must be the first player to start the game." };
+      return "You must be the first player to start the game.";
 
     const numPlayers = room.sockets.length;
     const { seed, options } = startOptions || {};
@@ -218,17 +229,30 @@ export function createServer<S extends Spec>(game: Game<S>) {
 
     const store = createGameStore(game, ctx);
     if (typeof store === "string")
-      return { serverErr: `Game error when starting game: ${store}` };
+      return `Game error when starting game: ${store}`;
 
     room.store = store;
     room.host = createGameHost(room.store, {
-      onUpdate: (playerIndex, gameUpdate) => {
+      onUpdate: (playerIndex, update) => {
         const socket = room.sockets[playerIndex];
-        socket && dispatch(socket, { gameUpdate });
+        if (!socket) return;
+        if (botMap.has(socket)) {
+          dispatch(socket, { update });
+          return;
+        }
+
+        if (socketMap.room.get(socket)?.hasUpdate) {
+          const { ctx, prevBoard, ...hotUpdate } = update;
+          dispatch(socket, { hotUpdate });
+          return;
+        }
+
+        socketMap.room.get(socket)!.hasUpdate = true;
+        dispatch(socket, { update });
       },
       onErr: (playerIndex, gameErr) => {
         const socket = room.sockets[playerIndex];
-        socket && dispatch(socket, { gameErr });
+        socket && dispatch(socket, { err: { type: "gameErr", msg: gameErr } });
       },
     });
 
@@ -238,8 +262,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
   function onSubmit(socket: ServerSocket<S>, action: S["actions"]) {
     const room = getRoom(socket);
 
-    if (!room) return { serverErr: "You are not in a room." };
-    if (!room.host) return { serverErr: "This room's game has not started." };
+    if (!room) return "You are not in a room.";
+    if (!room.host) return "This room's game has not started.";
 
     const playerIndex = room.sockets.indexOf(socket);
     room.host.submit({ playerIndex, action });
@@ -247,8 +271,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
 
   function getHistoryString(socket: ServerSocket<S>) {
     const room = getRoom(socket);
-    if (!room) return { serverErr: "You are not in a room." };
-    if (!room.store) return { serverErr: "This room's game has not started." };
+    if (!room) return "You are not in a room.";
+    if (!room.store) return "This room's game has not started.";
     const history = room.store.getHistory();
     const historyString = encodeHistory(history);
     dispatch(socket, { historyString });

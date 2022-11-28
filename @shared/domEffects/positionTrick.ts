@@ -22,7 +22,7 @@ export const getHeldPosition = (
   const heldOffset = Vec.mulV(Vec.mul(direction, -1), childDimensions, buffer);
   const cardCenter = Vec.mul(childDimensions, -0.5);
 
-  return toXY(Vec.add(seat, heldOffset, cardCenter));
+  return toXY(Vec.add(seat, cardCenter));
 };
 
 export const getCenterPlayedPosition = (
@@ -185,8 +185,10 @@ export const positionTrick = (
               {
                 ...winningHold,
                 rotate: 45,
+                opacity: [1, 1, 0],
+                scale: [1, 0.5],
               },
-              { duration: 275, delay: 325 }
+              { duration: 400, delay: 325 }
             )!
         )
       ),

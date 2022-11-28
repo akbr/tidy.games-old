@@ -16,7 +16,7 @@ export function initPreactApp<S extends Spec>(
 
   const client = createClient(server, game);
 
-  client.gameMeter.toggleHistory(true);
+  client.gameMeter.toggleHistory(dev);
 
   attachHashListener(client);
 

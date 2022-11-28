@@ -19,11 +19,7 @@ export type CreateSpec<
     options?: Options;
   }
 > = {
-  board: CreateGameStates<
-    I["phases"],
-    I["board"],
-    I["refineByPhase"] extends Record<string, any> ? I["refineByPhase"] : {}
-  >;
+  board: CreateGameStates<I["phases"], I["board"]>;
   actions: I["actions"];
   options: Fill<I["options"], null>;
 };
@@ -32,8 +28,5 @@ export type CreateSpec<
 type Fill<Desired, Fallback> = undefined extends Desired ? Fallback : Desired;
 type CreateGameStates<
   Phase extends string,
-  BaseBoard extends Board,
-  Refinements extends Record<string, any> = Record<string, any>
-> = Phase extends string
-  ? { phase: Phase } & BaseBoard & Refinements[Phase]
-  : never;
+  BaseBoard extends Board
+> = Phase extends string ? { phase: Phase } & BaseBoard : never;

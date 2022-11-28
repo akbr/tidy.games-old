@@ -7,13 +7,17 @@ import { getTotalBids } from "~src/game/logic";
 import { useGame } from "~src/control";
 
 export const Hud = () => {
+  const phase = useGame((x) => x.board.phase);
+  if (phase === "roundStart") return null;
   return (
     <section id="hud" class="absolute top-0 right-0 ">
-      <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
-        <RoundDisplay />
-        <TrumpDisplay />
-        <BidDisplay />
-      </div>
+      <AnimateIn>
+        <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
+          <RoundDisplay />
+          <TrumpDisplay />
+          <BidDisplay />
+        </div>
+      </AnimateIn>
     </section>
   );
 };

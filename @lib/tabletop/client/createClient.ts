@@ -1,12 +1,19 @@
 import { createEmitter, ReadOnlyEmitter, withSelector } from "@lib/emitter";
 import { Meter, createMeter } from "@lib/meter";
 import { createSocketManager } from "@lib/socket";
-import { deepPatch } from "@lib/compare";
 
 import { Spec } from "../core/spec";
 import { PlayerAction, Ctx } from "../core/game";
 import { Game } from "../core/game";
-import { ServerActions, actionKeys, ServerApi, SocketsStatus } from "../server";
+
+import {
+  ServerActions,
+  actionKeys,
+  ServerApi,
+  SocketsStatus,
+  Err,
+  Loc,
+} from "../server";
 
 import {
   ActionFns,
@@ -14,16 +21,14 @@ import {
   createServerActionFns,
 } from "./createActionFns";
 
+import { applyPatches } from "../core/utils";
+
 export type AppState = {
   connected: boolean;
-  err: { msg: string } | null;
+  err: Err | null;
 };
 
-type RoomState = {
-  id: string;
-  playerIndex: number;
-  socketsStatus: SocketsStatus;
-};
+export type RoomState = Loc & { socketsStatus: SocketsStatus };
 
 export type GameState<S extends Spec> = {
   board: S["board"];
@@ -48,17 +53,26 @@ export function createClient<S extends Spec>(
   server: ServerApi<S> | string,
   game: Game<S>
 ): Client<S> {
-  // Internal Memory
-  // ---------------
+  // Server Response Memory
+  // ----------------------
   let connected = false;
-  let err: { msg: string } | null = null;
-  let id: string | null = null;
-  let playerIndex: number | null = null;
+  let err: Err | null = null;
+  let loc: Loc | null = null;
   let socketsStatus: SocketsStatus = [];
-  let gameState = {} as GameState<S>;
+  let gameState: GameState<S> | null = null;
 
-  let _started = false;
-  // -----------------
+  // GameState Memory
+  // ----------------
+  let _idx = -1;
+  let _ctx: Ctx<S> | null = null;
+  let _boards: S["board"][] = [];
+  let _action: PlayerAction<S> | null = null;
+  function resetGameCache() {
+    _idx = -1;
+    _ctx = null;
+    _boards = [];
+    _action = null;
+  }
 
   const emitter = createEmitter({
     mode: "title",
@@ -66,59 +80,78 @@ export function createClient<S extends Spec>(
     err,
   } as ClientState<S>);
 
+  function emitState() {
+    const appState: AppState = {
+      connected,
+      err,
+    };
+
+    if (!loc) {
+      emitter.next({
+        mode: "title",
+        ...appState,
+      });
+      return;
+    }
+
+    const roomState: RoomState = {
+      ...loc,
+      socketsStatus,
+    };
+
+    if (!roomState.started) {
+      emitter.next({
+        mode: "lobby",
+        ...appState,
+        ...roomState,
+      });
+      return;
+    }
+
+    if (!gameState) {
+      throw new Error("Client has no game state to release.");
+    }
+
+    emitter.next({
+      mode: "game",
+      ...appState,
+      ...roomState,
+      ...gameState,
+    });
+  }
+
   const gameMeter = createMeter<GameState<S> | null>(null);
+
   withSelector(
     gameMeter.emitter,
     (x) => x.state,
     (state) => {
       if (state) {
         gameState = state;
-        releaseState();
+        emitState();
         setTimeout(gameMeter.unlock, 0);
       }
     }
   );
 
-  function releaseState() {
-    const state = {
-      mode: !id ? "title" : !_started ? "lobby" : "game",
-      connected,
-      err,
-      id,
-      playerIndex,
-      socketsStatus,
-      ...gameState,
-    };
-
-    err = null;
-
-    emitter.next(state as ClientState<S>);
-  }
-
   const socket = createSocketManager(server, {
     onopen: () => {
       connected = true;
-      releaseState();
+      emitState();
     },
     onclose: () => {
       connected = false;
-      releaseState();
+      emitState();
     },
     onmessage: (res) => {
-      if (res.serverErr) {
-        err = { msg: res.serverErr };
-      }
+      if (res.err) err = res.err;
 
       if (res.loc === null) {
-        id = null;
-        playerIndex = null;
+        loc = null;
+        resetGameCache();
         gameMeter.reset(null);
-        releaseState();
+        emitState();
         return;
-      }
-
-      if (res.gameErr) {
-        err = { msg: res.gameErr };
       }
 
       //TK
@@ -127,26 +160,46 @@ export function createClient<S extends Spec>(
         return;
       }
 
-      _started = res.loc.started;
-      id = res.loc.id;
-      playerIndex = res.loc.playerIndex;
+      const locChanged = !loc || loc.id !== res.loc.id;
+      if (locChanged) resetGameCache();
+
+      loc = res.loc;
       socketsStatus = res.socketsStatus || socketsStatus;
 
-      if (res.gameUpdate) {
-        const { gameUpdate } = res;
-        let patchedBoards = gameUpdate.boards.map((board, idx) => {
-          const prev = gameUpdate.boards[idx - 1] || gameUpdate.prevBoard;
-          return deepPatch(board, prev);
-        });
-        const meterUpdates = patchedBoards.map((board, idx) => ({
-          board,
-          action: idx === 0 ? gameUpdate.action || null : null,
-          ctx: gameUpdate.ctx,
-        }));
-        gameMeter.pushStates(...meterUpdates);
+      const { update, hotUpdate } = res;
+
+      if (update) {
+        let nextBoards = applyPatches(update.prevBoard, update.patches);
+        _boards = [update.prevBoard, ...nextBoards];
+        _ctx = update.ctx;
+        _action = update.action || null;
+        _idx = update.idx;
+      } else if (hotUpdate) {
+        if (!_ctx || hotUpdate.idx !== _idx + 1) {
+          // sync err
+          err = { type: "serverErr", msg: "Lost sync with server state." };
+          socket.close();
+          return;
+        }
+        _boards = applyPatches(_boards.at(-1)!, hotUpdate.patches);
+        _action = hotUpdate.action || null;
+        _idx = hotUpdate.idx;
       }
 
-      releaseState();
+      if (update || hotUpdate) {
+        const meterUpdates = _boards.map((board, idx) => ({
+          board,
+          action: idx === 0 ? _action : null,
+          ctx: _ctx!,
+        }));
+        const hasState = gameMeter.emitter.get().state;
+        if (hasState) gameMeter.pushStates(...meterUpdates);
+        if (!hasState) gameMeter.resetStates(...meterUpdates);
+
+        return;
+      }
+
+      emitState();
     },
   });
 

@@ -2,6 +2,7 @@ import { createLocalSocketPair } from "@lib/socket";
 import { Spec } from "../core/spec";
 import { BotFn } from "../core/game";
 import { ServerApi } from "./types";
+import { applyPatches } from "../core/utils";
 
 export const createBotSocket = <S extends Spec>(
   botFn: BotFn<S>,
@@ -13,13 +14,14 @@ export const createBotSocket = <S extends Spec>(
     clientSocket.send({ to: "game", msg: action });
 
   clientSocket.onmessage = (res) => {
-    if (!res.loc || !res.gameUpdate) return;
+    if (!res.loc || !res.update) return;
 
     const {
-      gameUpdate,
+      update,
       loc: { playerIndex },
     } = res;
-    const { boards, ctx } = gameUpdate;
+    const { prevBoard, patches, ctx } = update;
+    const boards = applyPatches(prevBoard, patches);
 
     boards.forEach((board) => {
       const action = botFn(board, ctx, playerIndex);

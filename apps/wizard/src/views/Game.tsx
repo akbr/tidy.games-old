@@ -56,12 +56,7 @@ function Table({ children }: { children: ComponentChildren }) {
   }, [refreshSymbol]);
 
   return (
-    <section
-      ref={ref}
-      id="table"
-      class="relative w-[700px] min-w-[400px]"
-      onClick={() => client.gameMeter.setIdx((i) => i + 1)}
-    >
+    <section ref={ref} id="table" class="relative w-[700px] min-w-[400px]">
       {children}
     </section>
   );

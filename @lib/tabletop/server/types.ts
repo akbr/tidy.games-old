@@ -37,16 +37,18 @@ export type ServerInputs<S extends Spec> =
   | { to: "game"; msg: S["actions"] }
   | { to: "server"; msg: ServerActions<S> };
 
+export type Err = { type: "serverErr" | "gameErr"; msg: string };
+
 export type ServerOutputData<S extends Spec> = {
   socketsStatus?: SocketsStatus;
-  gameUpdate?: StoreUpdate<S>;
-  serverErr?: string;
-  gameErr?: string;
+  update?: StoreUpdate<S>;
+  hotUpdate?: Omit<StoreUpdate<S>, "prevBoard" | "ctx">;
+  err?: Err;
   historyString?: string;
 };
 
 export type ServerOutputs<S extends Spec> =
-  | { loc: null; serverErr?: string }
+  | { loc: null; err?: Err }
   | ({
       loc: Loc;
     } & ServerOutputData<S>);

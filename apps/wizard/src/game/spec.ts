@@ -29,9 +29,6 @@ export type WizardSpec = CreateSpec<{
     trickWinner: number | null;
     scores: number[][];
   };
-  refineByPhase: {
-    roundStart: { player: null };
-  };
   actions:
     | { type: "select"; data: string }
     | { type: "bid"; data: number }

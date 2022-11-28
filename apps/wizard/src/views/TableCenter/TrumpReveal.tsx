@@ -54,8 +54,13 @@ const revealEffect = ($card: HTMLElement, suit: string) => {
     () =>
       style(
         $card,
-        { x: width / 2 + 100, y: -height / 2 - 100, rotate: 250 },
-        { duration: 500, delay: 850 }
+        {
+          x: width / 2 + 100,
+          y: -height / 2 - 100,
+          rotate: 250,
+          opacity: [1, 1, 0],
+        },
+        { duration: 600, delay: 850 }
       ),
   ]);
 };

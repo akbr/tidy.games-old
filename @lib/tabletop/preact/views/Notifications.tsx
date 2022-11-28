@@ -34,9 +34,10 @@ function ConnectionWarning({ connected }: { connected: boolean }) {
   );
 }
 
-function ErrorReciever({ err }: { err: { msg: string } | null }) {
+function ErrorReciever({ err }: { err: { type: string; msg: string } | null }) {
   const [errs, setErr] = useState<
     {
+      type: string;
       msg: string;
     }[]
   >([]);
@@ -55,7 +56,7 @@ function ErrorReciever({ err }: { err: { msg: string } | null }) {
     <div class="flex flex-col gap-4">
       {errs.map((err) => (
         <div class="inline-block bg-red-600 p-2 rounded-lg text-white">
-          {err.msg}
+          {err.type}: {err.msg}
         </div>
       ))}
     </div>
