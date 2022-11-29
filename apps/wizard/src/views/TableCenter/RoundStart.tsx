@@ -24,7 +24,7 @@ const roundEffect = ($el: HTMLElement) =>
     {
       scale: [0.75, 1.5],
       opacity: [0, 1, 1, 1, 0],
-      rotate: subtleRotate(8),
+      rotate: subtleRotate(4),
     },
     {
       duration: 2750,

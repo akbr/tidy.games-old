@@ -125,7 +125,7 @@ export function createServer<S extends Spec>(game: Game<S>) {
 
   function getSocketsStatus(room: Room<S>) {
     return room.sockets.map((socket) =>
-      socket ? socketMap.meta.get(socket) || {} : null
+      socket ? socketMap.meta.get(socket) || {} : { avatar: "🚫" }
     );
   }
 
@@ -182,6 +182,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
 
     room.sockets[seatIndex] = socket;
     socketMap.room.set(socket, { id: room.id, hasUpdate: false });
+
+    if (room.host) room.host.update(seatIndex);
 
     broadcastSocketsUpdate(room);
   }

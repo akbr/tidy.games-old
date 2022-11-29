@@ -129,7 +129,9 @@ export function createClient<S extends Spec>(
       if (state) {
         gameState = state;
         emitState();
-        setTimeout(gameMeter.unlock, 0);
+        setTimeout(() => {
+          gameMeter.unlock();
+        }, 0);
       }
     }
   );

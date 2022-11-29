@@ -1,8 +1,9 @@
-import { createUseEmitter } from "@lib/emitter";
+import { createUseEmitter, Selector } from "@lib/emitter";
 import { createServer, createClient, Spec, Game } from "..";
 import { createViewManager } from "./createViewManager";
 import { useClientTitle, useClientLobby, useClientGame } from "./createHooks";
 import { attachHashListener } from "../client/plugins";
+import { ClientState } from "../client";
 
 export function initPreactApp<S extends Spec>(
   game: Game<S>,
@@ -35,6 +36,10 @@ export function initPreactApp<S extends Spec>(
     useTitle,
     useLobby,
     useGame,
+    createGameSelector: <U>(
+      selector: Selector<Extract<ClientState<S>, { mode: "game" }>, U>
+    ) => selector,
+    waitFor: client.gameMeter.waitFor,
   };
 }
 

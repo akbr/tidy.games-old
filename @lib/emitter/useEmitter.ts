@@ -23,7 +23,7 @@ export function createUseEmitter<T>(
         selector
           ? withSelector(emitter, selector, setState, isEqual)
           : emitter.subscribe(setState),
-      [selector, isEqual]
+      []
     );
     return state;
   };

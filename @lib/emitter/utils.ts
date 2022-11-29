@@ -12,6 +12,7 @@ export function withSelector<T, U>(
   return subscribe((curr, prev) => {
     const selectedCurr = selector(curr);
     const selectedPrev = selector(prev);
+
     if (first || !isEqual(selectedCurr, selectedPrev)) {
       listener(selectedCurr, selectedPrev);
       first = false;

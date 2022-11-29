@@ -10,7 +10,14 @@ import {
 } from "@shared/components/PositionHandCard";
 import { getHandHeight } from "@shared/domEffects/positionHand";
 
-import { useGame, gameActions, waitFor } from "~src/control";
+import control from "~src/control";
+
+const {
+  useGame,
+  createGameSelector,
+  gameActions: { play },
+  waitFor,
+} = control;
 
 const shouldDrop: PositionHandCardProps["shouldDrop"] = (_, dy) => dy < -50;
 
@@ -22,18 +29,22 @@ const onDrop: PositionHandCardProps["onDrop"] = ($el, card, numCards) => {
     height: containerHeight - handHeight,
   });
   style($el, { x, y }, { duration: 250 })?.finished.then(() => {
-    gameActions.play(card);
+    play(card);
   });
 };
 
-export function Hand() {
-  const [hand, phase] = useGame((x) => [
-    x.board.hands[x.playerIndex],
-    x.board.phase,
-  ]);
-  const err = useGame((x) => x.err);
+const handSelector = createGameSelector(
+  ({ board: { phase, hands }, playerIndex, err }) => {
+    return {
+      hand: hands[playerIndex],
+      isDealt: phase === "deal",
+      err,
+    };
+  }
+);
 
-  const isDeal = phase === "deal";
+export function Hand() {
+  const { hand, isDealt, err } = useGame(handSelector);
 
   return (
     <section id="hand" class="absolute top-0 left-0">
@@ -42,7 +53,7 @@ export function Hand() {
           key={id}
           idx={idx}
           card={id}
-          isDeal={isDeal}
+          isDeal={isDealt}
           waitFor={waitFor}
           numCards={hand.length}
           shouldDrop={shouldDrop}

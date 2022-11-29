@@ -4,6 +4,9 @@ import { Options } from "./views/Options";
 
 setViews(document.body, { Game, Options }, { dev: true });
 
-const { join, addBot, start, leave } = serverActions;
+/**
+ * const { join, addBot, start, leave } = serverActions;
 join();
 addBot();
+
+ */

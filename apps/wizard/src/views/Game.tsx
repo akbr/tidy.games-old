@@ -14,7 +14,7 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
-import { useGame, client } from "~src/control";
+import { useGame } from "~src/control";
 
 export const Game = () => {
   return (
@@ -43,11 +43,8 @@ function Outer({ children }: { children: ComponentChildren }) {
 
 function Table({ children }: { children: ComponentChildren }) {
   const refreshSymbol = useRefreshOnResize();
+  const numCards = useGame((s) => s.board.hands[s.playerIndex].length || 1);
   const ref = useRef<HTMLElement>(null);
-
-  const [playerIndex, hands] = useGame((s) => [s.playerIndex, s.board.hands]);
-
-  const numCards = hands[playerIndex]?.length || 1;
 
   useLayoutEffect(() => {
     const [width] = getNearestDimensions(ref.current!);

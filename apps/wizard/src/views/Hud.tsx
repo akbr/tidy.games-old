@@ -4,11 +4,9 @@ import { Twemoji } from "@shared/components/Twemoji";
 import { MiniCard, splitCard } from "@shared/components/Card";
 
 import { getTotalBids } from "~src/game/logic";
-import { useGame } from "~src/control";
+import { useGame, createGameSelector } from "~src/control";
 
 export const Hud = () => {
-  const phase = useGame((x) => x.board.phase);
-  if (phase === "roundStart") return null;
   return (
     <section id="hud" class="absolute top-0 right-0 ">
       <AnimateIn>
@@ -24,6 +22,7 @@ export const Hud = () => {
 
 function RoundDisplay() {
   const round = useGame((x) => x.board.round);
+
   return (
     <AnimateIn>
       <div>Round: {round}</div>
@@ -31,20 +30,27 @@ function RoundDisplay() {
   );
 }
 
-function TrumpDisplay() {
-  const [phase, trumpCard, trumpSuit] = useGame((s) => [
-    s.board.phase,
-    s.board.trumpCard,
-    s.board.trumpSuit,
-  ]);
+const trumpDisplayProps = createGameSelector(
+  ({ board: { trumpCard, trumpSuit, phase } }) => {
+    return {
+      showTrumpDisplay: Boolean(
+        trumpCard && phase !== "deal" && phase !== "trumpReveal"
+      ),
+      showWaiting: phase === "select",
+      trumpCard,
+      trumpSuit,
+    };
+  }
+);
 
-  const showTrumpDisplay =
-    trumpCard && phase !== "deal" && phase !== "trumpReveal";
+function TrumpDisplay() {
+  const { showTrumpDisplay, showWaiting, trumpCard, trumpSuit } =
+    useGame(trumpDisplayProps);
 
   if (!showTrumpDisplay) return null;
 
   const vdom = (() => {
-    if (phase === "select") return <Twemoji char="⌛" size={16} />;
+    if (showWaiting) return <Twemoji char="⌛" size={16} />;
 
     if (!trumpSuit) return <Twemoji char="❌" size={16} align={"middle"} />;
 

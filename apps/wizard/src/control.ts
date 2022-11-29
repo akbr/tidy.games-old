@@ -15,6 +15,9 @@ export const {
   useTitle,
   useLobby,
   useGame,
+  createGameSelector,
 } = bundle;
 
 export const waitFor = gameMeter.waitFor;
+
+export default bundle;
