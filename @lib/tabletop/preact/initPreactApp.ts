@@ -8,7 +8,7 @@ import { ClientState } from "../client";
 export function initPreactApp<S extends Spec>(
   game: Game<S>,
   { dev } = {
-    dev: location.hostname === "localhost" && location.port === "3000",
+    dev: false,
   }
 ) {
   const server = dev

@@ -1,7 +1,10 @@
 import { initPreactApp } from "@lib/tabletop/preact/initPreactApp";
 import { wizardGame } from "./game/game";
 
-const bundle = initPreactApp(wizardGame);
+export const isDev = () =>
+  location.hostname === "localhost" && location.port === "3000";
+
+const bundle = initPreactApp(wizardGame, { dev: isDev() });
 
 export const {
   client,

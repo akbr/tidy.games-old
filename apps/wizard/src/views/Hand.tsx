@@ -37,14 +37,14 @@ const handSelector = createGameSelector(
   ({ board: { phase, hands }, playerIndex, err }) => {
     return {
       hand: hands[playerIndex],
-      isDealt: phase === "deal",
+      isDeal: phase === "deal",
       err,
     };
   }
 );
 
 export function Hand() {
-  const { hand, isDealt, err } = useGame(handSelector);
+  const { hand, isDeal, err } = useGame(handSelector);
 
   return (
     <section id="hand" class="absolute top-0 left-0">
@@ -53,7 +53,7 @@ export function Hand() {
           key={id}
           idx={idx}
           card={id}
-          isDeal={isDealt}
+          isDeal={isDeal}
           waitFor={waitFor}
           numCards={hand.length}
           shouldDrop={shouldDrop}
