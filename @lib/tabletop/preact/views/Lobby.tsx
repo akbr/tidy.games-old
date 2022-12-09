@@ -1,14 +1,67 @@
 import { useEffect, useState } from "preact/hooks";
-import { useClientLobby } from "../createHooks";
 
-import { Badge } from "@shared/components/Badge";
+import { PlayerBadge, BadgeOutline } from "@shared/components/PlayerBadge";
 import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 
-import { AppProps, OptionsView } from "../types";
 import type { Spec } from "../../core";
-import type { SocketMeta } from "../../server";
-import { avatars } from "../../server/";
+import { useClientLobby } from "../createHooks";
+import { MetaViewProps } from "../types";
+
+export function Lobby<S extends Spec>(props: MetaViewProps<S>) {
+  const name = props.appProps.client.game.meta.name;
+  const { TitleDisplay, FooterDisplay } = props.viewInputs;
+  // TK: Abstract as a wrapper for Title and Lobby views
+  // The extra "margin 0" wrapper is safely center flexbox so overflows on small
+  // screens correctly. See: https://stackoverflow.com/a/47636238/
+  return (
+    <div class="h-full flex flex-col items-center overflow-auto p-4 gap-4">
+      <TitleDisplay title={name} />
+      <div style={{ margin: "auto 0" }}>
+        <LobbyInnards {...props} />
+      </div>
+      <FooterDisplay title={name} />
+    </div>
+  );
+}
+
+export function LobbyInnards<S extends Spec>(props: MetaViewProps<S>) {
+  const { appProps, viewInputs } = props;
+  const { client } = appProps;
+
+  const isAdmin = useClientLobby(client)((x) => x.playerIndex === 0);
+
+  return (
+    <section
+      id="tabletop-lobbyContent"
+      class="flex flex-col items-center gap-4"
+    >
+      <RoomDisplay {...props} />
+      <Field legend={`Players`}>
+        <PlayersDisplay {...props} />
+      </Field>
+      {isAdmin && (
+        <Field legend="Host controls">
+          <HostDisplay {...props} />
+        </Field>
+      )}
+      {!isAdmin && (
+        <div class="text-center animate-pulse">
+          The host will start the game soon!
+        </div>
+      )}
+      <div class="p-4">
+        <button
+          class={`flex items-center gap-2 ${viewInputs.buttonClass}`}
+          onClick={client.serverActions.leave}
+        >
+          <Twemoji char={"🛑"} size={24} />
+          <span>Leave game</span>
+        </button>
+      </div>
+    </section>
+  );
+}
 
 export const getRoomURL = (roomId = "") => {
   const host = window.location.hostname.replace("www.", "");
@@ -16,22 +69,87 @@ export const getRoomURL = (roomId = "") => {
   const path = window.location.pathname;
   const hash = `#${roomId}`;
 
-  return [location.protocol, "//", host, port, path, hash].join("");
+  return [host, port, path, hash].join("");
 };
 
-export default function DefaultLobby<S extends Spec>({
-  client,
-  setDialog,
-  Options,
-}: AppProps<S> & { Options?: OptionsView<S> }) {
-  const [id, playerIndex, socketsStatus] = useClientLobby(client)((x) => [
-    x.id,
+function RoomDisplay<S extends Spec>(props: MetaViewProps<S>) {
+  const { client } = props.appProps;
+  const { buttonClass } = props.viewInputs;
+
+  const roomId = useClientLobby(client)((x) => x.id);
+
+  const [status, setStatus] = useState("📋");
+
+  useEffect(() => {
+    if (status === "✅") {
+      setTimeout(() => {
+        setStatus("📋");
+      }, 1500);
+    }
+  });
+
+  function doCopy() {
+    navigator.clipboard.writeText(getRoomURL(roomId)).then(() => {
+      setStatus("✅");
+    });
+  }
+
+  return (
+    <div class="flex flex-col items-center gap-3">
+      <h3 class="inline-flex items-center gap-1">
+        Room code:
+        <div class="bg-yellow-200 text-black p-1 rounded">{roomId}</div>
+      </h3>
+      <button class={`flex items-center gap-2 ${buttonClass}`} onClick={doCopy}>
+        <Twemoji char={status} size={24} />
+        <span>Copy link</span>
+      </button>
+    </div>
+  );
+}
+
+function PlayersDisplay<S extends Spec>(props: MetaViewProps<S>) {
+  const { client } = props.appProps;
+
+  const [playerIndex, socketsStatus] = useClientLobby(client)((x) => [
     x.playerIndex,
     x.socketsStatus,
   ]);
 
+  const modSockets = Array.from(
+    { length: client.game.meta.players[1] },
+    (x) => null
+  );
+
+  return (
+    <div class="flex flex-wrap justify-center items-center">
+      {modSockets.map((_, idx) => {
+        const player = socketsStatus[idx];
+        let isPlayer = idx === playerIndex;
+        return (
+          <div class="flex flex-col gap-1 p-2 animate-fadeIn text-center rounded">
+            {player && <PlayerBadge avatar={player.avatar} playerIndex={idx} />}
+            {!player && <BadgeOutline playerIndex={idx} />}
+            {isPlayer && (
+              <div class="flex justify-center items-center mt-1 gap-1">
+                <h3>You</h3>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function HostDisplay<S extends Spec>(props: MetaViewProps<S>) {
+  const { client } = props.appProps;
+  const { buttonClass, OptionsView } = props.viewInputs;
+
+  const socketsStatus = useClientLobby(client)((x) => x.socketsStatus);
+
   const { game, serverActions } = client;
-  const { addBot, start, leave } = serverActions;
+  const { start } = serverActions;
 
   const numPlayers = socketsStatus.length;
 
@@ -41,169 +159,43 @@ export default function DefaultLobby<S extends Spec>({
     setOptions(game.getOptions(numPlayers, options));
   }, [numPlayers]);
 
-  const isAdmin = playerIndex === 0;
   const gameReady = socketsStatus.length >= game.meta.players[0];
-
+  const roomFull =
+    socketsStatus.filter((x) => x).length >= game.meta.players[1];
   const updateOptions = (nextOptions: S["options"]) =>
     setOptions(game.getOptions(numPlayers, nextOptions));
 
   return (
-    <div class="flex flex-col h-full justify-center items-center gap-4">
-      <div class="text-center font-bold text-[64px] mb-2">{game.meta.name}</div>
-      <ShareLink roomId={id} />
-      <Field
-        legend={`🪑 Players (${socketsStatus.length}/${game.meta.players[1]})`}
-      >
-        <div class="flex justify-center gap-1">
-          {socketsStatus.map((player, idx) => {
-            player = player || {};
-            let isPlayer = idx === playerIndex;
-            let style = {
-              backgroundColor: isPlayer ? "rgba(252,255,164, 0.4)" : "",
-              borderRadius: "4px",
-              cursor: isPlayer ? "pointer" : "",
-            };
-            return (
-              <div
-                class={`flex flex-col gap-1 p-[6px] animate-fadeIn text-center`}
-                style={style}
-                onClick={() => {
-                  if (isPlayer) setDialog(SetMetaDialog);
-                }}
-              >
-                <Badge {...{ ...player, player: idx }}></Badge>
-                {isPlayer && (
-                  <div class="text-center text-base mt-1 -mb-1">YOU</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </Field>
-      {Options && (
-        <Field legend="Options">
-          <Options
-            numPlayers={numPlayers}
-            options={options}
-            setOptions={updateOptions}
-          />
-        </Field>
-      )}
-      {isAdmin ? (
-        <>
-          <button onClick={() => start({ options })} disabled={!gameReady}>
-            {gameReady ? "Start game" : "Waiting for players..."}
-          </button>
-          {addBot && <button onClick={() => addBot()}>Add bot</button>}
-        </>
-      ) : (
-        <div>The game creator will start the game. Hang tight!</div>
-      )}
-      <button onClick={() => leave()}>Leave</button>
-    </div>
-  );
-}
-
-function ShareLink({ roomId }: { roomId: string }) {
-  const [status, setStatus] = useState("📋");
-  useEffect(() => {
-    if (status === "✅") {
-      setTimeout(() => {
-        setStatus("📋");
-      }, 2000);
-    }
-  });
-
-  return (
-    <Field legend="🖇️ Share link">
-      <div
-        class="cursor-pointer"
-        onClick={() => {
-          navigator.clipboard.writeText(getRoomURL(roomId)).then(() => {
-            setStatus("✅");
-          });
-        }}
-      >
-        {getRoomURL(roomId)}{" "}
-        <div class="inline-block animate-bounce">
-          <Twemoji char={status} size={18} align={"text-top"} />
-        </div>
-      </div>
-    </Field>
-  );
-}
-
-function SetMetaDialog<S extends Spec>({ client, setDialog }: AppProps<S>) {
-  const [id, playerIndex, socketsStatus] = useClientLobby(client)((x) => [
-    x.id,
-    x.playerIndex,
-    x.socketsStatus,
-  ]);
-
-  if (id === "") {
-    setDialog(null);
-    return null;
-  }
-
-  return (
-    <SetMeta
-      meta={socketsStatus[playerIndex]}
-      set={client.serverActions.setMeta}
-      close={() => setDialog(null)}
-    />
-  );
-}
-
-type MetaDialogProps = {
-  meta: SocketMeta | null;
-  set: (meta: SocketMeta) => void;
-  close: () => void;
-};
-
-function SetMeta({ meta, set, close }: MetaDialogProps) {
-  if (!meta) meta = {};
-  const [name, setName] = useState(meta.name);
-  const [avatar, setAvatar] = useState(meta.avatar || avatars[0]);
-
-  return (
-    <div class="flex flex-col gap-2 text-center">
-      <div>
-        <label for="name">Initials: </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          size={3}
-          onInput={(e: any) => {
-            let modName = e.target.value.substr(0, 3).toUpperCase();
-            setName(modName);
-            e.target.value = modName;
-          }}
-          value={name}
+    <div class="flex flex-col gap-4">
+      {OptionsView && (
+        <OptionsView
+          numPlayers={numPlayers}
+          options={options}
+          setOptions={updateOptions}
         />
-      </div>
-      <div>
-        <label for="avatar">Avatar: </label>
-        <select
-          class="text-2xl"
-          value={avatar}
-          onChange={(e: any) => {
-            setAvatar(e.target.value);
-          }}
+      )}
+      <div class="inline-flex flex-col items-center gap-3">
+        {client.game.botFn && (
+          <button
+            class={`flex items-center gap-2 ${buttonClass}`}
+            onClick={() => {
+              client.serverActions.addBot();
+            }}
+            disabled={roomFull}
+          >
+            <Twemoji char={"🤖"} size={24} />
+            <span>Add bot</span>
+          </button>
+        )}
+        <button
+          class={`flex items-center gap-2 ${buttonClass}`}
+          onClick={() => start({ options })}
+          disabled={!gameReady}
         >
-          {avatars.map((a) => (
-            <option value={a}>{a}</option>
-          ))}
-        </select>
+          <Twemoji char={"➡️"} size={24} />
+          <span>Start game</span>
+        </button>
       </div>
-      <button
-        onClick={() => {
-          set({ name, avatar });
-          close();
-        }}
-      >
-        Apply
-      </button>
     </div>
   );
 }

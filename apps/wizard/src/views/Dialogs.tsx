@@ -1,19 +1,13 @@
+import { Twemoji } from "@shared/components/Twemoji";
 import { OptionsDisplay } from "./Options";
-
-import { useGame, game, setDialog, serverActions } from "~src/control";
+import { useGame, setDialog, serverActions } from "~src/control";
 
 export function OptionsDialog() {
   const [id, ctx, playerIndex] = useGame((x) => [x.id, x.ctx, x.playerIndex]);
 
-  if (id === "" || !ctx) {
-    setDialog(null);
-    return null;
-  }
-
   return (
-    <>
+    <div class="flex flex-col  gap-3">
       <div class="flex flex-col gap-2">
-        <h2>{game.meta.name}</h2>
         <div>
           <span class="font-bold">Room:</span> {id}
         </div>
@@ -27,25 +21,23 @@ export function OptionsDialog() {
           </div>
         </div>
       </div>
-      <br />
-      <div class="text-center">
+      <div class="flex flex-col items-center gap-2">
         <button
           onClick={() => {
             serverActions.leave();
             setDialog(null);
           }}
         >
-          🛑 Leave game
+          <Twemoji char={"🛑"} size={24} /> &nbsp; Leave game
         </button>
-        <br />
         <button
           onClick={() => {
             serverActions.getHistoryString();
           }}
         >
-          📖 Get history
+          <Twemoji char={"🔄"} size={24} /> &nbsp; Generate history
         </button>
       </div>
-    </>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useDrag } from "@use-gesture/react";
 
 import { style } from "@lib/style";
 import { useRefreshOnResize } from "@lib/hooks";
-import { getNearestDimensions } from "@lib/dom";
+import { getElDimensionsVector, getNearestDimensions } from "@lib/dom";
 
 import { getHandCardPosition } from "@shared/domEffects/positionHand";
 import { randomBetween } from "@lib/random";
@@ -51,7 +51,9 @@ export function PositionHandCard({
       const $el = elRef.current!;
       const $card = $el.firstChild as HTMLElement;
       const { width } = $card.getBoundingClientRect();
-      const [containerWidth, containerHeight] = getNearestDimensions($el);
+      const [containerWidth, containerHeight] = getElDimensionsVector(
+        document.getElementById("tabletop-backdrop")!
+      );
       handPosRef.current = getHandCardPosition(
         idx,
         numCards,
@@ -61,10 +63,16 @@ export function PositionHandCard({
       );
       const [x, y, z] = handPosRef.current;
       if (isDeal) {
-        style($el, { x, y: y + 100, rotate: randomBetween(0, 22), zIndex: z });
+        style($el, {
+          x,
+          y: y + 100,
+          rotate: randomBetween(0, 22),
+          zIndex: z,
+          scale: 1,
+        });
         waitFor(style($el, { x, y, rotate: 0, zIndex: z }, { duration: 750 }));
       } else {
-        style($el, { x, y, zIndex: z });
+        style($el, { x, y, zIndex: z, scale: 1 });
       }
     },
     [resizeToken, numCards, card, isDeal]
@@ -93,7 +101,11 @@ export function PositionHandCard({
       const $el = elRef.current!;
       const [x, y, z] = handPosRef.current;
 
-      style($el, { x, y, rotate: [360, 0], zIndex: z }, { duration: 300 });
+      style(
+        $el,
+        { x, y, rotate: [360, 0], zIndex: z, scale: 1 },
+        { duration: 300 }
+      );
       setState("idle");
     },
     [errRef]

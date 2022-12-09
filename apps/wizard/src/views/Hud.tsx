@@ -30,18 +30,17 @@ function RoundDisplay() {
   );
 }
 
-const trumpDisplayProps = createGameSelector(
-  ({ board: { trumpCard, trumpSuit, phase } }) => {
-    return {
-      showTrumpDisplay: Boolean(
-        trumpCard && phase !== "deal" && phase !== "trumpReveal"
-      ),
-      showWaiting: phase === "select",
-      trumpCard,
-      trumpSuit,
-    };
-  }
-);
+const trumpDisplayProps = createGameSelector(({ board }) => {
+  const b = board;
+  return {
+    showTrumpDisplay: Boolean(
+      b.trumpCard && b.phase !== "deal" && b.phase !== "trumpReveal"
+    ),
+    showWaiting: b.phase === "select",
+    trumpCard: b.trumpCard,
+    trumpSuit: b.trumpSuit,
+  };
+});
 
 function TrumpDisplay() {
   const { showTrumpDisplay, showWaiting, trumpCard, trumpSuit } =
@@ -69,8 +68,9 @@ function TrumpDisplay() {
 
   return (
     <AnimateIn>
-      <div class="inline align-middle">
-        Trump: <div class="inline">{vdom}</div>
+      <div class="flex justify-center items-center gap-1">
+        <div>Trump: </div>
+        <div class="inline">{vdom}</div>
       </div>
     </AnimateIn>
   );

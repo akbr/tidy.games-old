@@ -59,7 +59,7 @@ function MeterConsole<T>({
 
   return (
     <section
-      id="debug-json"
+      id="tabletop-debugPanel"
       class="h-full flex flex-col gap-4 bg-gray-200 w-[175px] text-black p-2 break-all"
     >
       <div class="text-center">
@@ -77,20 +77,15 @@ function MeterConsole<T>({
 
 export function DevWrapper<T>({
   meter,
-  children,
   stateDisplay,
 }: {
   meter: Meter<T>;
-  children: ComponentChildren;
   stateDisplay: StateDisplay<T>;
 }) {
   return (
-    <div class="h-full flex flex-row">
-      <MeterConsole meter={meter}>
-        <StateList meter={meter} SD={memo(stateDisplay)} />
-      </MeterConsole>
-      {children}
-    </div>
+    <MeterConsole meter={meter}>
+      <StateList meter={meter} SD={memo(stateDisplay)} />
+    </MeterConsole>
   );
 }
 

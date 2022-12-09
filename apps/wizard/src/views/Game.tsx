@@ -1,20 +1,20 @@
 import { ComponentChildren, h } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
-
-import { style } from "@lib/style";
-import { useRefreshOnResize } from "@lib/hooks";
-import { getNearestDimensions } from "@lib/dom";
-
-import { getHandHeight } from "@shared/domEffects/positionHand";
+import { useRef } from "preact/hooks";
 
 import { UiButtons } from "./UiButtons";
 import { Hud } from "./Hud";
-import { Seats } from "./Seats/Seats";
+import { Seats } from "./Seats";
 import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
-import { useGame } from "~src/control";
+import {
+  useGame,
+  waitFor,
+  useTableDimensions,
+  TABLE_MAX_WIDTH,
+} from "~src/control";
+import { BADGE_PADDING } from "./uiConsts";
 
 export const Game = () => {
   return (
@@ -29,9 +29,17 @@ export const Game = () => {
       <Hand />
       <Hud />
       <UiButtons />
+      <Timings />
     </>
   );
 };
+
+function Timings() {
+  const phase = useGame((x) => x.board.phase);
+  if (phase === "bidded") waitFor(500);
+  if (phase === "roundEnd") waitFor(4000);
+  return null;
+}
 
 function Outer({ children }: { children: ComponentChildren }) {
   return (
@@ -42,18 +50,20 @@ function Outer({ children }: { children: ComponentChildren }) {
 }
 
 function Table({ children }: { children: ComponentChildren }) {
-  const refreshSymbol = useRefreshOnResize();
-  const numCards = useGame((s) => s.board.hands[s.playerIndex].length || 1);
+  const { width, height } = useTableDimensions();
   const ref = useRef<HTMLElement>(null);
-
-  useLayoutEffect(() => {
-    const [width] = getNearestDimensions(ref.current!);
-    const tableHeight = getHandHeight(numCards, width, 35, 60);
-    style(ref.current!, { height: `calc(100% - ${tableHeight}px)` });
-  }, [refreshSymbol]);
-
+  console.log(width, height);
   return (
-    <section ref={ref} id="table" class="relative w-[700px] min-w-[400px]">
+    <section
+      ref={ref}
+      id="table"
+      class="relative w-full"
+      style={{
+        padding: BADGE_PADDING,
+        height,
+        maxWidth: TABLE_MAX_WIDTH,
+      }}
+    >
       {children}
     </section>
   );

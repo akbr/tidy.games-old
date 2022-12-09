@@ -28,5 +28,9 @@ export const avatars = [
   "🪰",
   "🦀",
   "🦑",
+  "🦬",
+  "🐧",
+  "🦋",
+  "🐝",
 ];
 export default avatars;

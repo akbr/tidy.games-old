@@ -1,23 +1,31 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { useShallowRef } from "@lib/hooks";
-import { positionTrick } from "@shared/domEffects/positionTrick";
+import { Vec } from "@lib/vector";
+import { stageTrick } from "@shared/domEffects/stageTrick";
 import { Card } from "@shared/components/Card";
 
-import { useGame, waitFor } from "~src/control";
+import { BADGE_PADDING, BADGE_DIMENSIONS } from "./uiConsts";
+
+import { useGame, useTableDimensions, waitFor } from "~src/control";
+
+export const PLAY_DISTANCE = Vec.add(BADGE_DIMENSIONS, [
+  BADGE_PADDING,
+  BADGE_PADDING,
+]);
 
 export const Trick = () => {
+  const dimensions = useTableDimensions();
   const ref = useRef(null);
 
-  const { board, ctx, playerIndex } = useGame();
-
-  const { phase, trickWinner, trick, trickLeader, player } = board;
+  const { board, ctx, playerIndex, action } = useGame();
+  const { phase, trickWinner, trick, trickLeader } = board;
 
   const effect = useShallowRef(
     (() => {
       if (phase === "played") {
         return {
           type: "played",
-          player: player!,
+          player: action?.player!,
         } as const;
       }
 
@@ -32,14 +40,19 @@ export const Trick = () => {
 
   useLayoutEffect(() => {
     waitFor(
-      positionTrick(ref.current!, {
-        numPlayers: ctx.numPlayers,
-        leadPlayer: trickLeader,
-        perspective: playerIndex,
-        effect,
-      })
+      stageTrick(
+        ref.current!,
+        [dimensions.width, dimensions.height],
+        {
+          numPlayers: ctx.numPlayers,
+          leadPlayer: trickLeader,
+          perspective: playerIndex,
+        },
+        PLAY_DISTANCE,
+        effect
+      )
     );
-  }, [effect, trick]);
+  }, [effect, trick, dimensions.resizeSymbol]);
 
   return (
     <section ref={ref} id="trick" class="absolute top-0 left-0">

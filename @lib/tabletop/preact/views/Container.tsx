@@ -1,19 +1,13 @@
 import { ComponentChildren } from "preact";
 
-export default function DefaultAppContainer({
-  children,
-}: {
-  children: ComponentChildren;
-}) {
+export function Container({ children }: { children: ComponentChildren }) {
   return (
     <section
       id="tabletop-container"
-      class="relative h-full w-full"
-      style={{
-        background: "radial-gradient(circle,#00850b 20%,#005c09 100%)",
-      }}
+      class="flex flex-col gap-12 items-center justify-between h-full p-4 overflow-auto"
     >
       {children}
     </section>
   );
 }
+export default Container;

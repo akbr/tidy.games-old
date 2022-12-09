@@ -63,7 +63,7 @@ export function createGameStore<S extends Spec>(
         prevBoard: applyMask(prevBoard, player),
         patches: patches.map((patch) => applyMask(patch, player)),
         final,
-        actions: actions.at(-1),
+        action: actions.at(-1),
       };
     },
 
@@ -79,6 +79,7 @@ export function createGameStore<S extends Spec>(
       actions.push(action);
       boards = nextUpdate.boards;
       patches = nextUpdate.patches;
+      final = nextUpdate.final;
       idx += 1;
     },
 

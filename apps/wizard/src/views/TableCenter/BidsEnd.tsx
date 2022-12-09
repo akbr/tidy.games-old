@@ -14,15 +14,15 @@ export function BidsEnd({
 }) {
   const ref = useRef(null);
   const diff = round - getTotalBids(bids);
-  const emoji = diff > 0 ? "📉" : diff < 0 ? "📈" : "👍";
+  const emoji = diff > 0 ? "⬇️" : diff < 0 ? "⬆️" : "👍";
 
   useLayoutEffect(() => {
     waitFor(fadeInOut(ref.current!));
   }, []);
 
   return (
-    <div ref={ref} class="flex items-center gap-2">
-      <h3>
+    <div ref={ref} class="flex flex-col items-center gap-2 max-w-[140px]">
+      <h3 class="text-center">
         {diff > 0
           ? `Underbid by ${diff}`
           : diff < 0
@@ -59,6 +59,6 @@ function fadeInOut($el: HTMLElement) {
         },
         { duration: 500, delay: 1000 }
       ),
-    () => delay(200),
+    () => delay(300),
   ]);
 }

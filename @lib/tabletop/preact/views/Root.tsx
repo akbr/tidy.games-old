@@ -1,56 +1,38 @@
 import { Spec } from "@lib/tabletop/core/spec";
 import { useEmitter } from "@lib/emitter";
 
-import { AppProps, AppViews } from "../types";
+import { AppProps, ViewInputs } from "../types";
 
-import DefaultBackrop from "./Backdrop";
-import DefaultAppContainer from "./Container";
-import DefaultTitle from "./Title";
-import DefaultLobby from "./Lobby";
-import DefaultGame from "./Game";
 import Notifications from "./Notifications";
 import DialogFeeder from "./DialogFeeder";
 
+import { Backdrop as DefaultBackdrop } from "./Backdrop";
+import { Title } from "./Title";
+import { Lobby } from "./Lobby";
+
 export function Root<S extends Spec>(
-  props: AppProps<S> & { views: AppViews<S> }
+  props: { appProps: AppProps<S> } & { viewInputs: ViewInputs<S> }
 ) {
-  const { views, ...appProps } = props;
-  const { Backdrop = DefaultBackrop, AppContainer = DefaultAppContainer } =
-    views;
+  const { appProps, viewInputs } = props;
+
+  const mode = useEmitter(appProps.client.emitter, (x) => x.mode);
+
+  const Backdrop = viewInputs.Backdrop || DefaultBackdrop;
+  const Game = viewInputs.Game;
+
+  const ModeView = (() => {
+    if (mode === "title") return <Title {...props} />;
+    if (mode === "lobby") return <Lobby {...props} />;
+    if (mode === "game") return <Game {...appProps} />;
+  })();
 
   return (
     <Backdrop {...appProps}>
-      <AppContainer {...appProps}>
-        <ModeSwitcher {...props} />
-        <Notifications {...appProps} />
-        <DialogFeeder {...appProps} />
-      </AppContainer>
+      {ModeView}
+      <Notifications {...appProps} />
+      <DialogFeeder {...appProps} />
     </Backdrop>
   );
 }
+
 export default Root;
-
-function ModeSwitcher<S extends Spec>(
-  props: AppProps<S> & { views: AppViews<S> }
-) {
-  const mode = useEmitter(props.client.emitter, (x) => x.mode);
-
-  const {
-    Title = DefaultTitle,
-    Lobby = DefaultLobby,
-    Game = DefaultGame,
-  } = props.views;
-
-  const lobbyProps = {
-    ...props,
-    Options: props.views.Options,
-  };
-
-  const ModeRoot = (() => {
-    if (mode === "title") return <Title {...props} />;
-    if (mode === "lobby") return <Lobby {...lobbyProps} />;
-    return <Game {...props} />;
-  })();
-
-  return <>{ModeRoot}</>;
-}

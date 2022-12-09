@@ -1,55 +1,62 @@
-import { useState } from "preact/hooks";
-import { useClientTitle } from "../createHooks";
-
 import type { Spec } from "@lib/tabletop/core/spec";
-import { Field } from "./Utils";
-import { AppProps } from "../types";
+import { Twemoji } from "@shared/components/Twemoji";
 
-export default function Title<S extends Spec>({ client }: AppProps<S>) {
+import { useClientTitle } from "../createHooks";
+import { MetaViewProps } from "../types";
+import { Container } from "./Container";
+
+export function Title<S extends Spec>({
+  viewInputs,
+  appProps,
+}: MetaViewProps<S>) {
+  const { client } = appProps;
+  const { buttonClass, TitleDisplay, FooterDisplay } = viewInputs;
+
   const connected = useClientTitle(client)((x) => x.connected);
-  const [code, setCode] = useState("");
 
-  const { meta } = client.game;
+  const {
+    meta: { name },
+  } = client.game;
   const { join } = client.serverActions;
 
-  return (
-    <section
-      id="tabletop-title"
-      class="flex flex-col h-full justify-center items-center gap-14"
-    >
-      <div class="text-center font-bold text-[64px]">{meta.name}</div>
-      <div class="flex flex-col items-center gap-4">
-        <Field legend="✨ New game">
-          <div class="text-center">
-            <button onClick={() => join()} disabled={!connected}>
-              Create
-            </button>
-          </div>
-        </Field>
+  function Buttons() {
+    return (
+      <section
+        id="tabletop-titleContent"
+        class="flex flex-col justify-center gap-2"
+      >
+        <button
+          onClick={() => join()}
+          disabled={!connected}
+          class={buttonClass}
+        >
+          <Twemoji char={"✨"} size={24} />
+          &nbsp;
+          <span>Create game</span>
+        </button>
+        <h3 class="font-italic font-light"></h3>
+        <button
+          onClick={() => {
+            const id = prompt("Enter a room code:");
+            if (!id) return;
+            client.serverActions.join({ id: id.toUpperCase() });
+          }}
+          class={buttonClass}
+          disabled={!connected}
+        >
+          <Twemoji char={"🚪"} size={24} />
+          &nbsp;
+          <span>Join game</span>
+        </button>
+      </section>
+    );
+  }
 
-        <h3 class="font-italic font-light"> OR </h3>
-        <Field legend="✏️ Join game">
-          <div class="flex gap-2 justify-center">
-            <input
-              onInput={
-                //@ts-ignore
-                (e: Event) => setCode(e.target.value.toUpperCase())
-              }
-              type="text"
-              size={4}
-              maxLength={4}
-            ></input>
-            <button
-              onClick={() => {
-                join({ id: code });
-              }}
-              disabled={!connected}
-            >
-              Enter code
-            </button>
-          </div>
-        </Field>
-      </div>
-    </section>
+  return (
+    <Container>
+      <TitleDisplay title={name} />
+      <Buttons />
+      <FooterDisplay title={name} />
+    </Container>
   );
 }

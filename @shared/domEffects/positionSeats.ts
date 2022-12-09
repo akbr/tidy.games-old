@@ -30,10 +30,10 @@ const ratio2DirectionVec = ([ratioX, ratioY]: number[]) => {
 };
 
 const ratio2CSSDirection = ([x, y]: number[]) => {
-  if (x === 0 && y > 0) return "left";
-  if (x === 1 && y > 0) return "right";
-  if (y === 1 && x > 0) return "bottom";
-  return "top";
+  if (x === 0 && y > 0) return "right";
+  if (x === 1 && y > 0) return "left";
+  if (y === 1 && x > 0) return "top";
+  return "bottom";
 };
 
 export const getSeatRatio = (numPlayers: number, seatIndex: number) =>
@@ -48,8 +48,8 @@ export const getSeatCSSDirection = (numPlayers: number, seatIndex: number) =>
 export const getSeatPosition = (
   numPlayers: number,
   seatIndex: number,
-  { width, height }: Dimensions
-) => Vec.mulV(getSeatRatio(numPlayers, seatIndex), [width, height]);
+  containerDimensions: number[]
+) => Vec.mulV(getSeatRatio(numPlayers, seatIndex), containerDimensions);
 
 export const getTranslateAdjustment = (ratio: number) =>
   ratio === 0 ? 0 : ratio === 1 ? -100 : -50;
@@ -57,8 +57,7 @@ export const getTranslateAdjustment = (ratio: number) =>
 export const getStyle = ([xRatio, yRatio]: number[]) => ({
   left: `${xRatio * 100}%`,
   top: `${yRatio * 100}%`,
-  transform: `translate(
-    ${getTranslateAdjustment(xRatio)}%,
-    ${getTranslateAdjustment(yRatio)}%
-  )`,
+  translate: `${getTranslateAdjustment(xRatio)}% ${getTranslateAdjustment(
+    yRatio
+  )}%`,
 });

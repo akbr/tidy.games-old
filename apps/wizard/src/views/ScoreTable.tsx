@@ -70,7 +70,6 @@ export const ScoreTable = () => {
 
   return (
     <div class="text-center">
-      <h2 class="mb-2">Scores</h2>
       {/** @ts-ignore  */}
       <table border={"1"} class="bg-white text-black rounded pb-0.5">
         <tr>

@@ -1,2 +1,2 @@
-export { default } from "./createViewManager";
-export * from "./createViewManager";
+export { default } from "./initViews";
+export * from "./initViews";

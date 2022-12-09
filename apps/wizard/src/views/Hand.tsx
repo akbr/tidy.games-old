@@ -2,15 +2,25 @@ import { style } from "@lib/style";
 import { getNearestDimensions } from "@lib/dom";
 
 import { Card } from "@shared/components/Card";
-import { getPlayedPosition } from "@shared/domEffects/positionTrick";
+import {
+  getPlayedPosition,
+  getTrickScaling,
+} from "@shared/domEffects/positionTrick";
 
 import {
   PositionHandCard,
   PositionHandCardProps,
 } from "@shared/components/PositionHandCard";
-import { getHandHeight } from "@shared/domEffects/positionHand";
 
-import control from "~src/control";
+import control, {
+  getDimensions,
+  getTableDimensions,
+  useDimensions,
+} from "~src/control";
+import { PLAY_DISTANCE } from "./Trick";
+import { BADGE_PADDING } from "./uiConsts";
+
+import { client } from "~src/control";
 
 const {
   useGame,
@@ -22,13 +32,37 @@ const {
 const shouldDrop: PositionHandCardProps["shouldDrop"] = (_, dy) => dy < -50;
 
 const onDrop: PositionHandCardProps["onDrop"] = ($el, card, numCards) => {
-  const [containerWidth, containerHeight] = getNearestDimensions($el);
-  const handHeight = getHandHeight(numCards, containerWidth);
-  const { x, y } = getPlayedPosition(2, 0, {
-    width: containerWidth,
-    height: containerHeight - handHeight,
-  });
-  style($el, { x, y }, { duration: 250 })?.finished.then(() => {
+  const dimensions = getTableDimensions();
+
+  //@ts-ignore
+  const numPlayers = client.emitter.get().ctx.numPlayers;
+
+  const containerDimensions = [dimensions.width, dimensions.height];
+  const { scale, scaledDimensions, playDistance } = getTrickScaling(
+    numPlayers,
+    containerDimensions,
+    $el,
+    PLAY_DISTANCE
+  );
+
+  const [x, y] = getPlayedPosition(
+    2,
+    0,
+    containerDimensions,
+    scaledDimensions,
+    playDistance,
+    scale
+  );
+
+  style(
+    $el,
+    {
+      x: x + dimensions.x,
+      y: y + dimensions.y,
+      scale,
+    },
+    { duration: 250 }
+  )?.finished.then(() => {
     play(card);
   });
 };

@@ -1,6 +1,11 @@
-export function getNearestDimensions($el: Element): number[] {
-  const rect = $el.parentElement!.getBoundingClientRect();
-  if (rect.width > 0 && rect.height > 0) return [rect.width, rect.height];
-  if ($el.parentElement) return getNearestDimensions($el.parentElement);
+export function getElDimensionsVector($el: Element): number[] {
+  const rect = $el.getBoundingClientRect();
   return [rect.width, rect.height];
+}
+
+export function getNearestDimensions($el: Element): number[] {
+  const vec = getElDimensionsVector($el.parentElement!);
+  if (vec[0] > 0 && vec[1] > 0) return vec;
+  if ($el.parentElement) return getNearestDimensions($el.parentElement);
+  return vec;
 }

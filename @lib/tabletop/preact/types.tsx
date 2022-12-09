@@ -1,4 +1,4 @@
-import type { FunctionalComponent } from "preact";
+import type { ComponentChildren, FunctionalComponent } from "preact";
 import type { Emitter } from "@lib/emitter";
 import type { Spec } from "../core";
 import type { Client } from "../client";
@@ -19,12 +19,16 @@ export type OptionsView<S extends Spec> = FunctionalComponent<{
   setOptions: (x: S["options"]) => void;
 }>;
 
-export type AppViews<S extends Spec> = {
-  Backdrop?: FunctionalComponent<AppProps<S>>;
-  AppContainer?: FunctionalComponent<AppProps<S>>;
-  Title?: FunctionalComponent<AppProps<S>>;
-  Lobby?: FunctionalComponent<AppProps<S> & { Options?: OptionsView<S> }>;
-  Game?: FunctionalComponent<AppProps<S>>;
-  Side?: FunctionalComponent<AppProps<S>>;
-  Options?: OptionsView<S>;
+export type ViewInputs<S extends Spec> = {
+  Backdrop?: FunctionalComponent<AppProps<S> & { children: ComponentChildren }>;
+  TitleDisplay: FunctionalComponent<{ title: string }>;
+  FooterDisplay: FunctionalComponent<{ title: string }>;
+  OptionsView?: OptionsView<S>;
+  buttonClass: string;
+  Game: FunctionalComponent<AppProps<S>>;
+};
+
+export type MetaViewProps<S extends Spec> = {
+  appProps: AppProps<S>;
+  viewInputs: ViewInputs<S>;
 };

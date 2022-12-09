@@ -12,6 +12,8 @@ import { createGameStore } from "../core/store";
 import { createBotSocket } from "./createBotSocket";
 import { createGameHost } from "./createGameHost";
 import { encodeHistory, getRandomRoomID, getSeatNumber } from "./utils";
+import avatars from "./avatars";
+import { randomFromArray } from "@lib/random";
 
 export function createServer<S extends Spec>(game: Game<S>) {
   // State
@@ -183,6 +185,10 @@ export function createServer<S extends Spec>(game: Game<S>) {
     room.sockets[seatIndex] = socket;
     socketMap.room.set(socket, { id: room.id, hasUpdate: false });
 
+    if (!botMap.has(socket)) {
+      socketMap.meta.set(socket, { avatar: randomFromArray(avatars) });
+    }
+
     if (room.host) room.host.update(seatIndex);
 
     broadcastSocketsUpdate(room);
@@ -238,19 +244,24 @@ export function createServer<S extends Spec>(game: Game<S>) {
       onUpdate: (playerIndex, update) => {
         const socket = room.sockets[playerIndex];
         if (!socket) return;
+
         if (botMap.has(socket)) {
           dispatch(socket, { update });
           return;
         }
 
+        const historyString = update.final
+          ? encodeHistory(room.store!.getHistory())
+          : undefined;
+
         if (socketMap.room.get(socket)?.hasUpdate) {
           const { ctx, prevBoard, ...hotUpdate } = update;
-          dispatch(socket, { hotUpdate });
+          dispatch(socket, { hotUpdate, historyString });
           return;
         }
 
         socketMap.room.get(socket)!.hasUpdate = true;
-        dispatch(socket, { update });
+        dispatch(socket, { update, historyString });
       },
       onErr: (playerIndex, gameErr) => {
         const socket = room.sockets[playerIndex];
@@ -275,8 +286,7 @@ export function createServer<S extends Spec>(game: Game<S>) {
     const room = getRoom(socket);
     if (!room) return "You are not in a room.";
     if (!room.store) return "This room's game has not started.";
-    const history = room.store.getHistory();
-    const historyString = encodeHistory(history);
+    const historyString = encodeHistory(room.store.getHistory());
     dispatch(socket, { historyString });
   }
 

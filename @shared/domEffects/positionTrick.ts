@@ -1,197 +1,130 @@
-import { Vec, toXY } from "@lib/vector";
-import { rotateArray } from "@lib/array";
-import { randomBetween } from "@lib/random";
-import { getNearestDimensions } from "@lib/dom";
-import { style } from "@lib/style";
-import { seq, delay, all } from "@lib/async/task";
+import { getElDimensionsVector } from "@lib/dom";
+import { Vec, Vector } from "@lib/vector";
+import {
+  getSeatPosition,
+  getSeatDirectionVector,
+  getSeatRatio,
+} from "./positionSeats";
 
-import { getSeatPosition, getSeatDirectionVector } from "./positionSeats";
-
-type Dimensions = { width: number; height: number };
-const CHILD_DIMENSIONS = [80, 112];
-const buffer = [0.8, 0.8];
+export const getScaleAdjVector = (scaledDimensions: Vector, atScale: number) =>
+  Vec.mul(
+    Vec.sub(scaledDimensions, Vec.mul(scaledDimensions, 1 / atScale)),
+    0.5
+  );
 
 export const getHeldPosition = (
   numPlayers: number,
   seatIndex: number,
-  dimensions: Dimensions,
-  childDimensions = CHILD_DIMENSIONS
+  containerDimensions: Vector,
+  childDimensions: Vector,
+  atScale: number
 ) => {
-  const seat = getSeatPosition(numPlayers, seatIndex, dimensions);
-  const direction = getSeatDirectionVector(numPlayers, seatIndex);
-  const heldOffset = Vec.mulV(Vec.mul(direction, -1), childDimensions, buffer);
-  const cardCenter = Vec.mul(childDimensions, -0.5);
-
-  return toXY(Vec.add(seat, cardCenter));
+  const [xR, yR] = getSeatRatio(numPlayers, seatIndex);
+  const seat = getSeatPosition(numPlayers, seatIndex, containerDimensions);
+  const adjDirVector = (() => {
+    if (xR === 0) return [-1, -0.5];
+    if (xR === 1) return [0, -0.5];
+    if (yR === 0) return [-0.5, -1];
+    return [-0.5, 0];
+  })();
+  const posVector = Vec.mulV(childDimensions, adjDirVector);
+  return Vec.add(seat, posVector, getScaleAdjVector(childDimensions, atScale));
 };
 
 export const getCenterPlayedPosition = (
-  { width, height }: Dimensions,
-  childDimensions = CHILD_DIMENSIONS
+  containerDimensions: Vector,
+  cardDimensions: Vector
 ) => {
-  const screenCenter = Vec.mul([width, height], 0.5);
-  const cardCenter = Vec.mul(childDimensions, -0.5);
-  return toXY(Vec.add(screenCenter, cardCenter));
+  const screenCenter = Vec.mul(containerDimensions, 0.5);
+  const cardCenter = Vec.mul(cardDimensions, -0.5);
+  return Vec.add(screenCenter, cardCenter);
 };
 
 export const getPlayedPosition = (
   numPlayers: number,
   seatIndex: number,
-  dimensions: Dimensions,
-  childDimensions = CHILD_DIMENSIONS
+  containerDimensions: Vector,
+  cardDimensions: Vector,
+  distance = [0, 0] as Vector,
+  atScale: number
 ) => {
-  const minYRatio = 0.35;
-  const seat = getSeatPosition(numPlayers, seatIndex, dimensions);
+  const heldPosition = getHeldPosition(
+    numPlayers,
+    seatIndex,
+    containerDimensions,
+    cardDimensions,
+    1
+  );
+
   const direction = getSeatDirectionVector(numPlayers, seatIndex);
 
-  const playOffset = Vec.mulV(direction, [
-    dimensions.width / 2,
-    dimensions.height * minYRatio,
-  ]);
-  const padding = Vec.mulV(Vec.mul(direction, -1), [
-    childDimensions[0] + 12,
-    childDimensions[1] / 2,
-  ]);
-  const cardCenter = Vec.mul(childDimensions, -0.5);
-  const positionVector = Vec.add(seat, playOffset, padding, cardCenter);
+  const [cardW, cardH] = cardDimensions;
+  const [dX, dY] = distance;
+  const pushOut = Vec.mulV([dX + cardW, dY + cardH], direction);
 
-  return toXY(positionVector);
+  return Vec.add(
+    heldPosition,
+    pushOut,
+    getScaleAdjVector(cardDimensions, atScale)
+  );
 };
 
-export const getWaggle = (amt: number, amt2: number) => {
-  const getAmt = () => randomBetween(amt, amt2);
-  return [0, getAmt(), 0, -getAmt(), 0, getAmt(), -getAmt() / 4];
-};
+export function getCardScale(
+  numPlayers: number,
+  containerDimensions: number[],
+  cardDimensions: number[]
+) {
+  return Math.min(
+    ...Vec.divV(
+      getMaxCardDimensions(numPlayers, containerDimensions),
+      cardDimensions
+    )
+  );
+}
 
-export type TrickProps = {
-  numPlayers: number;
-  leadPlayer: number;
-  perspective?: number;
-  effect?:
-    | { type: "none" }
-    | { type: "played"; player: number }
-    | { type: "won"; player: number };
-};
+export function getMaxCardDimensions(
+  numPlayers: number,
+  containerDimensions: Vector
+) {
+  const cardsPerDimension = (() => {
+    if (numPlayers === 2) return [1, 2];
+    if (numPlayers === 3) return [3, 1];
+    return [3, 2];
+  })();
 
-export const positionTrick = (
-  $trickContainer: HTMLElement,
-  curr: TrickProps
-) => {
-  const {
-    numPlayers,
-    leadPlayer,
-    perspective = 0,
-    effect = { type: "none" },
-  } = curr;
-  // Create collections
-  // ------------------
-  const cardEls = Array.from($trickContainer.children) as HTMLElement[];
-  if (cardEls.length === 0) return;
+  return Vec.divV(containerDimensions, cardsPerDimension);
+}
 
-  const cardElsByPlayer = rotateArray(
-    Array.from({ length: numPlayers }, (_, idx) => cardEls[idx]),
-    leadPlayer
-  ) as (HTMLElement | undefined)[];
-  const cardElsByPerspective = rotateArray(cardElsByPlayer, -perspective);
-
-  const [width, height] = getNearestDimensions(cardEls[0]);
-
-  // Base styling
-  // ------------
-  cardElsByPerspective.forEach(($card, idx) => {
-    if (!$card) return;
-    style($card, {
-      ...getPlayedPosition(numPlayers, idx, { width, height }),
-      rotate: 0,
-    });
-  });
-
-  // Play effect
-  // -----------
-  if (effect.type === "played" && effect.player !== perspective) {
-    const $played = cardElsByPlayer[effect.player]!;
-    const idx = cardElsByPerspective.indexOf($played);
-    style($played, {
-      ...getHeldPosition(numPlayers, idx, { width, height }),
-      rotate: randomBetween(-40, 40),
-      opacity: 0,
-    });
-    return style(
-      $played,
-      {
-        ...getPlayedPosition(numPlayers, idx, { width, height }),
-        rotate: 0,
-        opacity: 1,
-      },
-      {
-        duration: randomBetween(400, 600),
-      }
-    );
-  }
-
-  if (effect.type !== "won") return;
-
-  // Win effect
-  // ----------
-  const $winningCard = cardElsByPlayer[effect.player];
-  if (!$winningCard) return;
-
-  const losingCards = cardEls.filter(($el) => $el !== $winningCard);
-
-  $trickContainer.appendChild($winningCard);
-
-  const winningPlayed = getPlayedPosition(
-    numPlayers,
-    cardElsByPerspective.indexOf($winningCard),
-    { width, height }
+export function getTrickScaling(
+  numPlayers: number,
+  containerDimensions: number[],
+  $card: HTMLElement,
+  playDistanceVec: number[],
+  maxScale = 1.2,
+  cardPaddingVec = [16, 16]
+) {
+  const containerDimensionsForScaling = Vec.sub(
+    containerDimensions,
+    Vec.mul(playDistanceVec, 2),
+    cardPaddingVec
   );
 
-  const winningHold = getHeldPosition(
+  let { width, height } = getComputedStyle($card);
+  const originalCardDimensions = [parseInt(width, 10), parseInt(height, 10)];
+
+  let scale = getCardScale(
     numPlayers,
-    cardElsByPerspective.indexOf($winningCard),
-    { width, height }
+    containerDimensionsForScaling,
+    originalCardDimensions
   );
 
-  return seq([
-    () =>
-      style(
-        $winningCard,
-        { rotate: getWaggle(10, 20) },
-        {
-          duration: 750,
-          delay: 500,
-        }
-      ),
-    () =>
-      all(
-        losingCards.map(
-          ($card) =>
-            style(
-              $card,
-              {
-                ...winningPlayed,
-                rotate: randomBetween(-30, 30),
-              },
-              { duration: 300, delay: 375 }
-            )!
-        )
-      ),
-    () =>
-      all(
-        cardEls.map(
-          ($card) =>
-            style(
-              $card,
-              {
-                ...winningHold,
-                rotate: 45,
-                opacity: [1, 1, 0],
-                scale: [1, 0.5],
-              },
-              { duration: 400, delay: 325 }
-            )!
-        )
-      ),
-    () => delay(500),
-  ]);
-};
+  scale = scale > maxScale ? maxScale : scale;
+
+  return {
+    scale,
+    originalCardDimensions,
+    containerDimensions,
+    scaledDimensions: Vec.mul(originalCardDimensions, scale),
+    playDistance: playDistanceVec,
+  };
+}

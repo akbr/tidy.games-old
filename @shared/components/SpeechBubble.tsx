@@ -2,55 +2,42 @@ import { ComponentChildren } from "preact";
 
 const notchTransform = { transform: "translate(-50%, -50%) rotate(45deg)" };
 const notchPositions = {
-  left: {
+  right: {
     left: "0",
     top: "50%",
   },
-  right: {
+  left: {
     left: "100%",
     top: "50%",
   },
-  top: {
+  bottom: {
     left: "50%",
     top: "0",
   },
-  bottom: {
+  top: {
     left: "50%",
     top: "100%",
   },
 };
-
-export const getBubblePos = (dir: keyof typeof notchPositions, amt = 16) => {
-  if (dir === "left")
-    return { top: "50%", left: "100%", transform: `translate(${amt}px, -50%)` };
-  if (dir === "right")
-    return {
-      top: "50%",
-      right: "100%",
-      transform: `translate(${-amt}px, -50%)`,
-    };
-  if (dir === "top")
-    return { top: "100%", left: "50%", transform: `translate(-50%, ${amt}px)` };
-  return {
-    bottom: "100%",
-    left: "50%",
-    transform: `translate(-50%, ${-amt}px)`,
-  };
-};
+const getNotchStyle = (dir: keyof typeof notchPositions) => ({
+  ...notchPositions[dir],
+  ...notchTransform,
+});
 
 export const SpeechBubble = ({
   dir,
   children,
 }: {
-  dir: keyof typeof notchPositions;
+  dir: string;
   children: ComponentChildren;
 }) => {
-  const notchStyle = { ...notchPositions[dir], ...notchTransform };
-
   return (
-    <div class={`relative inline-block bg-yellow-200 text-black p-1.5 rounded`}>
-      {children}
-      <div class="absolute w-[8px] h-[8px] bg-yellow-200" style={notchStyle} />
+    <div class="m-[8px] relative">
+      <div
+        class="absolute w-[8px] h-[8px] bg-yellow-200"
+        style={getNotchStyle(dir as any)}
+      />
+      <div class={`bg-yellow-200 text-black p-1.5 rounded`}>{children}</div>
     </div>
   );
 };

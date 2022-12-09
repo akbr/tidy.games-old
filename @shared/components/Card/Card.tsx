@@ -9,7 +9,7 @@ export const splitCard = (cardId: string) => {
   return { value, suit, color } as const;
 };
 
-const shadow = { filter: "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.5))" };
+const filter = "drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.5))";
 export const Card = memo(({ card }: { card: string }) => {
   const { value, suit, color } = splitCard(card);
 
@@ -17,8 +17,8 @@ export const Card = memo(({ card }: { card: string }) => {
 
   return (
     <div
-      class="relative w-[80px] h-[112px] rounded-[8px] bg-[#fffff4]"
-      style={shadow}
+      class="relative rounded-[8px] bg-[#fffff4]"
+      style={{ filter, width: "80px", height: "112px" }}
     >
       <div
         class="flex flex-col pt-[6px] pl-[2px] gap-[4px] w-[26px]"
@@ -53,12 +53,15 @@ export const MiniCard = ({
 
   return (
     <div class="inline-block">
-      <div class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]">
+      <div
+        class="bg-[#fffff4] rounded flex justify-center items-center p-[3px]"
+        style={{ border: "1px solid black" }}
+      >
         {showValue && values[value] && (
           <div class="w-4 h-4" style={{ fill: color }}>
             {values[value]()}
           </div>
-        )}{" "}
+        )}
         <div class="w-4 h-4" style={{ fill: color }}>
           {suit && suits[suit]()}
         </div>

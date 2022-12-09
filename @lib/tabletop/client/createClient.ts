@@ -39,7 +39,9 @@ export type GameState<S extends Spec> = {
 export type ClientState<S extends Spec> =
   | ({ mode: "title" } & AppState)
   | ({ mode: "lobby" } & AppState & RoomState)
-  | ({ mode: "game" } & AppState & RoomState & GameState<S>);
+  | ({ mode: "game" } & AppState &
+      RoomState &
+      GameState<S> & { historyString?: string });
 
 export type Client<S extends Spec> = {
   emitter: ReadOnlyEmitter<ClientState<S>>;
@@ -66,12 +68,14 @@ export function createClient<S extends Spec>(
   let _idx = -1;
   let _ctx: Ctx<S> | null = null;
   let _boards: S["board"][] = [];
+  let _historyString: string | undefined = undefined;
   let _action: PlayerAction<S> | null = null;
   function resetGameCache() {
     _idx = -1;
     _ctx = null;
     _boards = [];
     _action = null;
+    _historyString = undefined;
   }
 
   const emitter = createEmitter({
@@ -117,6 +121,7 @@ export function createClient<S extends Spec>(
       ...appState,
       ...roomState,
       ...gameState,
+      historyString: _historyString,
     });
   }
 
@@ -156,10 +161,8 @@ export function createClient<S extends Spec>(
         return;
       }
 
-      //TK
       if (res.historyString) {
-        console.log(`http://localhost:3000/analyze.html#` + res.historyString);
-        return;
+        _historyString = res.historyString;
       }
 
       const locChanged = !loc || loc.id !== res.loc.id;

@@ -65,5 +65,12 @@ export const TableCenter = () => {
     return null;
   })();
 
-  return <div class="absolute top-1/2 left-1/2 translate-center">{vnode}</div>;
+  return (
+    <div
+      class="absolute top-1/2 left-1/2"
+      style={{ transform: "translate(-50%, -50%)" }}
+    >
+      {vnode}
+    </div>
+  );
 };

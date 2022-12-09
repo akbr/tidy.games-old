@@ -5,8 +5,8 @@ export const Field: FunctionalComponent<{ legend: string }> = ({
   children,
 }) => {
   return (
-    <fieldset class="p-3 border-0 bg-black bg-opacity-40 rounded">
-      <legend class="font-bold">{legend}</legend>
+    <fieldset class="p-4 border-0 bg-black bg-opacity-20 rounded">
+      <legend class="font-bold text-lg">{legend}</legend>
       {children}
     </fieldset>
   );

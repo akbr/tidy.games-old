@@ -11,25 +11,25 @@ export const UiButtons = () => {
       <Box>
         <OptionsButton />
         <ScoresButton />
+        <AnalyzeButton />
       </Box>
     </section>
   );
 };
 
 function Box({ children }: { children: ComponentChildren }) {
-  return <div class="flex gap-3 p-3">{children}</div>;
+  return <div class="flex gap-2 m-3">{children}</div>;
 }
 
 function OptionsButton() {
   return (
-    <div
-      class="cursor-pointer"
+    <button
       onClick={() => {
         setDialog(OptionsDialog);
       }}
     >
-      <Twemoji char={"⚙️"} size={36} />
-    </div>
+      <Twemoji char={"⚙️"} size={24} />
+    </button>
   );
 }
 
@@ -37,13 +37,36 @@ function ScoresButton() {
   const scores = useGame((x) => x.board.scores);
 
   return scores.length <= 0 ? null : (
-    <div
-      class="cursor-pointer"
+    <button
       onClick={() => {
         setDialog(ScoreTable);
       }}
     >
-      <Twemoji char={"🗒️"} size={36} />
-    </div>
+      <Twemoji char={"🔢"} size={24} />
+    </button>
+  );
+}
+
+const getAnalyzeHref = (history: string) => {
+  const host = window.location.hostname.replace("www.", "");
+  const port = location.port === "" ? "" : `:${location.port}`;
+  const path = window.location.pathname;
+  const hash = `#${history}`;
+
+  return [location.protocol, "//", host, port, path, "analyze.html", hash].join(
+    ""
+  );
+};
+
+function AnalyzeButton() {
+  const historyString = useGame((x) => x.historyString);
+  if (!historyString) return null;
+
+  return (
+    <button class="cursor-pointer">
+      <a href={getAnalyzeHref(historyString)} target="_blank">
+        <Twemoji char={"📊"} size={24} />
+      </a>
+    </button>
   );
 }

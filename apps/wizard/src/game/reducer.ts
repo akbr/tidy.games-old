@@ -118,28 +118,33 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
       return a;
     },
 
-    (b, a) => {
+    (b, a, c) => {
       const nextHands = b.hands.map((hand, i) =>
         i === a.player! ? hand.filter((card) => card !== a.data) : hand
       );
       const nextTrick = [...b.trick, a.data];
 
-      return { phase: "played", hands: nextHands, trick: nextTrick };
+      return [
+        {
+          phase: "played",
+          hands: nextHands,
+          trick: nextTrick,
+          player: null,
+        },
+        nextTrick.length < c.numPlayers
+          ? { phase: "play", player: rotateIndex(c.numPlayers, b.player!, 1) }
+          : {
+              phase: "trickWon",
+              player: null,
+              trickWinner: rotateIndex(
+                c.numPlayers,
+                getWinningIndex(b.trick, b.trumpSuit),
+                b.trickLeader
+              ),
+            },
+      ];
     }
   ),
-
-  played: (b, c) =>
-    b.trick.length < c.numPlayers
-      ? { phase: "play", player: rotateIndex(c.numPlayers, b.player!, 1) }
-      : {
-          phase: "trickWon",
-          player: null,
-          trickWinner: rotateIndex(
-            c.numPlayers,
-            getWinningIndex(b.trick, b.trumpSuit),
-            b.trickLeader
-          ),
-        },
 
   trickWon: (b) => {
     const roundContinues = b.hands[0].length > 0;
