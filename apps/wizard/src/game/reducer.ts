@@ -138,7 +138,7 @@ export const wizardReducer = createPhaseReducer<WizardSpec>({
               player: null,
               trickWinner: rotateIndex(
                 c.numPlayers,
-                getWinningIndex(b.trick, b.trumpSuit),
+                getWinningIndex(nextTrick, b.trumpSuit),
                 b.trickLeader
               ),
             },
