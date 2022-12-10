@@ -98,9 +98,20 @@ function getWizardAlert({
         {type === "dealBubble" && "Dealing..."}
         {type === "trumpBubble" && "Trump is..."}
         {type === "bidBubble" && `Bid: ${alert.data}`}
-        {type === "scoreBubble" && `${alert.data}!`}
+        {type === "scoreBubble" && <ScoreNumber score={alert.data} />}
       </div>
     </SpeechBubble>
+  );
+}
+
+function ScoreNumber({ score }: { score: number }) {
+  const isPositive = score >= 0;
+  const sign = isPositive ? "+" : "";
+  const color = isPositive ? "#006400" : "red";
+  return (
+    <div class="font-bold" style={{ color }}>
+      {sign + score}
+    </div>
   );
 }
 
@@ -129,7 +140,7 @@ function getWizardDisplay({ display }: { display?: WizardDisplay }) {
   const [bid, actual] = display.data;
   return (
     <div>
-      {bid}/{actual}
+      {actual}/{bid}
     </div>
   );
 }

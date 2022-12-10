@@ -22,7 +22,7 @@ export function initPreactApp<S extends Spec>(
 
   attachHashListener(client);
 
-  const viewManager = initViews(client, $el, { dev: false });
+  const viewManager = initViews(client, $el, options);
 
   const useClient = createUseEmitter(client.emitter);
   const useTitle = useClientTitle(client);

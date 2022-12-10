@@ -4,6 +4,8 @@ import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 import { h } from "preact";
 
 import { useGame, createGameSelector } from "~src/control";
+
+import { getScore } from "~src/game/logic";
 import { Seat, SeatProps, WizardAlert, WizardDisplay } from "./Seat";
 
 export function Seats() {
@@ -52,7 +54,8 @@ const seatProps = (playerIndex: number, perspectiveIndex: number) =>
       if (biddingActive && bid !== null)
         return { type: "bidBubble", data: bid };
       if (board.player === playerIndex) return { type: "waiting" };
-      if (board.phase === "roundEnd") return { type: "scoreBubble", data: 0 };
+      if (board.phase === "roundEnd")
+        return { type: "scoreBubble", data: getScore(bid!, actual!) };
     })();
 
     return {

@@ -50,17 +50,17 @@ function Outer({ children }: { children: ComponentChildren }) {
 }
 
 function Table({ children }: { children: ComponentChildren }) {
-  const { width, height } = useTableDimensions();
+  const { height } = useTableDimensions();
   const ref = useRef<HTMLElement>(null);
-  console.log(width, height);
+
   return (
     <section
       ref={ref}
       id="table"
       class="relative w-full"
       style={{
-        padding: BADGE_PADDING,
         height,
+        padding: BADGE_PADDING,
         maxWidth: TABLE_MAX_WIDTH,
       }}
     >
