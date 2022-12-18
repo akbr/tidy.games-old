@@ -3,8 +3,6 @@ import { useState, useRef, useLayoutEffect } from "preact/hooks";
 import { useDrag } from "@use-gesture/react";
 
 import { style } from "@lib/style";
-import { useRefreshOnResize } from "@lib/hooks";
-import { getElDimensionsVector, getNearestDimensions } from "@lib/dom";
 
 import { getHandCardPosition } from "@shared/domEffects/positionHand";
 import { randomBetween } from "@lib/random";
@@ -24,6 +22,9 @@ export type PositionHandCardProps = {
     dragPos: number[]
   ) => void;
   errRef: any;
+  containerDimensions: number[];
+  cardWidth: number;
+  resizeSymbol: Symbol;
   children: ComponentChildren;
 };
 
@@ -37,12 +38,14 @@ export function PositionHandCard({
   errRef,
   shouldDrop,
   onDrop,
+  containerDimensions,
+  cardWidth,
+  resizeSymbol,
 }: PositionHandCardProps) {
   const elRef = useRef<HTMLDivElement>(null);
   const handPosRef = useRef([0, 0, 1]);
   const dragPosRef = useRef([0, 0]);
 
-  const resizeToken = useRefreshOnResize();
   const [state, setState] = useState<"idle" | "playing">("idle");
 
   // Hand positioning
@@ -50,14 +53,11 @@ export function PositionHandCard({
     function positionInHand() {
       const $el = elRef.current!;
       const $card = $el.firstChild as HTMLElement;
-      const { width } = $card.getBoundingClientRect();
-      const [containerWidth, containerHeight] = getElDimensionsVector(
-        document.getElementById("tabletop-backdrop")!
-      );
+      const [containerWidth, containerHeight] = containerDimensions;
       handPosRef.current = getHandCardPosition(
         idx,
         numCards,
-        width,
+        cardWidth,
         containerWidth,
         containerHeight
       );
@@ -75,7 +75,7 @@ export function PositionHandCard({
         style($el, { x, y, zIndex: z, scale: 1 });
       }
     },
-    [resizeToken, numCards, card, isDeal]
+    [resizeSymbol, numCards, card, isDeal]
   );
 
   // Triggers action when is "played"

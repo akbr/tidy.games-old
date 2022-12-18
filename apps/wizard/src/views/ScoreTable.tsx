@@ -4,7 +4,10 @@ import { Twemoji } from "@shared/components/Twemoji";
 
 import { getScore } from "../game/logic";
 
-import { useGame } from "~src/control";
+import { bundle } from "~src/bundle";
+const {
+  client: { useGame },
+} = bundle;
 
 export const convert = (scores: number[][]) => {
   let rows: number[][][] = [];
@@ -35,8 +38,8 @@ export const convert = (scores: number[][]) => {
 };
 
 const PlayerHead = ({ children }: { children: ComponentChildren }) => (
-  <th class="p-1 align-middle" scope={"col"} colSpan={3}>
-    {children}
+  <th class="p-1" scope={"col"} colSpan={3}>
+    <div class="flex items-center justify-center">{children}</div>
   </th>
 );
 
@@ -62,11 +65,7 @@ export const ScoreTable = () => {
     x.board.scores,
   ]);
 
-  if (scores.length === 0) return null;
-
   let modSeats = rotateArray(socketsStatus, -playerIndex);
-
-  let table = convert(scores.map((row) => rotateArray(row, -playerIndex)));
 
   return (
     <div class="text-center">
@@ -82,9 +81,10 @@ export const ScoreTable = () => {
             );
           })}
         </tr>
-        {table.map((columns) => (
-          <PlayerRow columns={columns} />
-        ))}
+        {scores.length > 0 &&
+          convert(scores.map((row) => rotateArray(row, -playerIndex))).map(
+            (columns) => <PlayerRow columns={columns} />
+          )}
       </table>
     </div>
   );

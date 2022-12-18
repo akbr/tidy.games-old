@@ -1,5 +1,5 @@
 import { shallow } from "@lib/compare";
-import { Emitter, ReadOnlyEmitter, Listener, Options } from "./emitter";
+import { Emitter, ReadOnlyEmitter, Listener } from "./emitter";
 
 export type Selector<T, U> = (curr: T) => U;
 export function withSelector<T, U>(
@@ -20,18 +20,11 @@ export function withSelector<T, U>(
   });
 }
 
-export function createSetFn<T>(emitter: Emitter<T>) {
-  return (partial: Partial<T>, options?: Options) => {
-    if (typeof partial === "object") {
-      emitter.next(
-        {
-          ...emitter.get(),
-          ...partial,
-        },
-        options
-      );
-    } else {
-      emitter.next(partial, options);
-    }
+export function createSetFn<T>({ get, next }: Emitter<T>) {
+  return (partial: Partial<T>) => {
+    next({
+      ...get(),
+      ...partial,
+    });
   };
 }

@@ -1,16 +1,23 @@
 import { render } from "preact";
 import { DevWrapper } from "@lib/meter/preact";
-import { createEmitter } from "@lib/emitter";
+import { createEmitter, useEmitter } from "@lib/emitter";
 
 import type { Spec } from "../core";
 import type { Client } from "../client";
 import type { AppProps, DialogView, SetDialog } from "./types";
 
 import { ViewInputs } from "./types";
+import { createUseResizeObserver } from "./hooks/createUseResizeObserver";
 
 import { StateDisplay } from "./views/StateDisplay";
+import { Backdrop } from "./views/Backdrop";
+import { Title } from "./views/Title";
+import { Lobby } from "./views/Lobby";
 
-import { Root } from "./views/Root";
+import { getElDimensions } from "./hooks/createUseResizeObserver";
+
+import { Notifications } from "./views/Notifications";
+import { DialogFeeder } from "./views/DialogFeeder";
 
 export function initViews<S extends Spec>(
   client: Client<S>,
@@ -24,8 +31,11 @@ export function initViews<S extends Spec>(
   render(
     <section id="tabletop-root" class="h-full flex">
       <section id="tabletop-dev" class="h-full" />
-      <section id="tabletop-game" class="h-full flex-grow" />
-      <section id="tabletop-aside" class="h-full" />
+      <section id="tabletop-app" class="relative h-full flex flex-grow">
+        <section id="tabletop-notifications" class="absolute h-full w-full" />
+        <section id="tabletop-game" class="relative h-full flex-grow" />
+        <section id="tabletop-aside" class="relative h-full" />
+      </section>
     </section>,
     $el
   );
@@ -33,9 +43,17 @@ export function initViews<S extends Spec>(
   const dom = {
     $root: document.getElementById("tabletop-root")!,
     $dev: document.getElementById("tabletop-dev")!,
+    $app: document.getElementById("tabletop-app")!,
     $game: document.getElementById("tabletop-game")!,
     $aside: document.getElementById("tabletop-aside")!,
+    $notifications: document.getElementById("tabletop-notifications")!,
   };
+
+  const getAppDimensions = () => getElDimensions(dom.$app);
+  const useAppDimensions = createUseResizeObserver(dom.$app);
+  const getGameDimensions = () => getElDimensions(dom.$game);
+  const useGameDimensions = createUseResizeObserver(dom.$game);
+
   // ------------------------------------------------------
 
   const dialogEmitter = createEmitter<DialogView<S> | null>(null);
@@ -52,6 +70,7 @@ export function initViews<S extends Spec>(
 
   function internalRender(viewInputs: ViewInputs<S>) {
     const rootProps = { appProps, viewInputs };
+
     if (options.dev) {
       render(
         <DevWrapper meter={client.gameMeter} stateDisplay={StateDisplay} />,
@@ -59,12 +78,50 @@ export function initViews<S extends Spec>(
       );
     }
 
-    render(<Root {...rootProps} />, dom.$game);
+    render(
+      <>
+        <Notifications {...appProps} />
+        <DialogFeeder {...appProps} />
+      </>,
+      dom.$notifications
+    );
+
+    if (viewInputs.Aside) {
+      const Aside = viewInputs.Aside;
+      function ToggleAside() {
+        const dim = useAppDimensions();
+        return dim.width > (viewInputs.showAsideWidth || 1000) ? (
+          <Aside {...appProps} />
+        ) : null;
+      }
+
+      render(<ToggleAside />, dom.$aside);
+    }
+
+    function App() {
+      const mode = useEmitter(appProps.client.emitter, (x) => x.mode);
+
+      const Game = viewInputs.Game;
+
+      const ModeView = (() => {
+        if (mode === "title") return <Title {...rootProps} />;
+        if (mode === "lobby") return <Lobby {...rootProps} />;
+        if (mode === "game") return <Game {...appProps} />;
+      })();
+
+      return <Backdrop>{ModeView}</Backdrop>;
+    }
+
+    render(<App />, dom.$game);
   }
 
   return {
     dialogEmitter,
     setDialog,
+    getGameDimensions,
+    getAppDimensions,
+    useAppDimensions,
+    useGameDimensions,
     render: internalRender,
     dom,
   };

@@ -1,10 +1,6 @@
-import { getTranslateValues } from "@lib/style";
-
 type Props = {
   dX: number;
   dY: number;
-  startTX: number;
-  startTY: number;
   startX: number;
   startY: number;
   shiftX: number;
@@ -12,8 +8,6 @@ type Props = {
 };
 
 type Options = {
-  selectEl?: ($el: HTMLElement) => HTMLElement;
-  onBeforeStart?: ($el: HTMLElement) => void;
   onStart?: ($selected: HTMLElement, props: Props) => void;
   onDrag?: ($selected: HTMLElement, props: Props) => void;
   onEnd?: ($selected: HTMLElement, props: Props) => void;
@@ -22,8 +16,6 @@ type Options = {
 export const dragify = ($el: HTMLElement, options: Options) => {
   const {
     onStart = () => undefined,
-    selectEl = (x) => x,
-    onBeforeStart = () => undefined,
     onDrag = () => undefined,
     onEnd = () => undefined,
   } = options;
@@ -35,8 +27,6 @@ export const dragify = ($el: HTMLElement, options: Options) => {
     startY: 0,
     dX: 0,
     dY: 0,
-    startTX: 0,
-    startTY: 0,
     shiftX: 0,
     shiftY: 0,
   };
@@ -58,13 +48,6 @@ export const dragify = ($el: HTMLElement, options: Options) => {
   }
 
   function dragStart(e: MouseEvent | TouchEvent) {
-    $selected = selectEl(e.target! as HTMLElement);
-
-    onBeforeStart($selected);
-    const tValues = getTranslateValues($selected);
-    status.startTX = tValues.x;
-    status.startTY = tValues.y;
-
     const rect = $selected.getBoundingClientRect();
     const tapX = "touches" in e ? e.touches[0].clientX : e.clientX;
     const tapY = "touches" in e ? e.touches[0].clientY : e.clientY;
@@ -82,7 +65,6 @@ export const dragify = ($el: HTMLElement, options: Options) => {
     const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
     status.dX = pageX - status.startX - status.shiftX;
     status.dY = pageY - status.startY - status.shiftY;
-    console.log(status.dX, status.dY);
     onDrag($selected, status);
   }
 

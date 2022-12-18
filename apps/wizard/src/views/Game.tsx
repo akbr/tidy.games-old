@@ -9,12 +9,16 @@ import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
 import {
-  useGame,
-  waitFor,
   useTableDimensions,
   TABLE_MAX_WIDTH,
-} from "~src/control";
-import { BADGE_PADDING } from "./uiConsts";
+  BADGE_PADDING,
+} from "./tableDimensions";
+
+import { bundle } from "~src/bundle";
+
+const {
+  client: { useGame, waitFor },
+} = bundle;
 
 export const Game = () => {
   return (

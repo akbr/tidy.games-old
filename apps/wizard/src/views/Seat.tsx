@@ -33,7 +33,7 @@ export function Seat({
 
   const BottomDisplay = (
     <BottomDisplaySpace isVertical={isVertical}>
-      {getWizardDisplay({ display })}
+      {getWizardDisplay({ display, isPlayer: direction === "top" })}
     </BottomDisplaySpace>
   );
 
@@ -135,8 +135,14 @@ function BottomDisplaySpace({
 
 export type WizardDisplay = { type: "bidProgress"; data: number[] };
 
-function getWizardDisplay({ display }: { display?: WizardDisplay }) {
-  if (!display) return null;
+function getWizardDisplay({
+  display,
+  isPlayer,
+}: {
+  display?: WizardDisplay;
+  isPlayer?: boolean;
+}) {
+  if (!display) return isPlayer ? <div class="select-none">&nbsp;</div> : null;
   const [bid, actual] = display.data;
   return (
     <div>

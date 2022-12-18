@@ -1,4 +1,4 @@
-import { createUseSubscribable } from "@lib/subscribable";
+import { createUseEmitter } from "@lib/emitter/useEmitter";
 import { createServer } from "./server";
 import { createController } from "./controller";
 
@@ -8,8 +8,8 @@ export const controller = createController(server);
 
 export const clientActions = controller.clientActions;
 
-export const useTable = createUseSubscribable(controller.tableState);
+export const useTable = createUseEmitter(controller.tableState);
 export const tableActions = controller.tableActions;
 
-export const useCamera = createUseSubscribable(controller.cameraState);
+export const useCamera = createUseEmitter(controller.cameraState);
 export const cameraActions = controller.cameraActions;

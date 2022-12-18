@@ -1,6 +1,11 @@
 import { useState } from "preact/hooks";
-import { useGame, gameActions } from "~src/control";
 import { checkBid } from "~src/game/logic";
+
+import { bundle } from "~src/bundle";
+
+const {
+  client: { useGame, gameActions },
+} = bundle;
 
 export function BidInput() {
   const { board, ctx } = useGame();

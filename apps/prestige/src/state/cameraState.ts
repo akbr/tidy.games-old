@@ -1,14 +1,15 @@
-import { Camera, panCamera } from "@lib/camera";
-import {
-  Subscribable,
-  createSubscribable,
-  createActions,
-} from "@lib/subscribable";
+import { Camera, panCamera, Point, zoomCamera } from "@lib/camera";
+import { createEmitter, Emitter } from "@lib/emitter";
+import { createSetFn } from "@lib/emitter/utils";
 
 export const createCameraState = () =>
-  createSubscribable<Camera>({ x: 0, y: 0, z: 1 });
+  createEmitter<Camera>({ x: 0, y: 0, z: 1 });
 
-export const createCameraActions = (cameraStore: Subscribable<Camera>) =>
-  createActions(cameraStore, (set, get) => ({
+export const createCameraActions = (cameraStore: Emitter<Camera>) => {
+  const set = createSetFn(cameraStore);
+  const { get } = cameraStore;
+  return {
     pan: (dx: number, dy: number) => set(panCamera(get(), dx, dy)),
-  }));
+    zoom: (point: Point, dz: number) => set(zoomCamera(get(), point, dz)),
+  };
+};

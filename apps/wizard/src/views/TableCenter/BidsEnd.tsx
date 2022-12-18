@@ -1,9 +1,13 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { getTotalBids } from "../../game/logic";
 import { Twemoji } from "@shared/components/Twemoji";
-import { waitFor } from "~src/control";
 import style from "@lib/style";
 import { delay, seq } from "@lib/async/task";
+
+import { bundle } from "~src/bundle";
+const {
+  client: { waitFor },
+} = bundle;
 
 export function BidsEnd({
   bids,

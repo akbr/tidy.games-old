@@ -49,6 +49,7 @@ export type Client<S extends Spec> = {
   gameActions: ActionFns<S["actions"]>;
   gameMeter: Meter<GameState<S> | null>;
   game: Game<S>;
+  waitFor: Client<S>["gameMeter"]["waitFor"];
 };
 
 export function createClient<S extends Spec>(
@@ -194,7 +195,12 @@ export function createClient<S extends Spec>(
       if (update || hotUpdate) {
         const meterUpdates = _boards.map((board, idx) => ({
           board,
-          action: idx === 0 ? _action : null,
+          action:
+            hotUpdate && idx === 0
+              ? _action
+              : update && idx === 1
+              ? _action
+              : null, //This is gross, and reflects the fax the preceding action is returned in a different place depending on whether there's an update or hotUpdate
           ctx: _ctx!,
         }));
         const hasState = gameMeter.emitter.get().state;
@@ -223,6 +229,7 @@ export function createClient<S extends Spec>(
     gameActions,
     gameMeter,
     game,
+    waitFor: gameMeter.waitFor,
   };
 }
 

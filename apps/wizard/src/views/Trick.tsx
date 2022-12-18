@@ -4,9 +4,16 @@ import { Vec } from "@lib/vector";
 import { stageTrick } from "@shared/domEffects/stageTrick";
 import { Card } from "@shared/components/Card";
 
-import { BADGE_PADDING, BADGE_DIMENSIONS } from "./uiConsts";
+import {
+  BADGE_PADDING,
+  BADGE_DIMENSIONS,
+  useTableDimensions,
+} from "./tableDimensions";
 
-import { useGame, useTableDimensions, waitFor } from "~src/control";
+import { bundle } from "~src/bundle";
+const {
+  client: { useGame, waitFor },
+} = bundle;
 
 export const PLAY_DISTANCE = Vec.add(BADGE_DIMENSIONS, [
   BADGE_PADDING,

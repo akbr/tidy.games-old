@@ -3,7 +3,11 @@ import { Twemoji } from "@shared/components/Twemoji";
 import { OptionsDialog } from "./Dialogs";
 import { ScoreTable } from "./ScoreTable";
 
-import { useGame, setDialog } from "~src/control";
+import { bundle } from "~src/bundle";
+const {
+  client: { useGame },
+  view: { setDialog },
+} = bundle;
 
 export const UiButtons = () => {
   return (

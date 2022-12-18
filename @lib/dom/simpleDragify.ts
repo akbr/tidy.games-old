@@ -1,6 +1,14 @@
 export const dragify = (
   $el: HTMLElement,
-  onDrag: (dx: number, dy: number) => void
+  {
+    onDrag,
+    onDragStart,
+    onDragEnd,
+  }: {
+    onDrag: (dx: number, dy: number) => void;
+    onDragStart: () => void;
+    onDragEnd: () => void;
+  }
 ) => {
   const listeners = [
     ["mousemove", drag],
@@ -27,6 +35,7 @@ export const dragify = (
   }
 
   function dragStart(e: MouseEvent | TouchEvent) {
+    onDragStart();
     updateLast(e);
     toggleListeners(true);
   }
@@ -40,6 +49,7 @@ export const dragify = (
   }
 
   function dragEnd(e: MouseEvent | TouchEvent) {
+    onDragEnd();
     toggleListeners(false);
   }
 

@@ -24,8 +24,10 @@ export type ViewInputs<S extends Spec> = {
   TitleDisplay: FunctionalComponent<{ title: string }>;
   FooterDisplay: FunctionalComponent<{ title: string }>;
   OptionsView?: OptionsView<S>;
-  buttonClass: string;
   Game: FunctionalComponent<AppProps<S>>;
+  Aside?: FunctionalComponent<AppProps<S>>;
+  buttonClass: string;
+  showAsideWidth?: number;
 };
 
 export type MetaViewProps<S extends Spec> = {

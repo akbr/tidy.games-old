@@ -4,7 +4,11 @@ import { BidInput } from "./BidInput";
 import { BidsEnd } from "./BidsEnd";
 import { SelectInput } from "./SelectInput";
 
-import { useGame, gameActions } from "~src/control";
+import { bundle } from "~src/bundle";
+
+const {
+  client: { useGame, gameActions },
+} = bundle;
 
 export const TableCenter = () => {
   const { board, playerIndex } = useGame();

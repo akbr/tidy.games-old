@@ -1,7 +1,7 @@
 import type { Spec } from "@lib/tabletop/core/spec";
 import { Twemoji } from "@shared/components/Twemoji";
 
-import { useClientTitle } from "../createHooks";
+import { useClientTitle } from "../createClientHooks";
 import { MetaViewProps } from "../types";
 import { Container } from "./Container";
 

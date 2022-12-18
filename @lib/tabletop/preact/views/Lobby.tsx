@@ -5,7 +5,7 @@ import { Field } from "@shared/components/Field";
 import { Twemoji } from "@shared/components/Twemoji";
 
 import type { Spec } from "../../core";
-import { useClientLobby } from "../createHooks";
+import { useClientLobby } from "../createClientHooks";
 import { MetaViewProps } from "../types";
 
 export function Lobby<S extends Spec>(props: MetaViewProps<S>) {

@@ -1,8 +1,12 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { style } from "@lib/style";
-import { waitFor } from "~src/control";
 import { randomIntBetween } from "@lib/random";
 import { rotateArray } from "@lib/array";
+
+import { bundle } from "~src/bundle";
+const {
+  client: { waitFor },
+} = bundle;
 
 export const RoundStart = ({ num }: { num: number }) => {
   const ref = useRef(null);

@@ -4,13 +4,17 @@ import { Twemoji } from "@shared/components/Twemoji";
 import { MiniCard, splitCard } from "@shared/components/Card";
 
 import { getTotalBids } from "~src/game/logic";
-import { useGame, createGameSelector } from "~src/control";
+import { bundle, ClientGame } from "~src/bundle";
+
+const {
+  client: { useGame },
+} = bundle;
 
 export const Hud = () => {
   return (
     <section id="hud" class="absolute top-0 right-0 ">
       <AnimateIn>
-        <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md animate-fadeIn text-right">
+        <div class="flex flex-col gap-2 items-end p-2 bg-black bg-opacity-20 rounded-bl-md rounded-br-md animate-fadeIn text-right">
           <RoundDisplay />
           <TrumpDisplay />
           <BidDisplay />
@@ -30,7 +34,7 @@ function RoundDisplay() {
   );
 }
 
-const trumpDisplayProps = createGameSelector(({ board }) => {
+const trumpDisplayProps = ({ board }: ClientGame) => {
   const b = board;
   return {
     showTrumpDisplay: Boolean(
@@ -40,7 +44,7 @@ const trumpDisplayProps = createGameSelector(({ board }) => {
     trumpCard: b.trumpCard,
     trumpSuit: b.trumpSuit,
   };
-});
+};
 
 function TrumpDisplay() {
   const { showTrumpDisplay, showWaiting, trumpCard, trumpSuit } =

@@ -5,13 +5,8 @@ export interface ReadOnlyEmitter<T> {
   get: () => T;
 }
 
-export type Options = {
-  silent: boolean;
-};
-
-export const defaultOptions: Options = { silent: false };
 export interface Emitter<T> extends ReadOnlyEmitter<T> {
-  next: (state: T, options?: Options) => void;
+  next: (state: T) => void;
 }
 
 export function createEmitter<T>(initial: T): Emitter<T> {
@@ -24,10 +19,9 @@ export function createEmitter<T>(initial: T): Emitter<T> {
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
-    next: (state, { silent } = defaultOptions) => {
+    next: (state) => {
       prev = curr;
       curr = state;
-      if (silent) return;
       listeners.forEach((fn) => fn(curr, prev));
     },
     get: () => curr,

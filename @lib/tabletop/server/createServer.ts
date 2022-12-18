@@ -304,8 +304,8 @@ export function createServer<S extends Spec>(game: Game<S>) {
     ).length;
 
     if (numHumansLeft === 0) {
-      room.sockets.forEach((socket) => socket && clearSocket(socket));
-      roomMap.delete(room.id);
+      //room.sockets.forEach((socket) => socket && clearSocket(socket));
+      //roomMap.delete(room.id);
     } else {
       broadcastSocketsUpdate(room);
     }

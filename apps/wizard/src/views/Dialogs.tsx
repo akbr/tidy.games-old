@@ -1,6 +1,14 @@
 import { Twemoji } from "@shared/components/Twemoji";
 import { OptionsDisplay } from "./Options";
-import { useGame, setDialog, serverActions } from "~src/control";
+
+import { bundle } from "~src/bundle";
+const {
+  view: { setDialog },
+  client: {
+    useGame,
+    serverActions: { leave, getHistoryString },
+  },
+} = bundle;
 
 export function OptionsDialog() {
   const [id, ctx, playerIndex] = useGame((x) => [x.id, x.ctx, x.playerIndex]);
@@ -24,7 +32,7 @@ export function OptionsDialog() {
       <div class="flex flex-col items-center gap-2">
         <button
           onClick={() => {
-            serverActions.leave();
+            leave();
             setDialog(null);
           }}
         >
@@ -32,7 +40,7 @@ export function OptionsDialog() {
         </button>
         <button
           onClick={() => {
-            serverActions.getHistoryString();
+            getHistoryString();
           }}
         >
           <Twemoji char={"🔄"} size={24} /> &nbsp; Generate history

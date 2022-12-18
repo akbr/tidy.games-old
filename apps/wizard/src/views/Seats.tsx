@@ -3,10 +3,13 @@ import { PositionSeats } from "@shared/components/PositionSeats";
 import { getSeatCSSDirection } from "@shared/domEffects/positionSeats";
 import { h } from "preact";
 
-import { useGame, createGameSelector } from "~src/control";
-
 import { getScore } from "~src/game/logic";
 import { Seat, SeatProps, WizardAlert, WizardDisplay } from "./Seat";
+
+import { bundle, ClientGame } from "~src/bundle";
+const {
+  client: { useGame },
+} = bundle;
 
 export function Seats() {
   const [playerIndex, numPlayers] = useGame((x) => [
@@ -28,8 +31,9 @@ export function Seats() {
   );
 }
 
-const seatProps = (playerIndex: number, perspectiveIndex: number) =>
-  createGameSelector((state): SeatProps => {
+const seatProps =
+  (playerIndex: number, perspectiveIndex: number) =>
+  (state: ClientGame): SeatProps => {
     const { board, ctx, socketsStatus } = state;
     const { avatar } = socketsStatus[playerIndex] || {};
 
@@ -66,7 +70,7 @@ const seatProps = (playerIndex: number, perspectiveIndex: number) =>
       display,
       alert,
     };
-  });
+  };
 
 function _Seat({
   playerIndex,

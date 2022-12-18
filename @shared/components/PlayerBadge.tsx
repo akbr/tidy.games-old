@@ -45,6 +45,19 @@ export function PlayerBadge({
   );
 }
 
+export function PlayerNumber({ playerIndex }: { playerIndex: number }) {
+  const backgroundColor = colors[playerIndex][0];
+  const color = colors[playerIndex][1];
+  return (
+    <div
+      class="rounded font-mono font-bold pl-0.5 pr-0.5"
+      style={{ color, backgroundColor }}
+    >
+      {playerIndex + 1}
+    </div>
+  );
+}
+
 export function BadgeOutline({ playerIndex }: { playerIndex: number }) {
   const backgroundColor = colors[playerIndex][0];
   return (

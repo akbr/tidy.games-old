@@ -1,4 +1,5 @@
-import { createSet, Subscribable } from "@lib/subscribable";
+import { Emitter } from "@lib/emitter";
+import { createSetFn } from "@lib/emitter";
 import {
   getBoardAtTick,
   getIntermediateBoards,
@@ -11,10 +12,10 @@ import { TableState, TableStateActions } from "./tableState";
 
 export function createClient(
   server: Server,
-  tableState: Subscribable<TableState>,
+  tableState: Emitter<TableState>,
   tableActions: TableStateActions
 ) {
-  const tableSet = createSet(tableState);
+  const tableSet = createSetFn(tableState);
 
   let res: EntryRes;
   let id: string;

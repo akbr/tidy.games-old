@@ -1,6 +1,4 @@
 import { style } from "@lib/style";
-import { getNearestDimensions } from "@lib/dom";
-
 import { Card } from "@shared/components/Card";
 import {
   getPlayedPosition,
@@ -12,22 +10,20 @@ import {
   PositionHandCardProps,
 } from "@shared/components/PositionHandCard";
 
-import control, {
-  getDimensions,
-  getTableDimensions,
-  useDimensions,
-} from "~src/control";
 import { PLAY_DISTANCE } from "./Trick";
-import { BADGE_PADDING } from "./uiConsts";
+import { getTableDimensions } from "./tableDimensions";
 
-import { client } from "~src/control";
-
+import { bundle, ClientGame } from "~src/bundle";
 const {
-  useGame,
-  createGameSelector,
-  gameActions: { play },
-  waitFor,
-} = control;
+  client: {
+    useGame,
+
+    emitter,
+    waitFor,
+    gameActions: { play },
+  },
+  view: { useGameDimensions },
+} = bundle;
 
 const shouldDrop: PositionHandCardProps["shouldDrop"] = (_, dy) => dy < -50;
 
@@ -35,7 +31,7 @@ const onDrop: PositionHandCardProps["onDrop"] = ($el, card, numCards) => {
   const dimensions = getTableDimensions();
 
   //@ts-ignore
-  const numPlayers = client.emitter.get().ctx.numPlayers;
+  const numPlayers = emitter.get().ctx.numPlayers;
 
   const containerDimensions = [dimensions.width, dimensions.height];
   const { scale, scaledDimensions, playDistance } = getTrickScaling(
@@ -67,18 +63,20 @@ const onDrop: PositionHandCardProps["onDrop"] = ($el, card, numCards) => {
   });
 };
 
-const handSelector = createGameSelector(
-  ({ board: { phase, hands }, playerIndex, err }) => {
-    return {
-      hand: hands[playerIndex],
-      isDeal: phase === "deal",
-      err,
-    };
-  }
-);
-
+const handSelector = ({
+  board: { phase, hands },
+  playerIndex,
+  err,
+}: ClientGame) => {
+  return {
+    hand: hands[playerIndex],
+    isDeal: phase === "deal",
+    err,
+  };
+};
 export function Hand() {
   const { hand, isDeal, err } = useGame(handSelector);
+  const { width, height, resizeSymbol } = useGameDimensions();
 
   return (
     <section id="hand" class="absolute top-0 left-0">
@@ -93,6 +91,9 @@ export function Hand() {
           shouldDrop={shouldDrop}
           onDrop={onDrop}
           errRef={err}
+          containerDimensions={[width, height]}
+          resizeSymbol={resizeSymbol}
+          cardWidth={80}
         >
           <Card key={id} card={id} />
         </PositionHandCard>

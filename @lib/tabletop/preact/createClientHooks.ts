@@ -2,6 +2,15 @@ import { createUseEmitter, ReadOnlyEmitter, Listener } from "@lib/emitter";
 import { Client } from "../client";
 import { Spec } from "../core";
 
+export function createClientHooks<S extends Spec>(client: Client<S>) {
+  return {
+    useClient: createUseEmitter(client.emitter),
+    useTitle: useClientTitle(client),
+    useLobby: useClientLobby(client),
+    useGame: useClientGame(client),
+  };
+}
+
 // This hack is useful so hooks don't crash when the state mode changes underneath them.
 // This happens, e.g., when going from mode:game -> mode:title.
 export function createFilteredEmitter<T, U>(

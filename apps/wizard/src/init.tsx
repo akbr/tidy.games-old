@@ -1,11 +1,10 @@
-import {
-  serverActions,
-  render,
-  isDev,
-  gameActions,
-  gameMeter,
-} from "./control";
+import { bundle, isDev } from "./bundle";
 import viewInputs from "./views";
+
+const {
+  view: { render },
+  client: { serverActions },
+} = bundle;
 
 render(viewInputs);
 

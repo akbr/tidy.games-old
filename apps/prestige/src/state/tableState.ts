@@ -1,8 +1,4 @@
-import {
-  createActions,
-  createSubscribable,
-  Subscribable,
-} from "@lib/subscribable";
+import { createSetFn, createEmitter, Emitter } from "@lib/emitter";
 import { getBlankBoard } from "../game/board";
 import { Board, Orders, Events } from "../game/game.types";
 import { System, Transit } from "../game/board/board.types";
@@ -28,7 +24,7 @@ export type TableState = {
 };
 
 export const createTableState = () =>
-  createSubscribable<TableState>({
+  createEmitter<TableState>({
     id: "",
     player: 0,
     turn: 1,
@@ -45,8 +41,11 @@ export const createTableState = () =>
 
 export const TableState = createTableState();
 
-export const createTableStateActions = (TableState: Subscribable<TableState>) =>
-  createActions(TableState, (set, get) => ({
+export const createTableStateActions = (tableStore: Emitter<TableState>) => {
+  const set = createSetFn(tableStore);
+  const { get } = tableStore;
+
+  return {
     setMode: (mode: TableState["mode"]) => set({ mode }),
 
     select: (item: TableState["selected"] | string) => {
@@ -75,7 +74,8 @@ export const createTableStateActions = (TableState: Subscribable<TableState>) =>
 
       set({ selected });
     },
-  }));
+  };
+};
 
 export type TableStateActions = ReturnType<typeof createTableStateActions>;
 

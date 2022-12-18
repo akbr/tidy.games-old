@@ -1,6 +1,6 @@
+import { useState, useLayoutEffect } from "preact/hooks";
 import { shallow } from "@lib/compare";
 import { ReadOnlyEmitter } from "./emitter";
-import { useState, useLayoutEffect } from "preact/hooks";
 import { withSelector, Selector } from "./utils";
 
 export type UseEmitterHook<T> = {
@@ -18,6 +18,7 @@ export function createUseEmitter<T>(
     const curr = emitter.get();
     const intial = selector ? selector(curr) : curr;
     const [state, setState] = useState(intial);
+
     useLayoutEffect(
       () =>
         selector
