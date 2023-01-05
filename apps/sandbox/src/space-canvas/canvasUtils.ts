@@ -23,7 +23,6 @@ export type SpriteDimensions = {
   h: number;
   x: number;
   y: number;
-  z?: number;
 };
 
 export type ImgSprite = SpriteDimensions & {
@@ -43,7 +42,7 @@ export type FnSprite = SpriteDimensions & {
 export type Sprite = ImgSprite | FnSprite;
 
 export function getScreenCoords({ x, y }: { x: number; y: number }, c: Camera) {
-  return [Math.round((c.x + x) * c.z), Math.round((c.y + y) * c.z)];
+  return [(c.x + x) * c.z, (c.y + y) * c.z];
 }
 
 export function getScreenDimensions(

@@ -4,6 +4,8 @@ import { dragify } from "@lib/dom/simpleDragify";
 
 import { cameraActions, useCamera } from "./global";
 
+const r = (num: number) => Math.round(num);
+
 export const DragContainer = ({
   children,
 }: {
@@ -34,7 +36,7 @@ export const DragContainer = ({
     >
       {children}
       <div class="absolute top-0 left-0 bg-white p-1 m-1 rounded">
-        {camera.x},{camera.y},x{camera.z}
+        {r(camera.x)}, {r(camera.y)}, x{r(camera.z)}
       </div>
     </div>
   );
