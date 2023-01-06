@@ -1,4 +1,3 @@
-import { getElDimensionsVector } from "@lib/dom";
 import { Vec, Vector } from "@lib/vector";
 import {
   getSeatPosition,
@@ -6,19 +5,62 @@ import {
   getSeatRatio,
 } from "./positionSeats";
 
-export const getScaleAdjVector = (scaledDimensions: Vector, atScale: number) =>
-  Vec.mul(
-    Vec.sub(scaledDimensions, Vec.mul(scaledDimensions, 1 / atScale)),
-    0.5
+function getCardsPerDimension(numPlayers: number) {
+  if (numPlayers === 2) return [1, 2];
+  if (numPlayers === 3) return [3, 1];
+  return [3, 2];
+}
+
+export function getTrickScaling(
+  numPlayers: number,
+  containerDimensions: number[],
+  originalCardDimensions: number[],
+  playDistanceVec: number[],
+  maxScale = 1.2,
+  cardPaddingVec = [16, 16]
+) {
+  const containerDimensionsForScaling = Vec.sub(
+    containerDimensions,
+    Vec.mul(playDistanceVec, 2),
+    cardPaddingVec
   );
+
+  const maxCardDimensions = Vec.divV(
+    containerDimensionsForScaling,
+    getCardsPerDimension(numPlayers)
+  );
+
+  let scale = Math.min(...Vec.divV(maxCardDimensions, originalCardDimensions));
+
+  scale = scale > maxScale ? maxScale : scale;
+
+  return scale;
+}
+
+export const getScaleAdjVector = (
+  scaledDimensions: Vector,
+  atScale: number
+) => {
+  const originalDimensions = Vec.mul(scaledDimensions, 1 / atScale);
+  return Vec.mul(Vec.sub(scaledDimensions, originalDimensions), 0.5);
+};
 
 export const getHeldPosition = (
   numPlayers: number,
   seatIndex: number,
   containerDimensions: Vector,
   childDimensions: Vector,
-  atScale: number
+  playDistance = [0, 0] as Vector
 ) => {
+  const scale = getTrickScaling(
+    numPlayers,
+    containerDimensions,
+    childDimensions,
+    playDistance
+  );
+
+  const scaledDimensions = Vec.mul(childDimensions, scale);
+
   const [xR, yR] = getSeatRatio(numPlayers, seatIndex);
   const seat = getSeatPosition(numPlayers, seatIndex, containerDimensions);
   const adjDirVector = (() => {
@@ -27,8 +69,15 @@ export const getHeldPosition = (
     if (yR === 0) return [-0.5, -1];
     return [-0.5, 0];
   })();
-  const posVector = Vec.mulV(childDimensions, adjDirVector);
-  return Vec.add(seat, posVector, getScaleAdjVector(childDimensions, atScale));
+  const posVector = Vec.mulV(scaledDimensions, adjDirVector);
+
+  const pos = Vec.add(
+    seat,
+    posVector,
+    getScaleAdjVector(scaledDimensions, scale)
+  );
+
+  return [...pos, scale];
 };
 
 export const getCenterPlayedPosition = (
@@ -45,86 +94,23 @@ export const getPlayedPosition = (
   seatIndex: number,
   containerDimensions: Vector,
   cardDimensions: Vector,
-  distance = [0, 0] as Vector,
-  atScale: number
+  distance = [0, 0] as Vector
 ) => {
   const heldPosition = getHeldPosition(
     numPlayers,
     seatIndex,
     containerDimensions,
     cardDimensions,
-    1
+    distance
   );
+  const [, , scale] = heldPosition;
 
-  const direction = getSeatDirectionVector(numPlayers, seatIndex);
-
-  const [cardW, cardH] = cardDimensions;
+  const [cardW, cardH] = Vec.mul(cardDimensions, scale);
   const [dX, dY] = distance;
+  const direction = getSeatDirectionVector(numPlayers, seatIndex);
   const pushOut = Vec.mulV([dX + cardW, dY + cardH], direction);
 
-  return Vec.add(
-    heldPosition,
-    pushOut,
-    getScaleAdjVector(cardDimensions, atScale)
-  );
+  const pos = Vec.add(heldPosition, pushOut);
+
+  return [...pos, scale];
 };
-
-export function getCardScale(
-  numPlayers: number,
-  containerDimensions: number[],
-  cardDimensions: number[]
-) {
-  return Math.min(
-    ...Vec.divV(
-      getMaxCardDimensions(numPlayers, containerDimensions),
-      cardDimensions
-    )
-  );
-}
-
-export function getMaxCardDimensions(
-  numPlayers: number,
-  containerDimensions: Vector
-) {
-  const cardsPerDimension = (() => {
-    if (numPlayers === 2) return [1, 2];
-    if (numPlayers === 3) return [3, 1];
-    return [3, 2];
-  })();
-
-  return Vec.divV(containerDimensions, cardsPerDimension);
-}
-
-export function getTrickScaling(
-  numPlayers: number,
-  containerDimensions: number[],
-  $card: HTMLElement,
-  playDistanceVec: number[],
-  maxScale = 1.2,
-  cardPaddingVec = [16, 16]
-) {
-  const containerDimensionsForScaling = Vec.sub(
-    containerDimensions,
-    Vec.mul(playDistanceVec, 2),
-    cardPaddingVec
-  );
-
-  let { width, height } = getComputedStyle($card);
-  const originalCardDimensions = [parseInt(width, 10), parseInt(height, 10)];
-
-  let scale = getCardScale(
-    numPlayers,
-    containerDimensionsForScaling,
-    originalCardDimensions
-  );
-
-  scale = scale > maxScale ? maxScale : scale;
-
-  return {
-    scale,
-    originalCardDimensions,
-    containerDimensions,
-    scaledDimensions: Vec.mul(originalCardDimensions, scale),
-    playDistance: playDistanceVec,
-  };
-}

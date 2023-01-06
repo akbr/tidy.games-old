@@ -6,18 +6,17 @@ export const BADGE_PADDING = 12;
 export const BADGE_DIMENSIONS = [70, 86];
 
 const {
-  client,
-  client: { useGame },
+  client: { emitter, useGame },
   view: { useGameDimensions, getGameDimensions },
 } = bundle;
 
 export const getTableDimensions = (
   dimensions?: ReturnType<typeof getGameDimensions>
 ) => {
-  const { width, height } = dimensions || getGameDimensions();
+  const [width, height] = dimensions || getGameDimensions();
 
-  const state = client.emitter.get();
-  if (state.mode !== "game") return { x: 0, y: 0, width: 0, height: 0 };
+  const state = emitter.get();
+  if (state.mode !== "game") return [0, 0, 0, 0];
 
   const numCards = state.board.hands[state.playerIndex].length || 1;
 
@@ -25,20 +24,11 @@ export const getTableDimensions = (
   const widthDiff = width - tableW;
   const handHeight = getHandHeight(numCards, tableW);
 
-  return {
-    x: widthDiff / 2,
-    y: 0,
-    width: tableW,
-    height: height - handHeight,
-  };
+  return [tableW, height - handHeight, widthDiff / 2, 0];
 };
 
 export const useTableDimensions = () => {
   const dimensions = useGameDimensions();
   useGame((s) => [s.board.hands[s.playerIndex].length, s.ctx.numPlayers]);
-
-  return {
-    ...getTableDimensions(dimensions),
-    resizeSymbol: dimensions.resizeSymbol,
-  };
+  return getTableDimensions(dimensions);
 };

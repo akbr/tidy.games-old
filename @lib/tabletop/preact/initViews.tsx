@@ -89,8 +89,8 @@ export function initViews<S extends Spec>(
     if (viewInputs.Aside) {
       const Aside = viewInputs.Aside;
       function ToggleAside() {
-        const dim = useAppDimensions();
-        return dim.width > (viewInputs.showAsideWidth || 1000) ? (
+        const [width] = useAppDimensions();
+        return width > (viewInputs.showAsideWidth || 1000) ? (
           <Aside {...appProps} />
         ) : null;
       }

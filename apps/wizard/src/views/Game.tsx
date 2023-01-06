@@ -54,7 +54,7 @@ function Outer({ children }: { children: ComponentChildren }) {
 }
 
 function Table({ children }: { children: ComponentChildren }) {
-  const { height } = useTableDimensions();
+  const [, height] = useTableDimensions();
   const ref = useRef<HTMLElement>(null);
 
   return (

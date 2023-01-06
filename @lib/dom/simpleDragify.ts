@@ -1,3 +1,8 @@
+type MoveProps = {
+  mx: number;
+  my: number;
+};
+
 export const dragify = (
   $el: HTMLElement,
   {
@@ -5,9 +10,9 @@ export const dragify = (
     onDragStart,
     onDragEnd,
   }: {
-    onDrag: (dx: number, dy: number) => void;
-    onDragStart: () => void;
-    onDragEnd: () => void;
+    onDrag: (props: MoveProps, $el: HTMLElement) => void;
+    onDragStart: ($el: HTMLElement) => void;
+    onDragEnd: (props: MoveProps, $el: HTMLElement) => void;
   }
 ) => {
   const listeners = [
@@ -26,30 +31,32 @@ export const dragify = (
     );
   }
 
-  let lastX = 0;
-  let lastY = 0;
-  function updateLast(e: MouseEvent | TouchEvent) {
-    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
-    lastX = pageX;
-    lastY = pageY;
+  let startX = 0;
+  let startY = 0;
+  function getInfo(pageX: number, pageY: number): MoveProps {
+    return {
+      mx: startX - pageX,
+      my: startY - pageY,
+    };
   }
 
   function dragStart(e: MouseEvent | TouchEvent) {
-    onDragStart();
-    updateLast(e);
+    const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
+    startX = pageX;
+    startY = pageY;
+
     toggleListeners(true);
+    onDragStart(e.target as HTMLElement);
   }
 
   function drag(e: MouseEvent | TouchEvent) {
     const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
-    const dx = lastX - pageX;
-    const dy = lastY - pageY;
-    updateLast(e);
-    onDrag(dx, dy);
+    onDrag(getInfo(pageX, pageY), e.target as HTMLElement);
   }
 
   function dragEnd(e: MouseEvent | TouchEvent) {
-    onDragEnd();
+    const { pageX, pageY } = "touches" in e ? e.changedTouches[0] : e;
+    onDragEnd(getInfo(pageX, pageY), e.target as HTMLElement);
     toggleListeners(false);
   }
 

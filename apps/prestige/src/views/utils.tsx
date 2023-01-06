@@ -1,6 +1,6 @@
 import { ComponentChildren } from "preact";
 import { useTable } from "../state";
-import { angleBetween, pointAlong, toDegrees } from "@lib/geometry";
+import { angleBetween, pointAlong, toDegrees } from "@lib/gfx";
 import { Transit, System } from "../game/board/board.types";
 
 export function getTransitPosition(transit: Transit, systems: System[]) {

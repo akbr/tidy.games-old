@@ -21,8 +21,6 @@
     "nanoid": "^4.0.0",
     "perfect-arrows": "^0.3.7",
     "preact": "latest",
-    "use-gesture": "^1.0.0",
-    "@use-gesture/react": "^10.2.20",
     "ws": "^8.5.0"
   },
   "devDependencies": {

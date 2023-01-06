@@ -53,7 +53,7 @@ export function LobbyInnards<S extends Spec>(props: MetaViewProps<S>) {
       <div class="p-4">
         <button
           class={`flex items-center gap-2 ${viewInputs.buttonClass}`}
-          onClick={client.serverActions.leave}
+          onClick={() => client.serverActions.leave()}
         >
           <Twemoji char={"🛑"} size={24} />
           <span>Leave game</span>

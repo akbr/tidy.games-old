@@ -1,5 +1,5 @@
 import { Twemoji } from "@shared/components/Twemoji";
-import { angleBetween, pointAlong, toDegrees } from "@lib/geometry";
+import { angleBetween, pointAlong, toDegrees } from "@lib/gfx";
 import { useTable } from "../state";
 import { System, Transit } from "../game/board/board.types";
 import { AbsPosition, SpriteSelect, getTransitPosition } from "./utils";

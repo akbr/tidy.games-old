@@ -1,4 +1,4 @@
-import { distanceBetween } from "@lib/geometry";
+import { distanceBetween } from "@lib/gfx";
 import { EventLogic, TransitArrive, TransitBattle } from "./events.types";
 import { getID, getById } from "../utils";
 

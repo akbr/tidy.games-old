@@ -21,7 +21,7 @@ export const PLAY_DISTANCE = Vec.add(BADGE_DIMENSIONS, [
 ]);
 
 export const Trick = () => {
-  const dimensions = useTableDimensions();
+  const tableDimensions = useTableDimensions();
   const ref = useRef(null);
 
   const { board, ctx, playerIndex, action } = useGame();
@@ -49,7 +49,7 @@ export const Trick = () => {
     waitFor(
       stageTrick(
         ref.current!,
-        [dimensions.width, dimensions.height],
+        tableDimensions,
         {
           numPlayers: ctx.numPlayers,
           leadPlayer: trickLeader,
@@ -59,7 +59,7 @@ export const Trick = () => {
         effect
       )
     );
-  }, [effect, trick, dimensions.resizeSymbol]);
+  }, [effect, trick, tableDimensions]);
 
   return (
     <section ref={ref} id="trick" class="absolute top-0 left-0">

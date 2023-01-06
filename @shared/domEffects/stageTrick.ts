@@ -3,11 +3,7 @@ import { randomBetween } from "@lib/random";
 import { style } from "@lib/style";
 import { seq, delay, all } from "@lib/async/task";
 
-import {
-  getHeldPosition,
-  getPlayedPosition,
-  getTrickScaling,
-} from "./positionTrick";
+import { getHeldPosition, getPlayedPosition } from "./positionTrick";
 
 export const getWaggle = (amt: number, amt2: number) => {
   const getAmt = () => randomBetween(amt, amt2);
@@ -27,6 +23,7 @@ export const stageTrick = (
   playDistanceVec: number[],
   effect?: { type: "played"; player: number } | { type: "won"; player: number }
 ) => {
+  const CHILD_DIMENSIONS = [80, 112];
   const { numPlayers, leadPlayer, perspective = 0 } = curr;
 
   // Create sparse array, altered for perspective
@@ -40,15 +37,6 @@ export const stageTrick = (
   ) as (HTMLElement | undefined)[];
   const cardElsByPerspective = rotateArray(cardElsByPlayer, -perspective);
 
-  // Get scaling information, depending on table size
-  // ------------------------------------------------
-  const { scale, scaledDimensions, playDistance } = getTrickScaling(
-    numPlayers,
-    containerDimensions,
-    cardEls[0],
-    playDistanceVec
-  );
-
   // Base styling
   // ------------
   const playedPositions = cardElsByPerspective.map((_, idx) =>
@@ -56,15 +44,14 @@ export const stageTrick = (
       numPlayers,
       idx,
       containerDimensions,
-      scaledDimensions,
-      playDistance,
-      scale
+      CHILD_DIMENSIONS,
+      playDistanceVec
     )
   );
 
   cardElsByPerspective.forEach(($card, idx) => {
     if (!$card) return;
-    let [x, y] = playedPositions[idx];
+    let [x, y, scale] = playedPositions[idx];
     style($card, {
       x,
       y,
@@ -86,8 +73,8 @@ export const stageTrick = (
       numPlayers,
       idx,
       containerDimensions,
-      scaledDimensions,
-      scale
+      CHILD_DIMENSIONS,
+      playDistanceVec
     );
 
     style($played, {
@@ -130,8 +117,8 @@ export const stageTrick = (
     numPlayers,
     winningIdx,
     containerDimensions,
-    scaledDimensions,
-    scale
+    CHILD_DIMENSIONS,
+    playDistanceVec
   );
 
   return seq([
