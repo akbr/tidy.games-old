@@ -9,7 +9,7 @@ export const PositionSeats = ({
 }: {
   children: ComponentChildren;
   perspective: number;
-  padding: number;
+  padding?: number;
 }) => {
   const childArray = rotateArray(toChildArray(children), -perspective);
   const numSeats = childArray.length;
