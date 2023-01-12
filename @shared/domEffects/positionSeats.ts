@@ -54,10 +54,12 @@ export const getSeatPosition = (
 export const getTranslateAdjustment = (ratio: number) =>
   ratio === 0 ? 0 : ratio === 1 ? -100 : -50;
 
-export const getStyle = ([xRatio, yRatio]: number[]) => ({
-  left: `${xRatio * 100}%`,
-  top: `${yRatio * 100}%`,
-  translate: `${getTranslateAdjustment(xRatio)}% ${getTranslateAdjustment(
-    yRatio
-  )}%`,
-});
+export const getStyle = ([xRatio, yRatio]: number[]) => {
+  const xT = getTranslateAdjustment(xRatio);
+  const yT = getTranslateAdjustment(yRatio);
+  return {
+    left: `${xRatio * 100}%`,
+    top: `${yRatio * 100}%`,
+    translate: `${xT}% ${yT}%`,
+  };
+};

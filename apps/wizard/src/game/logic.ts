@@ -23,13 +23,13 @@ const createDeck = () => [
 ];
 
 const suitOrder = ["j", "c", "d", "h", "s", "w"];
-const getSortValue = (card: string, trumpSuit?: string) => {
+const getSortValue = (card: string, trumpSuit?: string | null) => {
   const [value, suit] = getTuple(card);
   const bonus = suit === trumpSuit ? 1000 : suit === "w" ? 9999 : 0;
   return value + suitOrder.indexOf(suit) * 100 + bonus;
 };
-const sortHand = (hand: string[], trumpSuit?: string) => {
-  trumpSuit = trumpSuit === "j" ? undefined : trumpSuit; // Don't sort jesters as trump
+const sortHand = (hand: string[], trumpSuit?: string | null) => {
+  trumpSuit = trumpSuit === "j" ? null : trumpSuit; // Don't sort jesters as trump
   return hand.sort(
     (a, b) => getSortValue(a, trumpSuit) - getSortValue(b, trumpSuit)
   );
@@ -41,19 +41,17 @@ export const getDeal = (
   seed?: string
 ) => {
   const deck = shuffle(createDeck(), createPRNG(seed));
-  const unsortedHands = deal(deck, [
-    ...Array.from({ length: numPlayers }, () => numCards),
-    1, // deal a trump card
-  ]);
+  const handSpecs = Array.from({ length: numPlayers }, () => numCards);
+  const [unsortedHands, remainingDeck] = deal(deck, handSpecs);
 
-  const [trumpCard] = unsortedHands.pop()!;
-  const trumpSuit = trumpCard && getSuit(trumpCard);
+  const trumpCard = remainingDeck.length > 0 ? remainingDeck.pop()! : null;
+  const trumpSuit = trumpCard ? getSuit(trumpCard) : null;
   const hands = unsortedHands.map((hand) => sortHand(hand, trumpSuit));
 
   return {
     hands,
-    trumpCard: trumpCard || null,
-    trumpSuit: trumpSuit || null,
+    trumpCard,
+    trumpSuit,
   };
 };
 

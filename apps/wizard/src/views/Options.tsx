@@ -29,6 +29,7 @@ export const Options: OptionsView<WizardSpec> = ({
   options,
   setOptions,
 }) => {
+  console.log(options);
   return (
     <table>
       <tr>
@@ -50,6 +51,27 @@ export const Options: OptionsView<WizardSpec> = ({
         </td>
         <td>
           <div class="font-bold">Number of rounds.</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="text-center pr-2">
+          <input
+            class="w-10 text-right"
+            type="number"
+            name="startRound"
+            min="1"
+            max={options.numRounds}
+            value={options.startRound}
+            onChange={(e: any) =>
+              setOptions({
+                ...options,
+                startRound: parseInt(e.target.value, 10),
+              })
+            }
+          />
+        </td>
+        <td>
+          <div class="font-bold">Starting round.</div>
         </td>
       </tr>
       <tr class="h-1.5" />

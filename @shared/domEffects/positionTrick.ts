@@ -109,7 +109,6 @@ export const getPlayedPosition = (
   const [dX, dY] = distance;
   const direction = getSeatDirectionVector(numPlayers, seatIndex);
   const pushOut = Vec.mulV([dX + cardW, dY + cardH], direction);
-
   const pos = Vec.add(heldPosition, pushOut);
 
   return [...pos, scale];

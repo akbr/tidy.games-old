@@ -1,6 +1,8 @@
 type MoveProps = {
   mx: number;
   my: number;
+  dx: number;
+  dy: number;
 };
 
 export const dragify = (
@@ -33,17 +35,29 @@ export const dragify = (
 
   let startX = 0;
   let startY = 0;
+  let prevX = 0;
+  let prevY = 0;
+
   function getInfo(pageX: number, pageY: number): MoveProps {
-    return {
+    const props = {
       mx: startX - pageX,
       my: startY - pageY,
+      dx: prevX - pageX,
+      dy: prevY - pageY,
     };
+
+    prevX = pageX;
+    prevY = pageY;
+
+    return props;
   }
 
   function dragStart(e: MouseEvent | TouchEvent) {
     const { pageX, pageY } = "touches" in e ? e.touches[0] : e;
     startX = pageX;
     startY = pageY;
+    prevX = pageX;
+    prevY = pageY;
 
     toggleListeners(true);
     onDragStart(e.target as HTMLElement);

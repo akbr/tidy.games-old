@@ -8,11 +8,7 @@ import { Hand } from "./Hand";
 import { Trick } from "./Trick";
 import { TableCenter } from "./TableCenter";
 
-import {
-  useTableDimensions,
-  TABLE_MAX_WIDTH,
-  BADGE_PADDING,
-} from "./tableDimensions";
+import { useTableDimensions, TABLE_MAX_WIDTH } from "./tableDimensions";
 
 import { bundle } from "~src/bundle";
 
@@ -64,7 +60,6 @@ function Table({ children }: { children: ComponentChildren }) {
       class="relative w-full"
       style={{
         height,
-        padding: BADGE_PADDING,
         maxWidth: TABLE_MAX_WIDTH,
       }}
     >

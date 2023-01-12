@@ -16,7 +16,9 @@ export const DragContainer = ({
   useEffect(
     () =>
       dragify(ref.current!, {
-        onDrag: cameraActions.pan,
+        onDrag: ({ dx, dy }) => {
+          cameraActions.pan(dx, dy);
+        },
         onDragStart: () => null,
         onDragEnd: () => null,
       }),

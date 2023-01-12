@@ -2,8 +2,8 @@ import { bundle } from "../bundle";
 import { getHandHeight } from "@shared/domEffects/positionHand";
 
 export const TABLE_MAX_WIDTH = 700;
-export const BADGE_PADDING = 12;
-export const BADGE_DIMENSIONS = [70, 86];
+export const BADGE_PADDING = [12, 12];
+export const BADGE_DIMENSIONS = [50, 72];
 
 const {
   client: { emitter, useGame },

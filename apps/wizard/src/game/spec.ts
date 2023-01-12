@@ -33,5 +33,5 @@ export type WizardSpec = CreateSpec<{
     | { type: "select"; data: string }
     | { type: "bid"; data: number }
     | { type: "play"; data: string };
-  options: { canadian: boolean; numRounds: number };
+  options: { canadian: boolean; numRounds: number; startRound: number };
 }>;

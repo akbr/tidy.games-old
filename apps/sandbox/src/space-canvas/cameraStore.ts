@@ -5,11 +5,10 @@ import { debounce } from "@lib/async/";
 export function createCameraStore() {
   let panning = false;
 
-  const cameraEmitter = createEmitter<Camera & { panning: boolean }>({
+  const cameraEmitter = createEmitter<Camera>({
     x: 0,
     y: 0,
     z: 1,
-    panning,
   });
 
   const donePanning = debounce(
@@ -24,17 +23,17 @@ export function createCameraStore() {
   const cameraActions = {
     setPanning: (status: boolean) => {
       panning = status;
-      next({ ...get(), panning });
+      next({ ...get() });
     },
     pan: (dx: number, dy: number) => {
       panning = true;
-      next({ ...panCamera(get(), dx, dy), panning });
-      donePanning();
+      next({ ...panCamera(get(), dx, dy) });
+      //donePanning();
     },
     zoom: (point: Point, dz: number) => {
       panning = true;
-      next({ ...zoomCamera(get(), point, dz), panning });
-      donePanning();
+      next({ ...zoomCamera(get(), point, dz) });
+      //donePanning();
     },
   };
 

@@ -38,7 +38,9 @@ const trumpDisplayProps = ({ board }: ClientGame) => {
   const b = board;
   return {
     showTrumpDisplay: Boolean(
-      b.trumpCard && b.phase !== "deal" && b.phase !== "trumpReveal"
+      b.phase !== "roundStart" &&
+        b.phase !== "deal" &&
+        b.phase !== "trumpReveal"
     ),
     showWaiting: b.phase === "select",
     trumpCard: b.trumpCard,
@@ -55,7 +57,7 @@ function TrumpDisplay() {
   const vdom = (() => {
     if (showWaiting) return <Twemoji char="⌛" size={16} />;
 
-    if (!trumpSuit) return <Twemoji char="❌" size={16} align={"middle"} />;
+    if (!trumpSuit) return <Twemoji char="❌" size={16} />;
 
     let card = trumpCard || `${0}|${trumpSuit}`;
     const { suit } = splitCard(card);

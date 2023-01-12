@@ -11,15 +11,21 @@ export const wizardGame: Game<WizardSpec> = {
   },
   getOptions: (
     numPlayers,
-    options = { canadian: true, numRounds: 60 / numPlayers }
+    o = { canadian: true, numRounds: 60 / numPlayers, startRound: 1 }
   ) => {
     const maxRounds = 60 / numPlayers;
-    const numRounds =
-      options.numRounds > maxRounds ? maxRounds : options.numRounds;
+    const numRounds = o.numRounds > maxRounds ? maxRounds : o.numRounds;
+    const startRound = (() => {
+      if (o.startRound === undefined) return 1;
+      if (o.startRound < 1) return 1;
+      if (o.startRound > numRounds) return numRounds;
+      return o.startRound;
+    })();
 
     return {
-      ...options,
+      ...o,
       numRounds,
+      startRound,
     };
   },
   getInitialBoard: getNextRound,

@@ -155,15 +155,15 @@ function HostDisplay<S extends Spec>(props: MetaViewProps<S>) {
 
   const [options, setOptions] = useState(game.getOptions(numPlayers));
 
-  useEffect(() => {
-    setOptions(game.getOptions(numPlayers, options));
-  }, [numPlayers]);
-
   const gameReady = socketsStatus.length >= game.meta.players[0];
   const roomFull =
     socketsStatus.filter((x) => x).length >= game.meta.players[1];
   const updateOptions = (nextOptions: S["options"]) =>
     setOptions(game.getOptions(numPlayers, nextOptions));
+
+  useEffect(() => {
+    setOptions(game.getOptions(numPlayers, options));
+  }, [numPlayers]);
 
   return (
     <div class="flex flex-col gap-4">

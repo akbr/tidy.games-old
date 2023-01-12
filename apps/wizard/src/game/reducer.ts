@@ -1,11 +1,11 @@
-import { createPhaseReducer, withAction } from "@lib/tabletop";
+import { createPhaseReducer, Ctx, withAction } from "@lib/tabletop";
 import { rotateIndex } from "@lib/array";
 
 import { WizardSpec } from "./spec";
 import { getDeal, getWinningIndex, getPlayableCards, checkBid } from "./logic";
 
 export const getNextRound = (
-  { numPlayers }: { numPlayers: number },
+  { numPlayers, options }: Ctx<WizardSpec>,
   board = {} as WizardSpec["board"]
 ) => {
   const dealer =
@@ -13,11 +13,13 @@ export const getNextRound = (
   const scores = board.scores
     ? ([...board.scores, board.bids, board.actuals] as number[][])
     : [];
+  const round =
+    board.round === undefined ? options.startRound : board.round + 1;
 
   const nextRound: WizardSpec["board"] = {
     phase: "roundStart",
     player: null,
-    round: board.round ? board.round + 1 : 1,
+    round,
     dealer,
     hands: Array.from({ length: numPlayers }, () => []),
     trumpCard: null,

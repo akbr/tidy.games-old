@@ -25,7 +25,9 @@ function getEmojiCode(rawText: string) {
   );
 }
 export const getCDNUrl = (emoji: string) =>
-  `https://twemoji.maxcdn.com/v/13.1.0/svg/${getEmojiCode(emoji)}.svg`;
+  `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${getEmojiCode(
+    emoji
+  )}.svg`;
 
 export function Twemoji({
   char,

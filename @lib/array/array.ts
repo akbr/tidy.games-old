@@ -45,18 +45,21 @@ export function shuffle<T>(array: T[], random = Math.random) {
   return array;
 }
 
-export function deal<T>(deck: T[], handSpecs: number[]): T[][] {
+export function deal<T>(deck: T[], handSpecs: number[]): [T[][], T[]] {
   const expectedNumCards = handSpecs.reduce((a, b) => a + b, 0);
   if (deck.length < expectedNumCards)
     throw new Error("Not enough cards in deck.");
 
   deck = [...deck];
-  return Array.from({ length: handSpecs.length }).map((_, idx) =>
-    Array.from({ length: handSpecs[idx] }).map(() => deck.pop()!)
-  );
+  return [
+    Array.from({ length: handSpecs.length }).map((_, idx) =>
+      Array.from({ length: handSpecs[idx] }).map(() => deck.pop()!)
+    ),
+    deck,
+  ];
 }
 
-export function indexOfInt(arr: number[], doMax = true) {
+export function indexOfInt(arr: number[]) {
   if (arr.length === 0) return -1;
 
   let max = arr[0];

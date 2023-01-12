@@ -15,10 +15,10 @@ const {
   client: { useGame, waitFor },
 } = bundle;
 
-export const PLAY_DISTANCE = Vec.add(BADGE_DIMENSIONS, [
-  BADGE_PADDING,
-  BADGE_PADDING,
-]);
+export const PLAY_DISTANCE = Vec.add(
+  BADGE_DIMENSIONS,
+  Vec.mul(BADGE_PADDING, 2)
+);
 
 export const Trick = () => {
   const tableDimensions = useTableDimensions();
